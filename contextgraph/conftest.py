@@ -4,6 +4,7 @@ import warnings
 import pytest
 import webtest
 
+from contextgraph.cache import create_cache
 from contextgraph.web.app import (
     create_app,
     shutdown_app,
@@ -38,25 +39,38 @@ def package():
 
 
 @pytest.yield_fixture(scope='session')
-def global_app():
-    wsgiapp = create_app()
+def global_cache():
+    cache = create_cache()
+    yield cache
+    cache.close()
+
+
+@pytest.yield_fixture(scope='function')
+def cache(global_cache):
+    yield global_cache
+    global_cache.flushdb()
+
+
+@pytest.yield_fixture(scope='session')
+def global_app(global_cache):
+    wsgiapp = create_app(_cache=global_cache)
     app = webtest.TestApp(wsgiapp)
     yield app
     shutdown_app(app.app)
 
 
 @pytest.yield_fixture(scope='function')
-def app(global_app):
+def app(global_app, cache):
     yield global_app
 
 
 @pytest.yield_fixture(scope='session')
-def global_celery():
-    init_worker(celery_app)
+def global_celery(global_cache):
+    init_worker(celery_app, _cache=global_cache)
     yield celery_app
     shutdown_worker(celery_app)
 
 
 @pytest.yield_fixture(scope='function')
-def celery(global_celery):
+def celery(global_celery, cache):
     yield global_celery

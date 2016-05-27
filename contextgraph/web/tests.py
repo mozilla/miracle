@@ -1,3 +1,23 @@
+import pytest
+import webtest
+
+from contextgraph.cache import create_cache
+from contextgraph.web.app import (
+    create_app,
+    shutdown_app,
+)
+
+
+@pytest.yield_fixture(scope='function')
+def broken_app():
+    cache = create_cache('redis://127.0.0.1:9/15')
+
+    wsgiapp = create_app(_cache=cache)
+    app = webtest.TestApp(wsgiapp)
+    yield app
+    shutdown_app(app.app)
+
+    cache.close()
 
 
 def test_config(app):
@@ -8,7 +28,13 @@ def test_config(app):
 def test_heartbeat(app):
     res = app.get('/__heartbeat__')
     assert res.status_code == 200
-    assert res.json == {}
+    assert res.json == {'redis': {'up': True}}
+
+
+def test_heartbeat_error(broken_app):
+    res = broken_app.get('/__heartbeat__', status=503)
+    assert res.status_code == 503
+    assert res.json == {'redis': {'up': False}}
 
 
 def test_index(app):

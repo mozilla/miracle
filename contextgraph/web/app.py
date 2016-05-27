@@ -1,5 +1,6 @@
 from pyramid.config import Configurator
 
+from contextgraph.cache import create_cache
 from contextgraph.config import REDIS_URI
 from contextgraph.web import views
 
@@ -17,14 +18,14 @@ def application(environ, start_response):  # pragma: no cover
     return _APP(environ, start_response)
 
 
-def create_app(redis_uri=REDIS_URI):
+def create_app(redis_uri=REDIS_URI, _cache=None):
     config = Configurator(settings={
         'redis_uri': redis_uri,
     })
 
     views.configure(config)
 
-    config.registry.redis_client = None
+    config.registry.cache = create_cache(_cache=_cache)
 
     return config.make_wsgi_app()
 
@@ -32,7 +33,8 @@ def create_app(redis_uri=REDIS_URI):
 def shutdown_app(app):
     registry = getattr(app, 'registry', None)
     if registry is not None:
-        del registry.redis_client
+        registry.cache.close()
+        del registry.cache
 
 
 def worker_exit(server, worker):  # pragma: no cover

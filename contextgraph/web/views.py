@@ -1,5 +1,6 @@
 import os
 
+from pyramid.httpexceptions import HTTPServiceUnavailable
 from pyramid.response import (
     FileResponse,
     Response,
@@ -22,7 +23,15 @@ def configure(config):
 
 
 def heartbeat_view(request):
-    return {}
+    success = request.registry.cache.ping()
+
+    if not success:
+        response = HTTPServiceUnavailable()
+        response.content_type = 'application/json'
+        response.json = {'redis': {'up': False}}
+        return response
+
+    return {'redis': {'up': True}}
 
 
 _index_response = Response(content_type='text/plain', body='''\

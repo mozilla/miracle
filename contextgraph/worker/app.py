@@ -6,6 +6,7 @@ from celery.signals import (
 )
 from kombu import Queue
 
+from contextgraph.cache import create_cache
 from contextgraph.config import REDIS_URI
 
 
@@ -23,12 +24,13 @@ def configure_celery(celery_app):
     )
 
 
-def init_worker(celery_app):
-    celery_app.redis_client = None
+def init_worker(celery_app, _cache=None):
+    celery_app.cache = create_cache(_cache=_cache)
 
 
 def shutdown_worker(celery_app):
-    del celery_app.redis_client
+    celery_app.cache.close()
+    del celery_app.cache
 
 
 @worker_process_init.connect
