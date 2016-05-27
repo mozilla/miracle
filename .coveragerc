@@ -1,0 +1,9 @@
+[run]
+source = contextgraph
+concurrency = gevent
+
+[report]
+show_missing = true
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError()

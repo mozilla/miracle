@@ -23,6 +23,8 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+*.sublime-project
+*.sublime-workspace
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

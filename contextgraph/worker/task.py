@@ -1,0 +1,32 @@
+from celery import Task
+from kombu.serialization import (
+    dumps as kombu_dumps,
+    loads as kombu_loads,
+)
+
+
+class BaseTask(Task):
+
+    abstract = True  #:
+    acks_late = False  #:
+    ignore_result = True  #:
+    max_retries = 3  #:
+
+    def apply(self, *args, **kw):
+        """
+        This method is only used when calling tasks directly and blocking
+        on them. It's also used if always_eager is set, like in tests.
+
+        If always_eager is set, we feed the task arguments through the
+        de/serialization process to make sure the arguments can indeed
+        be serialized into JSON.
+        """
+
+        if self.app.conf.CELERY_ALWAYS_EAGER:
+            # We do the extra check to make sure this was really used from
+            # inside tests
+            serializer = self.app.conf.CELERY_TASK_SERIALIZER
+            content_type, encoding, data = kombu_dumps(args, serializer)
+            args = kombu_loads(data, content_type, encoding)
+
+        return super(BaseTask, self).apply(*args, **kw)

@@ -1,0 +1,8 @@
+include LICENSE
+include MANIFEST.in
+include *.ini
+include *.rst
+include *.txt
+
+recursive-include contextgraph *
+recursive-exclude contextgraph *.pyc *.pyo *.so *.dll .DS_Store __pycache__

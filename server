@@ -1,0 +1,161 @@
+#!/bin/bash
+
+APPLICATION="contextgraph-service"
+HOST="contextgraph-service.dev"
+MACHINE="contextgraph-service-dev"
+STATUS="$(docker-machine status $MACHINE)"
+
+# First, let's make sure that Docker Toolbox has been installed.
+if ! [ -x "$(command -v docker-machine)" ]; then
+  echo "Please install Docker Toolbox and try again:"
+  echo "https://www.docker.com/products/docker-toolbox"
+  exit 1
+fi
+
+
+# Next, let's make sure that the VM that runs our containers has been started
+# and that the shell has been configured appropriately.
+if [ ! "$DOCKER_MACHINE_NAME" == "$MACHINE" ]; then
+  if [ "$STATUS" == "Stopped" ]; then
+    echo "Starting VM..."
+    docker-machine start $MACHINE >/dev/null
+  fi
+
+  # Since this script cannot modify the calling shell's environment, we have to
+  # do this nasty thing to make sure that the shell is appropriately configured
+  # for docker-machine.
+  echo "Unable to find your VM. Please run the following command to configure"
+  echo "your shell and try again:"
+  echo "eval \$(docker-machine env $MACHINE)"
+fi
+
+
+# Now that we know the containers are running, some runtime constants.
+APP_ID="$(docker ps -a -q --filter name=$APPLICATION)"
+
+
+# Finally, let's do the important things.
+case "$1" in
+
+  # Creates the VM and a predictable hostname to point to it.
+  init)
+    docker-machine create --driver virtualbox --virtualbox-memory 1024 --virtualbox-cpu-count -1 $MACHINE
+    sudo sh -c "echo $(docker-machine ip $MACHINE 2>/dev/null) $HOST >> /etc/hosts"
+    ;;
+
+  # Restarts some/all of the containers.
+  restart)
+
+    case "$2" in
+
+      # Restarts the application.
+      app)
+        $0 stop app
+        $0 start app
+        ;;
+
+      # Restarts the services.
+      services)
+        $0 stop services
+        $0 start services
+        ;;
+
+      # Restarts both the services and application.
+      *)
+        $0 stop
+        $0 start
+        ;;
+
+    esac
+    ;;
+
+  # Builds and starts some/all of our containers.
+  start)
+
+    case "$2" in
+
+      # Builds and starts the application container.
+      app)
+        if [ ! -z "$APP_ID" ]; then
+          $0 stop app
+        fi
+        docker build -t $APPLICATION .
+        docker run -d \
+          -e "REDIS_HOST=`docker-machine ip $MACHINE`" \
+          -p 80:8000/tcp --name="$APPLICATION" $APPLICATION
+        ;;
+
+      # Builds and starts the services supporting the application container.
+      services)
+        docker-compose build
+        docker-compose up -d
+        ;;
+
+      # Builds and starts the application server and the supporting services.
+      *)
+        $0 $1 services
+        $0 $1 app
+        ;;
+
+    esac
+    ;;
+
+  # Stops some/all of our containers.
+  stop)
+
+    case "$2" in
+
+      # Kills and removes the application container.
+      app)
+        if [ $STATUS == "Running" ]; then
+          if [ ! -z $APP_ID ]; then
+            docker kill $APP_ID >/dev/null
+            docker rm $APP_ID >/dev/null
+          fi
+        fi
+        ;;
+
+      # Stops the service containers.
+      services)
+        if [ $STATUS = "Running" ]; then
+          docker-compose stop
+        fi
+        ;;
+
+      # Kills and removes the application container, then stops the supporting
+      # services.
+      *)
+        $0 $1 app
+        $0 $1 services
+        ;;
+
+    esac
+    ;;
+
+  # Open a shell inside the container.
+  shell)
+    docker build -t $APPLICATION .
+    docker run -it \
+        -e "REDIS_HOST=`docker-machine ip $MACHINE`" \
+        $APPLICATION shell
+    ;;
+
+  # Run the tests inside the container.
+  test)
+    docker build -t $APPLICATION .
+    docker run -it \
+        -e "REDIS_HOST=`docker-machine ip $MACHINE`" \
+        $APPLICATION test
+    ;;
+
+  # Shows usage information.
+  help)
+    echo "Usage: $0 {start|stop|restart|shell|test|init|help}"
+    ;;
+
+  # Shows help message.
+  *)
+    $0 help
+    ;;
+
+esac
