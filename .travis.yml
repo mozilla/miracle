@@ -12,7 +12,7 @@ install:
   - travis_wait pip install --no-deps -r requirements.txt
 
 script:
-  - py.test --cov-config=.coveragerc --cov=contextgraph contextgraph
+  - TESTING=true py.test --cov-config=.coveragerc --cov=contextgraph contextgraph
 
 services:
   - redis-server
