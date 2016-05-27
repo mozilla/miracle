@@ -1,4 +1,5 @@
 {
+  "build": null,
   "commit": "master",
   "source": "https://github.com/mozilla/contextgraph-service",
   "version": "dev"

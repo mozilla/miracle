@@ -37,7 +37,7 @@ def test_settings():
 def test_version(app):
     res = app.get('/__version__')
     keys = set(res.json.keys())
-    assert keys == {'commit', 'source', 'version'}
+    assert keys == {'build', 'commit', 'source', 'version'}
 
 
 def test_worker():
