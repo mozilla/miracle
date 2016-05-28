@@ -5,6 +5,10 @@ import pytest
 import webtest
 
 from contextgraph.cache import create_cache
+from contextgraph.log import (
+    create_raven,
+    create_stats,
+)
 from contextgraph.web.app import (
     create_app,
     shutdown_app,
@@ -52,25 +56,59 @@ def cache(global_cache):
 
 
 @pytest.yield_fixture(scope='session')
-def global_app(global_cache):
-    wsgiapp = create_app(_cache=global_cache)
+def global_raven():
+    raven = create_raven()
+    yield raven
+
+
+@pytest.yield_fixture(scope='function')
+def raven(global_raven):
+    yield global_raven
+    messages = [msg['message'] for msg in global_raven.msgs]
+    global_raven.clear()
+    assert not messages
+
+
+@pytest.yield_fixture(scope='session')
+def global_stats():
+    stats = create_stats()
+    yield stats
+    stats.close()
+
+
+@pytest.yield_fixture(scope='function')
+def stats(global_stats):
+    yield global_stats
+    global_stats.clear()
+
+
+@pytest.yield_fixture(scope='session')
+def global_app(global_cache, global_raven, global_stats):
+    wsgiapp = create_app(
+        _cache=global_cache,
+        _raven=global_raven,
+        _stats=global_stats)
     app = webtest.TestApp(wsgiapp)
     yield app
     shutdown_app(app.app)
 
 
 @pytest.yield_fixture(scope='function')
-def app(global_app, cache):
+def app(global_app, cache, raven, stats):
     yield global_app
 
 
 @pytest.yield_fixture(scope='session')
-def global_celery(global_cache):
-    init_worker(celery_app, _cache=global_cache)
+def global_celery(global_cache, global_raven, global_stats):
+    init_worker(
+        celery_app,
+        _cache=global_cache,
+        _raven=global_raven,
+        _stats=global_stats)
     yield celery_app
     shutdown_worker(celery_app)
 
 
 @pytest.yield_fixture(scope='function')
-def celery(global_celery, cache):
+def celery(global_celery, cache, raven, stats):
     yield global_celery

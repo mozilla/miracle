@@ -1,7 +1,13 @@
 from pyramid.config import Configurator
+from pyramid.tweens import EXCVIEW
 
 from contextgraph.cache import create_cache
 from contextgraph.config import REDIS_URI
+from contextgraph.log import (
+    configure_logging,
+    create_raven,
+    create_stats,
+)
 from contextgraph.web import views
 
 _APP = None
@@ -18,14 +24,19 @@ def application(environ, start_response):  # pragma: no cover
     return _APP(environ, start_response)
 
 
-def create_app(redis_uri=REDIS_URI, _cache=None):
+def create_app(redis_uri=REDIS_URI, _cache=None, _raven=None, _stats=None):
+    configure_logging()
+
     config = Configurator(settings={
         'redis_uri': redis_uri,
     })
+    config.add_tween('contextgraph.log.log_tween_factory', under=EXCVIEW)
 
     views.configure(config)
 
     config.registry.cache = create_cache(_cache=_cache)
+    config.registry.raven = create_raven(transport='gevent', _raven=_raven)
+    config.registry.stats = create_stats(_stats=_stats)
 
     return config.make_wsgi_app()
 
@@ -35,6 +46,9 @@ def shutdown_app(app):
     if registry is not None:
         registry.cache.close()
         del registry.cache
+        del registry.raven
+        registry.stats.close()
+        del registry.stats
 
 
 def worker_exit(server, worker):  # pragma: no cover

@@ -8,6 +8,11 @@ from kombu import Queue
 
 from contextgraph.cache import create_cache
 from contextgraph.config import REDIS_URI
+from contextgraph.log import (
+    configure_logging,
+    create_raven,
+    create_stats,
+)
 
 
 CELERY_QUEUES = (
@@ -24,13 +29,20 @@ def configure_celery(celery_app):
     )
 
 
-def init_worker(celery_app, _cache=None):
+def init_worker(celery_app, _cache=None, _raven=None, _stats=None):
+    configure_logging()
+
     celery_app.cache = create_cache(_cache=_cache)
+    celery_app.raven = create_raven(transport='threaded', _raven=_raven)
+    celery_app.stats = create_stats(_stats=_stats)
 
 
 def shutdown_worker(celery_app):
     celery_app.cache.close()
     del celery_app.cache
+    del celery_app.raven
+    celery_app.stats.close()
+    del celery_app.stats
 
 
 @worker_process_init.connect

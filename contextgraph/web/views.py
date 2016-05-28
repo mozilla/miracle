@@ -1,14 +1,10 @@
-import os
-
 from pyramid.httpexceptions import HTTPServiceUnavailable
 from pyramid.response import (
     FileResponse,
     Response,
 )
 
-HERE = os.path.dirname(__file__)
-STATIC_DIR = os.path.abspath(os.path.join(HERE, os.pardir, 'static'))
-VERSION_FILE = os.path.join(STATIC_DIR, 'version.json')
+from contextgraph.config import VERSION_FILE
 
 
 def configure(config):

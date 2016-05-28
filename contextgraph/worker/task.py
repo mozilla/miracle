@@ -12,6 +12,24 @@ class BaseTask(Task):
     ignore_result = True  #:
     max_retries = 3  #:
 
+    def __call__(self, *args, **kw):
+        """
+        Execute the task, capture a statsd timer for the task duration and
+        automatically report exceptions into Sentry.
+        """
+        name = self.name
+        if name.startswith('contextgraph.'):
+            name = name[13:]
+        with self.stats.timed('task', tags=['task:' + name]):
+            try:
+                result = super(BaseTask, self).__call__(*args, **kw)
+            except Exception as exc:  # pragma: no cover
+                self.raven.captureException()
+                if self._auto_retry and not self.app.conf.CELERY_ALWAYS_EAGER:
+                    raise self.retry(exc=exc)
+                raise
+        return result
+
     def apply(self, *args, **kw):
         """
         This method is only used when calling tasks directly and blocking
@@ -30,3 +48,11 @@ class BaseTask(Task):
             args = kombu_loads(data, content_type, encoding)
 
         return super(BaseTask, self).apply(*args, **kw)
+
+    @property
+    def raven(self):  # pragma: no cover
+        return self.app.raven
+
+    @property
+    def stats(self):
+        return self.app.stats
