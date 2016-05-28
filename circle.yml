@@ -43,8 +43,8 @@ dependencies:
     # Clean up any old images; save the new one.
     - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save app:build | pigz --fast -c > ~/docker/$I; ls -l ~/docker
 
-    # Pull down and create Redis container.
-    - docker-compose create redis
+    # Pull down images for Redis container.
+    - docker-compose pull redis
 
 test:
   override:
