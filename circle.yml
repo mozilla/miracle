@@ -8,7 +8,6 @@
 machine:
   services:
     - docker
-    - redis
 
 dependencies:
   cache_directories:
@@ -44,9 +43,13 @@ dependencies:
     # Clean up any old images; save the new one.
     - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save app:build | pigz --fast -c > ~/docker/$I; ls -l ~/docker
 
+    # Pull down and create Redis container.
+    - docker-compose create redis
+
 test:
   override:
-    - docker run -e "REDIS_HOST=`ip route show 0.0.0.0/0 | grep -Eo 'via \S+' | awk '{ print $2 }'`" app:build test
+    - docker-compose up -d redis
+    - docker run -e "REDIS_HOST=`ip route | awk '/docker0/ { print $NF }'`" app:build test
 
 # appropriately tag and push the container to dockerhub
 # deployment:
