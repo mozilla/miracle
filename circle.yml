@@ -46,7 +46,7 @@ dependencies:
 
 test:
   override:
-    - docker run app:build test
+    - docker run -e "REDIS_HOST=`ip route show 0.0.0.0/0 | grep -Eo 'via \S+' | awk '{ print $2 }'`" app:build test
 
 # appropriately tag and push the container to dockerhub
 # deployment:
