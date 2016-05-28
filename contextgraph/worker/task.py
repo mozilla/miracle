@@ -23,9 +23,9 @@ class BaseTask(Task):
         with self.stats.timed('task', tags=['task:' + name]):
             try:
                 result = super(BaseTask, self).__call__(*args, **kw)
-            except Exception as exc:  # pragma: no cover
+            except Exception as exc:
                 self.raven.captureException()
-                if self._auto_retry and not self.app.conf.CELERY_ALWAYS_EAGER:
+                if not self.app.conf.CELERY_ALWAYS_EAGER:  # pragma: no cover
                     raise self.retry(exc=exc)
                 raise
         return result
@@ -50,7 +50,11 @@ class BaseTask(Task):
         return super(BaseTask, self).apply(*args, **kw)
 
     @property
-    def raven(self):  # pragma: no cover
+    def cache(self):
+        return self.app.cache
+
+    @property
+    def raven(self):
         return self.app.raven
 
     @property
