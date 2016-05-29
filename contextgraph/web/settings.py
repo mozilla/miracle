@@ -1,3 +1,5 @@
+import multiprocessing
+
 errorlog = '-'
 keepalive = 0
 loglevel = 'warning'
@@ -6,6 +8,7 @@ max_requests_jitter = max_requests // 10
 timeout = 60
 worker_class = 'contextgraph.web.worker.GeventWorker'
 worker_connections = 20
+workers = multiprocessing.cpu_count()
 
 
 def post_worker_init(worker):  # pragma: no cover
@@ -15,3 +18,6 @@ def post_worker_init(worker):  # pragma: no cover
 def worker_exit(server, worker):  # pragma: no cover
     from contextgraph.web.app import worker_exit
     worker_exit(server, worker)
+
+# cleanup
+del multiprocessing
