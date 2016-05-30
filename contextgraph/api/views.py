@@ -1,9 +1,12 @@
+import json
+
 from pyramid.httpexceptions import (
     HTTPBadRequest,
     HTTPMethodNotAllowed,
 )
 from pyramid.response import Response
 
+from contextgraph.data import tasks
 from contextgraph.exceptions import GZIPDecodeError
 from contextgraph.util import gzip_decode
 
@@ -55,6 +58,14 @@ class View(object):
     def __call__(self):
         raise NotImplementedError()
 
+    def user(self):
+        user = self.request.headers.get('X-User')
+        if not user or len(user) < 3 or len(user) > 36:
+            return None
+        if isinstance(user, bytes):
+            user = user.decode('ascii')
+        return user
+
     def head(self):
         return Response()
 
@@ -71,10 +82,13 @@ class DeleteView(View):
     _route_path = '/v1/delete'
 
     def __call__(self):
-        if 'X-User' not in self.request.headers:
+        user = self.user()
+        if not user:
             return HTTPBadRequest('Missing X-User header.')
         if self.request.body:
             return HTTPBadRequest('Non-empty body.')
+
+        tasks.delete.delay(user)
         return {'status': 'success'}
 
 
@@ -84,18 +98,24 @@ class UploadView(View):
     _route_path = '/v1/upload'
 
     def __call__(self):
+        user = self.user()
+        if not user:
+            return HTTPBadRequest('Missing or invalid X-User header.')
+
         body = self.request.body
-
-        if 'X-User' not in self.request.headers:
-            return HTTPBadRequest('Missing X-User header.')
-
         if not body:
             return HTTPBadRequest('Empty body.')
 
         if self.request.headers.get('Content-Encoding') == 'gzip':
             try:
-                body = gzip_decode(body)
+                body = gzip_decode(body, encoding=None)
             except GZIPDecodeError:
                 return HTTPBadRequest('Invalid GZIP body.')
 
+        try:
+            data = json.loads(body.decode('utf-8'))
+        except json.JSONDecodeError:
+            return HTTPBadRequest('Invalid JSON body.')
+
+        tasks.upload.delay(user, data)
         return {'status': 'success'}

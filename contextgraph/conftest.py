@@ -83,22 +83,6 @@ def stats(global_stats):
 
 
 @pytest.yield_fixture(scope='session')
-def global_app(global_cache, global_raven, global_stats):
-    wsgiapp = create_app(
-        _cache=global_cache,
-        _raven=global_raven,
-        _stats=global_stats)
-    app = webtest.TestApp(wsgiapp)
-    yield app
-    shutdown_app(app.app)
-
-
-@pytest.yield_fixture(scope='function')
-def app(global_app, cache, raven, stats):
-    yield global_app
-
-
-@pytest.yield_fixture(scope='session')
 def global_celery(global_cache, global_raven, global_stats):
     init_worker(
         celery_app,
@@ -112,3 +96,19 @@ def global_celery(global_cache, global_raven, global_stats):
 @pytest.yield_fixture(scope='function')
 def celery(global_celery, cache, raven, stats):
     yield global_celery
+
+
+@pytest.yield_fixture(scope='session')
+def global_app(global_cache, global_celery, global_raven, global_stats):
+    wsgiapp = create_app(
+        _cache=global_cache,
+        _raven=global_raven,
+        _stats=global_stats)
+    app = webtest.TestApp(wsgiapp)
+    yield app
+    shutdown_app(app.app)
+
+
+@pytest.yield_fixture(scope='function')
+def app(global_app, cache, celery, raven, stats):
+    yield global_app

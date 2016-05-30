@@ -9,43 +9,53 @@ CORS_HEADERS = {
 }
 
 
-def test_delete(app):
+def test_delete(app, stats):
     res = app.post('/v1/delete',
                    b'',
-                   headers={'X-User': 'abc'},
+                   headers={'X-User': b'abc'},
                    status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {'status': 'success'}
+    stats.check(timer=[
+        ('task', 1, ['task:data.tasks.delete']),
+    ])
 
 
 def test_delete_fail(app, stats):
     app.post('/v1/delete', b'foo', status=400)
-    app.post('/v1/delete', b'foo', headers={'X-User': 'abc'}, status=400)
+    app.post('/v1/delete', b'foo', headers={'X-User': b'abc'}, status=400)
     stats.check(timer=[
         ('request', 2, ['path:v1.delete', 'method:post', 'status:400']),
     ])
 
 
-def test_upload(app):
+def test_upload(app, stats):
     res = app.post_json('/v1/upload',
                         {'foo': 1},
                         headers={'Content-Type': 'application/json',
-                                 'X-User': 'abc'},
+                                 'X-User': b'abc'},
                         status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {'status': 'success'}
+    stats.check(timer=[
+        ('task', 1, ['task:data.tasks.upload']),
+    ])
 
 
 def test_upload_fail(app, stats):
-    app.post('/v1/upload', '',
+    app.post('/v1/upload', b'',
              headers={'Content-Type': 'application/json'},
              status=400)
-    app.post('/v1/upload', '',
+    app.post('/v1/upload', b'',
              headers={'Content-Type': 'application/json',
-                      'X-User': 'abc'},
+                      'X-User': b'abc'},
+             status=400)
+    app.post('/v1/upload', b'invalid',
+             headers={'Content-Type': 'application/json',
+                      'X-User': b'abc'},
              status=400)
     stats.check(timer=[
-        ('request', 2, ['path:v1.upload', 'method:post', 'status:400']),
+        ('request', 3, ['path:v1.upload', 'method:post', 'status:400']),
     ])
 
 
@@ -54,7 +64,7 @@ def test_upload_gzip(app):
                    gzip_encode('{"foo": 1}'),
                    headers={'Content-Encoding': 'gzip',
                             'Content-Type': 'application/json',
-                            'X-User': 'abc'},
+                            'X-User': b'abc'},
                    status=200)
     assert res.json == {'status': 'success'}
 
@@ -64,7 +74,7 @@ def test_upload_gzip_fail(app):
              b'invalid',
              headers={'Content-Encoding': 'gzip',
                       'Content-Type': 'application/json',
-                      'X-User': 'abc'},
+                      'X-User': b'abc'},
              status=400)
 
 

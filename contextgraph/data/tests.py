@@ -20,3 +20,22 @@ def test_error(celery, raven, stats):
     stats.check(timer=[
         ('task', 1, ['task:data.tasks.error']),
     ])
+
+
+def test_delete(cache, celery, stats):
+    cache.set(b'user_foo', b'')
+    tasks.delete.delay('foo').get()
+    assert b'user_foo' not in cache.keys()
+    stats.check(timer=[
+        ('task', 1, ['task:data.tasks.delete']),
+    ])
+
+
+def test_upload(cache, celery, stats):
+    tasks.upload.delay('foo', {'bar': 7}).get()
+    assert b'user_foo' in cache.keys()
+    assert cache.get(b'user_foo') == b'{"bar": 7}'
+    assert cache.ttl(b'user_foo') <= 3600
+    stats.check(timer=[
+        ('task', 1, ['task:data.tasks.upload']),
+    ])
