@@ -1,6 +1,7 @@
 from pyramid.config import Configurator
 from pyramid.tweens import EXCVIEW
 
+from contextgraph.api.views import configure as configure_api_views
 from contextgraph.cache import create_cache
 from contextgraph.config import REDIS_URI
 from contextgraph.log import (
@@ -8,7 +9,7 @@ from contextgraph.log import (
     create_raven,
     create_stats,
 )
-from contextgraph.web import views
+from contextgraph.web.views import configure as configure_web_views
 
 _APP = None
 
@@ -32,7 +33,8 @@ def create_app(redis_uri=REDIS_URI, _cache=None, _raven=None, _stats=None):
     })
     config.add_tween('contextgraph.log.log_tween_factory', under=EXCVIEW)
 
-    views.configure(config)
+    configure_api_views(config)
+    configure_web_views(config)
 
     config.registry.cache = create_cache(_cache=_cache)
     config.registry.raven = create_raven(transport='gevent', _raven=_raven)
