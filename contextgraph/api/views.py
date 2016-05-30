@@ -1,45 +1,89 @@
-from pyramid.httpexceptions import HTTPMethodNotAllowed
-
-HTTP_METHODS = frozenset([
-    'DELETE',
-    'GET',
-    'HEAD',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-])
-
-HTTP_UPLOAD_METHODS = frozenset(['HEAD', 'POST', 'PUT'])
+from pyramid.httpexceptions import (
+    HTTPBadRequest,
+    HTTPMethodNotAllowed,
+)
+from pyramid.response import Response
 
 
 def configure(config):
-    config.add_route('v1_delete', '/v1/delete')
-    config.add_view(delete_view,
-                    route_name='v1_delete',
-                    renderer='json',
-                    request_method=tuple(HTTP_UPLOAD_METHODS))
-    config.add_view(unsupported_view,
-                    route_name='v1_delete',
-                    request_method=tuple(HTTP_METHODS - HTTP_UPLOAD_METHODS))
-
-    config.add_route('v1_upload', '/v1/upload')
-    config.add_view(upload_view,
-                    route_name='v1_upload',
-                    renderer='json',
-                    request_method=tuple(HTTP_UPLOAD_METHODS))
-    config.add_view(unsupported_view,
-                    route_name='v1_upload',
-                    request_method=tuple(HTTP_METHODS - HTTP_UPLOAD_METHODS))
+    DeleteView.configure(config)
+    UploadView.configure(config)
 
 
-def delete_view(request):
-    return {'status': 'success'}
+class View(object):
+
+    _route_name = None
+    _route_path = None
+
+    _cors_headers = {
+        'Access-Control-Allow-Headers':
+            'Content-Encoding, Content-Type, X-User',
+        'Access-Control-Allow-Methods': 'HEAD, OPTIONS, POST, PUT',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Max-Age': str(86400 * 30),  # 30 days
+    }
+    _supported_methods = ('POST', 'PUT')
+    _unsupported_methods = ('GET', 'DELETE', 'PATCH')
+
+    @classmethod
+    def configure(cls, config):
+        config.add_route(cls._route_name, cls._route_path)
+        config.add_view(cls,
+                        route_name=cls._route_name,
+                        renderer='json',
+                        request_method=cls._supported_methods)
+        config.add_view(cls,
+                        attr='head',
+                        route_name=cls._route_name,
+                        request_method='HEAD')
+        config.add_view(cls,
+                        attr='options',
+                        route_name=cls._route_name,
+                        request_method='OPTIONS')
+        config.add_view(cls,
+                        attr='unsupported',
+                        route_name=cls._route_name,
+                        request_method=cls._unsupported_methods)
+
+    def __init__(self, request):
+        self.request = request
+        self.request.response.headers.update(self._cors_headers)
+
+    def __call__(self):
+        raise NotImplementedError()
+
+    def head(self):
+        return Response()
+
+    def options(self):
+        return Response(headers=self._cors_headers)
+
+    def unsupported(self):
+        raise HTTPMethodNotAllowed()
 
 
-def unsupported_view(request):
-    raise HTTPMethodNotAllowed()
+class DeleteView(View):
+
+    _route_name = 'v1_delete'
+    _route_path = '/v1/delete'
+
+    def __call__(self):
+        if 'X-User' not in self.request.headers:
+            return HTTPBadRequest('Missing X-User header.')
+        if self.request.body:
+            return HTTPBadRequest('Non-empty body.')
+        return {'status': 'success'}
 
 
-def upload_view(request):
-    return {'status': 'success'}
+class UploadView(View):
+
+    _route_name = 'v1_upload'
+    _route_path = '/v1/upload'
+
+    def __call__(self):
+        if 'X-User' not in self.request.headers:
+            return HTTPBadRequest('Missing X-User header.')
+        if not self.request.body:
+            return HTTPBadRequest('Empty body.')
+
+        return {'status': 'success'}
