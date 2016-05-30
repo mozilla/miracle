@@ -1,3 +1,6 @@
+from contextgraph.util import gzip_encode
+
+
 CORS_HEADERS = {
     'Access-Control-Allow-Origin',
     'Access-Control-Max-Age',
@@ -8,7 +11,7 @@ CORS_HEADERS = {
 
 def test_delete(app):
     res = app.post('/v1/delete',
-                   '',
+                   b'',
                    headers={'X-User': 'abc'},
                    status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
@@ -16,8 +19,8 @@ def test_delete(app):
 
 
 def test_delete_fail(app, stats):
-    app.post('/v1/delete', 'foo', status=400)
-    app.post('/v1/delete', 'foo', headers={'X-User': 'abc'}, status=400)
+    app.post('/v1/delete', b'foo', status=400)
+    app.post('/v1/delete', b'foo', headers={'X-User': 'abc'}, status=400)
     stats.check(timer=[
         ('request', 2, ['path:v1.delete', 'method:post', 'status:400']),
     ])
@@ -26,18 +29,43 @@ def test_delete_fail(app, stats):
 def test_upload(app):
     res = app.post_json('/v1/upload',
                         {'foo': 1},
-                        headers={'X-User': 'abc'},
+                        headers={'Content-Type': 'application/json',
+                                 'X-User': 'abc'},
                         status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {'status': 'success'}
 
 
 def test_upload_fail(app, stats):
-    app.post('/v1/upload', '', status=400)
-    app.post('/v1/upload', '', headers={'X-User': 'abc'}, status=400)
+    app.post('/v1/upload', '',
+             headers={'Content-Type': 'application/json'},
+             status=400)
+    app.post('/v1/upload', '',
+             headers={'Content-Type': 'application/json',
+                      'X-User': 'abc'},
+             status=400)
     stats.check(timer=[
         ('request', 2, ['path:v1.upload', 'method:post', 'status:400']),
     ])
+
+
+def test_upload_gzip(app):
+    res = app.post('/v1/upload',
+                   gzip_encode('{"foo": 1}'),
+                   headers={'Content-Encoding': 'gzip',
+                            'Content-Type': 'application/json',
+                            'X-User': 'abc'},
+                   status=200)
+    assert res.json == {'status': 'success'}
+
+
+def test_upload_gzip_fail(app):
+    app.post('/v1/upload',
+             b'invalid',
+             headers={'Content-Encoding': 'gzip',
+                      'Content-Type': 'application/json',
+                      'X-User': 'abc'},
+             status=400)
 
 
 def test_head(app, stats):

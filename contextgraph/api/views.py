@@ -4,6 +4,9 @@ from pyramid.httpexceptions import (
 )
 from pyramid.response import Response
 
+from contextgraph.exceptions import GZIPDecodeError
+from contextgraph.util import gzip_decode
+
 
 def configure(config):
     DeleteView.configure(config)
@@ -81,9 +84,18 @@ class UploadView(View):
     _route_path = '/v1/upload'
 
     def __call__(self):
+        body = self.request.body
+
         if 'X-User' not in self.request.headers:
             return HTTPBadRequest('Missing X-User header.')
-        if not self.request.body:
+
+        if not body:
             return HTTPBadRequest('Empty body.')
+
+        if self.request.headers.get('Content-Encoding') == 'gzip':
+            try:
+                body = gzip_decode(body)
+            except GZIPDecodeError:
+                return HTTPBadRequest('Invalid GZIP body.')
 
         return {'status': 'success'}
