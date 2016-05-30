@@ -18,12 +18,17 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 .. code-block:: bash
 
     curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
+        -H 'Content-Type: application/json' \
         https://contextgraph.dev.mozaws.net/v1/upload -d '{"some": "data"}'
 
 If the data was accepted, you get a `200` response code.
 
 If the request was malformed, you can get `4xx` responses, if the
 service is unavailable or broken, you might get `5xx` responses.
+
+The upload endpoint optionally supports sending the body GZIP encoded.
+To do so, you need to additionally specify the ``Content-Encoding: gzip``
+header in the request.
 
 
 Delete
