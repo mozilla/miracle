@@ -97,6 +97,6 @@ an error to Sentry if it fails.
 
 The web role exposes three URL endpoints to check its status:
 
-``__lbheartbeat__`` - Returns 200 OK if the web app is responding.
-``__heartbeat__`` - Returns 200 OK if the web app can connect to Redis.
-``__version__`` - Returns version data about the running software.
+* ``__lbheartbeat__`` - Returns 200 OK if the web app is responding.
+* ``__heartbeat__`` - Returns 200 OK if the web app can connect to Redis.
+* ``__version__`` - Returns version data about the running software.
