@@ -40,6 +40,7 @@ def init_worker(celery_app,
     celery_app.stats = create_stats(_stats=_stats)
 
     celery_app.bucket.connect(celery_app.raven)
+    celery_app.cache.ping(celery_app.raven)
 
 
 def shutdown_worker(celery_app):

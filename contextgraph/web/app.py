@@ -40,6 +40,8 @@ def create_app(redis_uri=REDIS_URI, _cache=None, _raven=None, _stats=None):
     config.registry.raven = create_raven(transport='gevent', _raven=_raven)
     config.registry.stats = create_stats(_stats=_stats)
 
+    config.registry.cache.ping(config.registry.raven)
+
     return config.make_wsgi_app()
 
 

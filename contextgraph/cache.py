@@ -22,9 +22,10 @@ class RedisClient(redis.StrictRedis):
     def close(self):
         self.connection_pool.disconnect()
 
-    def ping(self):
+    def ping(self, raven):
         try:
             self.execute_command('PING')
         except Exception:
+            raven.captureException()
             return False
         return True

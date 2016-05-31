@@ -13,6 +13,8 @@ def broken_app(raven, stats):
     cache = create_cache('redis://127.0.0.1:9/15')
 
     wsgiapp = create_app(_cache=cache, _raven=raven, _stats=stats)
+    raven.check(['ConnectionError'])
+
     app = webtest.TestApp(wsgiapp)
     yield app
     shutdown_app(app.app)
@@ -39,7 +41,7 @@ def test_heartbeat(app, stats):
     ])
 
 
-def test_heartbeat_error(broken_app, stats):
+def test_heartbeat_error(broken_app, raven, stats):
     res = broken_app.get('/__heartbeat__', status=503)
     assert res.status_code == 503
     assert res.json == {'redis': {'up': False}}
@@ -48,6 +50,7 @@ def test_heartbeat_error(broken_app, stats):
     ], timer=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:503']),
     ])
+    raven.check(['ConnectionError'])
 
 
 def test_index(app, stats):

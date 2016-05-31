@@ -19,7 +19,7 @@ def configure(config):
 
 
 def heartbeat_view(request):
-    success = request.registry.cache.ping()
+    success = request.registry.cache.ping(request.registry.raven)
 
     if not success:
         response = HTTPServiceUnavailable()
