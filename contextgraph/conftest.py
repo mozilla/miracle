@@ -4,6 +4,7 @@ import warnings
 import pytest
 import webtest
 
+from contextgraph.bucket import create_bucket
 from contextgraph.cache import create_cache
 from contextgraph.log import (
     create_raven,
@@ -40,6 +41,18 @@ def package():
         print('Uncollectable objects found:')
         for obj in gc.garbage:
             print(obj)
+
+
+@pytest.yield_fixture(scope='session')
+def global_bucket():
+    bucket = create_bucket()
+    yield bucket
+
+
+@pytest.yield_fixture(scope='function')
+def bucket(global_bucket):
+    yield global_bucket
+    global_bucket.clear()
 
 
 @pytest.yield_fixture(scope='session')
@@ -83,9 +96,10 @@ def stats(global_stats):
 
 
 @pytest.yield_fixture(scope='session')
-def global_celery(global_cache, global_raven, global_stats):
+def global_celery(global_bucket, global_cache, global_raven, global_stats):
     init_worker(
         celery_app,
+        _bucket=global_bucket,
         _cache=global_cache,
         _raven=global_raven,
         _stats=global_stats)
@@ -94,7 +108,7 @@ def global_celery(global_cache, global_raven, global_stats):
 
 
 @pytest.yield_fixture(scope='function')
-def celery(global_celery, cache, raven, stats):
+def celery(global_celery, bucket, cache, raven, stats):
     yield global_celery
 
 
