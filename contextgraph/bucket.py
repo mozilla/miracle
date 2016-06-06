@@ -28,7 +28,7 @@ class Bucket(object):
 
     def connect(self, raven):  # pragma: no cover
         self._resource = s3 = boto3.resource('s3')
-        self._bucket = bucket = s3.Bucket(self.name)
+        self._bucket = s3.Bucket(self.name)
         try:
             s3.meta.client.head_bucket(Bucket=self.name)
         except botocore.exceptions.ClientError:
