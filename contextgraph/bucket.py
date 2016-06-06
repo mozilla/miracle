@@ -30,7 +30,7 @@ class Bucket(object):
         self._resource = s3 = boto3.resource('s3')
         self._bucket = bucket = s3.Bucket(self.name)
         try:
-            s3.meta.client.head_bucket(bucket)
+            s3.meta.client.head_bucket(Bucket=self.name)
         except botocore.exceptions.ClientError:
             raven.captureException()
             return False
