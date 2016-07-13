@@ -1,57 +1,33 @@
 #!/bin/bash
 
-APPLICATION="miracle"
-HOST="miracle.dev"
-MACHINE="miracle-dev"
-STATUS="$(docker-machine status $MACHINE)"
-
-# First, let's make sure that Docker Toolbox has been installed.
-if ! [ -x "$(command -v docker-machine)" ]; then
-  echo "Please install Docker Toolbox and try again:"
-  echo "https://www.docker.com/products/docker-toolbox"
+# First, let's make sure that Docker Compose has been installed.
+if ! [ -x "$(command -v docker-compose)" ]; then
+  echo "Please install Docker Compose and try again."
   exit 1
 fi
 
+# Some runtime constants.
+WEB_ID="$(docker ps -a -q --filter name=miracle_web)"
+WORKER_ID="$(docker ps -a -q --filter name=miracle_worker)"
 
-# Next, let's make sure that the VM that runs our containers has been started
-# and that the shell has been configured appropriately.
-if [ ! "$DOCKER_MACHINE_NAME" == "$MACHINE" ]; then
-  if [ "$STATUS" == "Stopped" ]; then
-    echo "Starting VM..."
-    docker-machine start $MACHINE >/dev/null
-  fi
-
-  # Since this script cannot modify the calling shell's environment, we have to
-  # do this nasty thing to make sure that the shell is appropriately configured
-  # for docker-machine.
-  echo "Unable to find your VM. Please run the following command to configure"
-  echo "your shell and try again:"
-  echo "eval \$(docker-machine env $MACHINE)"
-fi
-
-
-# Now that we know the containers are running, some runtime constants.
-APP_ID="$(docker ps -a -q --filter name=$APPLICATION)"
-
-
-# Finally, let's do the important things.
+# Let's do the important things.
 case "$1" in
-
-  # Creates the VM and a predictable hostname to point to it.
-  init)
-    docker-machine create --driver virtualbox --virtualbox-memory 1024 --virtualbox-cpu-count -1 $MACHINE
-    sudo sh -c "echo $(docker-machine ip $MACHINE 2>/dev/null) $HOST >> /etc/hosts"
-    ;;
 
   # Restarts some/all of the containers.
   restart)
 
     case "$2" in
 
-      # Restarts the application.
-      app)
-        $0 stop app
-        $0 start app
+      # Restarts the web container.
+      web)
+        $0 stop web
+        $0 start web
+        ;;
+
+      # Restarts the worker container.
+      worker)
+        $0 stop worker
+        $0 start worker
         ;;
 
       # Restarts the services.
@@ -60,7 +36,7 @@ case "$1" in
         $0 start services
         ;;
 
-      # Restarts both the services and application.
+      # Restarts all containers.
       *)
         $0 stop
         $0 start
@@ -74,15 +50,26 @@ case "$1" in
 
     case "$2" in
 
-      # Builds and starts the application container.
-      app)
-        if [ ! -z "$APP_ID" ]; then
-          $0 stop app
+      # Builds and starts the web container.
+      web)
+        if [ ! -z "$WEB_ID" ]; then
+          $0 stop web
         fi
-        docker build -t $APPLICATION .
+        docker build -t miracle .
         docker run -d \
-          -e "REDIS_HOST=`docker-machine ip $MACHINE`" \
-          -p 80:8000/tcp --name="$APPLICATION" $APPLICATION
+          -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+          -p 8000:8000/tcp --name="miracle_web" miracle web
+        ;;
+
+      # Builds and starts the worker container.
+      worker)
+        if [ ! -z "$WORKER_ID" ]; then
+          $0 stop worker
+        fi
+        docker build -t miracle .
+        docker run -d \
+          -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+          --name="miracle_worker" miracle worker
         ;;
 
       # Builds and starts the services supporting the application container.
@@ -91,10 +78,11 @@ case "$1" in
         docker-compose up -d
         ;;
 
-      # Builds and starts the application server and the supporting services.
+      # Builds and starts all containers.
       *)
         $0 $1 services
-        $0 $1 app
+        $0 $1 worker
+        $0 $1 web
         ;;
 
     esac
@@ -105,27 +93,31 @@ case "$1" in
 
     case "$2" in
 
-      # Kills and removes the application container.
-      app)
-        if [ $STATUS == "Running" ]; then
-          if [ ! -z $APP_ID ]; then
-            docker kill $APP_ID >/dev/null
-            docker rm $APP_ID >/dev/null
-          fi
+      # Kills and removes the web container.
+      web)
+        if [ ! -z "$WEB_ID" ]; then
+          docker kill $WEB_ID >/dev/null
+          docker rm $WEB_ID >/dev/null
+        fi
+        ;;
+
+      # Kills and removes the worker container.
+      worker)
+        if [ ! -z "$WORKER_ID" ]; then
+          docker kill $WORKER_ID >/dev/null
+          docker rm $WORKER_ID >/dev/null
         fi
         ;;
 
       # Stops the service containers.
       services)
-        if [ $STATUS = "Running" ]; then
-          docker-compose stop
-        fi
+        docker-compose stop
         ;;
 
-      # Kills and removes the application container, then stops the supporting
-      # services.
+      # Kills and removes all containers.
       *)
-        $0 $1 app
+        $0 $1 web
+        $0 $1 worker
         $0 $1 services
         ;;
 
@@ -134,23 +126,24 @@ case "$1" in
 
   # Open a shell inside the container.
   shell)
-    docker build -t $APPLICATION .
+    docker build -t miracle .
     docker run -it \
-        -e "REDIS_HOST=`docker-machine ip $MACHINE`" \
-        $APPLICATION shell
+        -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+        miracle shell
     ;;
 
   # Run the tests inside the container.
   test)
-    docker build -t $APPLICATION .
+    $0 start services
+    docker build -t miracle .
     docker run -it \
-        -e "REDIS_HOST=`docker-machine ip $MACHINE`" \
-        $APPLICATION test
+        -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+        miracle test
     ;;
 
   # Shows usage information.
   help)
-    echo "Usage: $0 {start|stop|restart|shell|test|init|help}"
+    echo "Usage: $0 {start|stop|restart|shell|test|help}"
     ;;
 
   # Shows help message.

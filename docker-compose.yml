@@ -2,13 +2,7 @@ redis:
   expose:
     - "6379"
   image: redis:2.8
+  container_name: miracle_redis
   ports:
     - "6379"
     - "6379:6379"
-
-worker:
-  build: ./
-  entrypoint: /app/conf/worker.sh
-  links:
-    - redis
-  restart: always

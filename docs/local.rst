@@ -18,45 +18,24 @@ but to run it, several additional services are required:
 A `Docker Compose <https://docs.docker.com/compose/>`_ configuration is
 included to streamline setup and management of those services for local
 development. They are run alongside the application container on a
-single `Docker Machine <https://docs.docker.com/machine/overview/>`_ VM.
-
-
-Usage
-=====
-
-A `./server` utility script is included to streamline use of the Docker
-containers.
+single `Docker <https://docs.docker.com/>`_ host.
 
 
 First-Time Setup
 ================
 
-First, run the following script:
-
-.. code-block:: bash
-
-    ./server init
-
-This creates a host VM called `miracle-dev`.
-Then, it configures a consistent hostname
-(`miracle.dev <http://miracle.dev/>`_)
-for local development (requires `sudo` to change `/etc/hosts`).
-
-Once you have a running VM, you need to configure your shell to talk
-to the right Docker daemon inside the VM:
-
-.. code-block:: bash
-
-    eval $(docker-machine env miracle-dev)
+You need to install Docker and Docker Compose on your machine. If you
+are on Mac OS, you need to install
+`Docker for Mac <https://docs.docker.com/docker-for-mac/>`_.
 
 
 Development
 ===========
 
-Finally, you're ready to go. The `./server` script has a number of
-additional commands to help out.
+A `./server` utility script is included to streamline use of the Docker
+containers. It has a number of commands to help out:
 
-- `./server start` - builds and starts the application and supporting services.
+- `./server start` - builds and starts all containers.
 - `./server stop` - kills and removes all containers.
 - `./server restart` - runs `./server stop`, then `./server start`.
 - `./server shell` - Opens a shell inside the application container.
