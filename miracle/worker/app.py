@@ -6,10 +6,10 @@ from celery.signals import (
 )
 from kombu import Queue
 
-from contextgraph.bucket import create_bucket
-from contextgraph.cache import create_cache
-from contextgraph.config import REDIS_URI
-from contextgraph.log import (
+from miracle.bucket import create_bucket
+from miracle.cache import create_cache
+from miracle.config import REDIS_URI
+from miracle.log import (
     configure_logging,
     create_raven,
     create_stats,
@@ -22,7 +22,7 @@ CELERY_QUEUES = (
 
 
 def configure_celery(celery_app):
-    celery_app.config_from_object('contextgraph.worker.settings')
+    celery_app.config_from_object('miracle.worker.settings')
     celery_app.conf.update(
         BROKER_URL=REDIS_URI,
         CELERY_RESULT_BACKEND=REDIS_URI,
@@ -66,5 +66,5 @@ def shutdown_worker_process(signal, sender, **kw):  # pragma: no cover
     shutdown_worker(celery_app)
 
 
-celery_app = Celery('contextgraph.worker.app')
+celery_app = Celery('miracle.worker.app')
 configure_celery(celery_app)

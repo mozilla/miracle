@@ -5,7 +5,7 @@ from setuptools import (
     setup,
 )
 
-from contextgraph import VERSION
+from miracle import VERSION
 
 here = os.path.relpath(os.path.abspath(os.path.dirname(__file__)))
 
@@ -13,11 +13,11 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as fd:
     long_description = fd.read()
 
 setup(
-    name='mozilla-contextgraph-service',
+    name='mozilla-miracle',
     version=VERSION,
-    description='Mozilla Context Graph Service',
+    description='Mozilla Miracle',
     long_description=long_description,
-    url='https://github.com/mozilla/contextgraph-service',
+    url='https://github.com/mozilla/miracle',
     author='Mozilla',
     author_email='testpilot-dev@mozilla.org',
     license='MPL 2.0',
@@ -30,7 +30,7 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
         'Framework :: Pyramid',
     ],
-    keywords='mozilla context graph',
+    keywords='mozilla miracle',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,

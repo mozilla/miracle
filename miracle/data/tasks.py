@@ -1,8 +1,8 @@
 import json
 
-from contextgraph.config import TESTING
-from contextgraph.worker.app import celery_app
-from contextgraph.worker.task import BaseTask
+from miracle.config import TESTING
+from miracle.worker.app import celery_app
+from miracle.worker.task import BaseTask
 
 
 if TESTING:

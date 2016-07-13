@@ -18,8 +18,8 @@ case "$1" in
     test)
         echo "Running Tests"
         cd ..
-        flake8 contextgraph
-        TESTING=true py.test --cov-config=.coveragerc --cov=contextgraph contextgraph
+        flake8 miracle
+        TESTING=true py.test --cov-config=.coveragerc --cov=miracle miracle
         ;;
     *)
         echo "Usage: $0 {web|worker|shell|test}"

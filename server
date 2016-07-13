@@ -1,8 +1,8 @@
 #!/bin/bash
 
-APPLICATION="contextgraph-service"
-HOST="contextgraph-service.dev"
-MACHINE="contextgraph-service-dev"
+APPLICATION="miracle"
+HOST="miracle.dev"
+MACHINE="miracle-dev"
 STATUS="$(docker-machine status $MACHINE)"
 
 # First, let's make sure that Docker Toolbox has been installed.

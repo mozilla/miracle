@@ -1,4 +1,4 @@
-# contextgraph-service
+# miracle
 #
 # VERSION 0.1
 
@@ -29,7 +29,7 @@ EXPOSE 8000
 COPY . /app
 
 # symlink version object to serve /__version__ endpoint
-RUN rm /app/contextgraph/static/version.json ; \
-    ln -s /app/version.json /app/contextgraph/static/version.json
+RUN rm /app/miracle/static/version.json ; \
+    ln -s /app/version.json /app/miracle/static/version.json
 
 USER app

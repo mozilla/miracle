@@ -4,7 +4,7 @@ import boto3
 import botocore
 from botocore.response import StreamingBody
 
-from contextgraph.config import (
+from miracle.config import (
     S3_BUCKET,
     TESTING,
 )

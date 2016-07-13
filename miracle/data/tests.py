@@ -1,6 +1,6 @@
 import pytest
 
-from contextgraph.data import tasks
+from miracle.data import tasks
 
 
 def test_dummy(celery, stats):

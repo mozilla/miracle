@@ -1,15 +1,15 @@
 from pyramid.config import Configurator
 from pyramid.tweens import EXCVIEW
 
-from contextgraph.api.views import configure as configure_api_views
-from contextgraph.cache import create_cache
-from contextgraph.config import REDIS_URI
-from contextgraph.log import (
+from miracle.api.views import configure as configure_api_views
+from miracle.cache import create_cache
+from miracle.config import REDIS_URI
+from miracle.log import (
     configure_logging,
     create_raven,
     create_stats,
 )
-from contextgraph.web.views import configure as configure_web_views
+from miracle.web.views import configure as configure_web_views
 
 _APP = None
 
@@ -31,7 +31,7 @@ def create_app(redis_uri=REDIS_URI, _cache=None, _raven=None, _stats=None):
     config = Configurator(settings={
         'redis_uri': redis_uri,
     })
-    config.add_tween('contextgraph.log.log_tween_factory', under=EXCVIEW)
+    config.add_tween('miracle.log.log_tween_factory', under=EXCVIEW)
 
     configure_api_views(config)
     configure_web_views(config)

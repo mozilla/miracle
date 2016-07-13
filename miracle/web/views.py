@@ -4,7 +4,7 @@ from pyramid.response import (
     Response,
 )
 
-from contextgraph.config import VERSION_FILE
+from miracle.config import VERSION_FILE
 
 
 def configure(config):

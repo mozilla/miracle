@@ -12,8 +12,8 @@ from raven.transport.gevent import GeventedHTTPTransport
 from raven.transport.http import HTTPTransport
 from raven.transport.threaded import ThreadedHTTPTransport
 
-from contextgraph import VERSION
-from contextgraph.config import (
+from miracle import VERSION
+from miracle.config import (
     STATSD_HOST,
     SENTRY_DSN,
     TESTING,
@@ -103,7 +103,7 @@ def create_stats(statsd_host=STATSD_HOST, _stats=None):
         return _stats
 
     klass = DebugStatsClient if TESTING else StatsClient
-    namespace = None if TESTING else 'contextgraph-service'
+    namespace = None if TESTING else 'miracle'
     client = klass(
         host=statsd_host, port=8125,
         namespace=namespace, use_ms=True)

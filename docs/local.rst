@@ -9,7 +9,7 @@ local development.
 Architecture
 ============
 
-`contextgraph-service` is built as a containerized Docker application,
+`miracle` is built as a containerized Docker application,
 but to run it, several additional services are required:
 
 - a `Celery <http://www.celeryproject.org/>`_ task queue
@@ -37,9 +37,9 @@ First, run the following script:
 
     ./server init
 
-This creates a host VM called `contextgraph-service-dev`.
+This creates a host VM called `miracle-dev`.
 Then, it configures a consistent hostname
-(`contextgraph-service.dev <http://contextgraph-service.dev/>`_)
+(`miracle.dev <http://miracle.dev/>`_)
 for local development (requires `sudo` to change `/etc/hosts`).
 
 Once you have a running VM, you need to configure your shell to talk
@@ -47,7 +47,7 @@ to the right Docker daemon inside the VM:
 
 .. code-block:: bash
 
-    eval $(docker-machine env contextgraph-service-dev)
+    eval $(docker-machine env miracle-dev)
 
 
 Development

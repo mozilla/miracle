@@ -1,4 +1,4 @@
-from contextgraph.util import gzip_encode
+from miracle.util import gzip_encode
 
 
 CORS_HEADERS = {

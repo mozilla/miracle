@@ -2,7 +2,7 @@
 API
 ===
 
-The contextgraph service provides two API endpoints. One to share your
+The miracle service provides two API endpoints. One to share your
 data with and upload it to the service. Another one to ask the service
 to forget and delete all data about you.
 
@@ -19,7 +19,7 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 
     curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
         -H 'Content-Type: application/json' \
-        https://contextgraph.dev.mozaws.net/v1/upload -d '{"some": "data"}'
+        https://miracle.stage.mozaws.net/v1/upload -d '{"some": "data"}'
 
 If the data was accepted, you get a `200` response code.
 
@@ -42,7 +42,7 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 .. code-block:: bash
 
     curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
-        https://contextgraph.dev.mozaws.net/v1/delete -d ''
+        https://miracle.stage.mozaws.net/v1/delete -d ''
 
 If the delete request was accepted, you get a `200` response code.
 

@@ -3,7 +3,7 @@ from io import BytesIO
 import struct
 import zlib
 
-from contextgraph.exceptions import GZIPDecodeError
+from miracle.exceptions import GZIPDecodeError
 
 
 def gzip_decode(blob, encoding='utf-8'):

@@ -1,13 +1,12 @@
-====================
-contextgraph-service
-====================
+=======
+miracle
+=======
 
 Please use `our github tracker
-<https://github.com/mozilla/contextgraph-service/issues>`_
+<https://github.com/mozilla/miracle/issues>`_
 to report issues.
 
 License
 =======
 
-``contextgraph-service`` is offered under the
-Mozilla Public License Version 2.0.
+``miracle`` is offered under the Mozilla Public License Version 2.0.

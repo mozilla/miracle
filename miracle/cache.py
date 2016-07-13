@@ -1,6 +1,6 @@
 import redis
 
-from contextgraph.config import REDIS_URI
+from miracle.config import REDIS_URI
 
 
 def create_cache(cache_url=REDIS_URI, _cache=None):

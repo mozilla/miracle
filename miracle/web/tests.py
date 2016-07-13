@@ -1,8 +1,8 @@
 import pytest
 import webtest
 
-from contextgraph.cache import create_cache
-from contextgraph.web.app import (
+from miracle.cache import create_cache
+from miracle.web.app import (
     create_app,
     shutdown_app,
 )
@@ -85,7 +85,7 @@ def test_robots(app, stats):
 
 
 def test_settings():
-    from contextgraph.web import settings
+    from miracle.web import settings
     assert type(settings.max_requests_jitter) == int
 
 
@@ -97,5 +97,5 @@ def test_version(app, stats):
 
 
 def test_worker():
-    from contextgraph.web import worker
+    from miracle.web import worker
     assert hasattr(worker, 'GeventWorker')

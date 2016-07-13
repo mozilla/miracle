@@ -18,7 +18,7 @@ class BaseTask(Task):
         automatically report exceptions into Sentry.
         """
         name = self.name
-        if name.startswith('contextgraph.'):
+        if name.startswith('miracle.'):
             name = name[13:]
         with self.stats.timed('task', tags=['task:' + name]):
             try:

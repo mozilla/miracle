@@ -4,17 +4,17 @@ import warnings
 import pytest
 import webtest
 
-from contextgraph.bucket import create_bucket
-from contextgraph.cache import create_cache
-from contextgraph.log import (
+from miracle.bucket import create_bucket
+from miracle.cache import create_cache
+from miracle.log import (
     create_raven,
     create_stats,
 )
-from contextgraph.web.app import (
+from miracle.web.app import (
     create_app,
     shutdown_app,
 )
-from contextgraph.worker.app import (
+from miracle.worker.app import (
     celery_app,
     init_worker,
     shutdown_worker,

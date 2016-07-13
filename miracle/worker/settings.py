@@ -19,7 +19,7 @@ BROKER_TRANSPORT_OPTIONS = {
 CELERY_DEFAULT_QUEUE = 'celery_default'
 
 CELERY_IMPORTS = [
-    'contextgraph.data.tasks',
+    'miracle.data.tasks',
 ]
 
 # Optimization

@@ -1,7 +1,7 @@
 import pytest
 
-from contextgraph.exceptions import GZIPDecodeError
-from contextgraph import util
+from miracle.exceptions import GZIPDecodeError
+from miracle import util
 
 
 def test_gzip_decode():

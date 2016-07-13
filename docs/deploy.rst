@@ -42,7 +42,7 @@ Both roles expect:
 
 The worker role additionally expects:
 
-* ``S3_BUCKET``, example ``com-example-dev-us-west-2-contextgraph``
+* ``S3_BUCKET``, example ``com-example-dev-us-west-2-miracle``
 
 
 AWS Permissions

@@ -6,9 +6,9 @@ from pyramid.httpexceptions import (
 )
 from pyramid.response import Response
 
-from contextgraph.data import tasks
-from contextgraph.exceptions import GZIPDecodeError
-from contextgraph.util import gzip_decode
+from miracle.data import tasks
+from miracle.exceptions import GZIPDecodeError
+from miracle.util import gzip_decode
 
 
 def configure(config):
