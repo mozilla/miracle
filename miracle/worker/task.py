@@ -19,7 +19,7 @@ class BaseTask(Task):
         """
         name = self.name
         if name.startswith('miracle.'):
-            name = name[13:]
+            name = name[8:]
         with self.stats.timed('task', tags=['task:' + name]):
             try:
                 result = super(BaseTask, self).__call__(*args, **kw)
