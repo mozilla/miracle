@@ -12,6 +12,8 @@ workers = multiprocessing.cpu_count()
 
 
 def post_worker_init(worker):  # pragma: no cover
+    from psycogreen.gevent import patch_psycopg
+    patch_psycopg()
     worker.wsgi(None, None)
 
 

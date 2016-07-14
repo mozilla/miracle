@@ -2,10 +2,15 @@ import gc
 import warnings
 
 import pytest
+from sqlalchemy import (
+    inspect,
+    text,
+)
 import webtest
 
 from miracle.bucket import create_bucket
 from miracle.cache import create_cache
+from miracle.db import create_db
 from miracle.log import (
     create_raven,
     create_stats,
@@ -21,11 +26,24 @@ from miracle.worker.app import (
 )
 
 
+def setup_db(engine):
+    # Drop all tables currently in the database.
+    inspector = inspect(engine)
+    with engine.connect() as conn:
+        trans = conn.begin()
+        names = inspector.get_table_names()
+        if names:  # pragma: no cover
+            conn.execute(text('DROP TABLE %s' % ', '.join(names)))
+        trans.commit()
+
+
 @pytest.yield_fixture(scope='session', autouse=True)
 def package():
     # Apply gevent monkey patches as early as possible during tests.
-    from gevent import monkey
-    monkey.patch_all()
+    from gevent.monkey import patch_all
+    patch_all()
+    from psycogreen.gevent import patch_psycopg
+    patch_psycopg()
 
     # Enable all warnings in test mode.
     warnings.resetwarnings()
@@ -69,6 +87,28 @@ def cache(global_cache):
 
 
 @pytest.yield_fixture(scope='session')
+def global_db():
+    db = create_db()
+    setup_db(db.engine)
+    yield db
+    db.close()
+
+
+@pytest.yield_fixture(scope='session')
+def db(global_db):
+    conn = global_db.engine.connect()
+    trans = conn.begin()
+    global_db.session_factory.configure(bind=conn)
+    with global_db.session(commit=False) as session:
+        yield global_db
+        session.rollback()
+    global_db.session_factory.configure(bind=None)
+    trans.rollback()
+    trans.close()
+    conn.close()
+
+
+@pytest.yield_fixture(scope='session')
 def global_raven():
     raven = create_raven()
     yield raven
@@ -96,11 +136,13 @@ def stats(global_stats):
 
 
 @pytest.yield_fixture(scope='session')
-def global_celery(global_bucket, global_cache, global_raven, global_stats):
+def global_celery(global_bucket, global_cache, global_db,
+                  global_raven, global_stats):
     init_worker(
         celery_app,
         _bucket=global_bucket,
         _cache=global_cache,
+        _db=global_db,
         _raven=global_raven,
         _stats=global_stats)
     yield celery_app
@@ -108,14 +150,16 @@ def global_celery(global_bucket, global_cache, global_raven, global_stats):
 
 
 @pytest.yield_fixture(scope='function')
-def celery(global_celery, bucket, cache, raven, stats):
+def celery(global_celery, bucket, cache, db, raven, stats):
     yield global_celery
 
 
 @pytest.yield_fixture(scope='session')
-def global_app(global_cache, global_celery, global_raven, global_stats):
+def global_app(global_cache, global_celery, global_db,
+               global_raven, global_stats):
     wsgiapp = create_app(
         _cache=global_cache,
+        _db=global_db,
         _raven=global_raven,
         _stats=global_stats)
     app = webtest.TestApp(wsgiapp)
@@ -124,5 +168,5 @@ def global_app(global_cache, global_celery, global_raven, global_stats):
 
 
 @pytest.yield_fixture(scope='function')
-def app(global_app, cache, celery, raven, stats):
+def app(global_app, cache, celery, db, raven, stats):
     yield global_app

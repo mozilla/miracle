@@ -5,5 +5,6 @@ def test_config(celery):
     assert 'redis' in celery.conf['CELERY_RESULT_BACKEND']
     assert hasattr(celery, 'bucket')
     assert hasattr(celery, 'cache')
+    assert hasattr(celery, 'db')
     assert hasattr(celery, 'raven')
     assert hasattr(celery, 'stats')

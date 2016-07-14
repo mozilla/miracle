@@ -16,19 +16,26 @@ WORKDIR /app
 ENTRYPOINT ["/app/conf/run.sh"]
 CMD ["web"]
 
-# install dependencies, cleanup
+# Install runtime dependencies
+RUN apk add --no-cache \
+    postgresql-libs
+
 COPY ./requirements.txt /app/requirements.txt
-RUN apk add --update build-base zlib-dev linux-headers && \
+
+# Install build dependencies, build and cleanup
+RUN apk add --no-cache --virtual .deps \
+    build-base \
+    postgresql-dev && \
     pip install --upgrade --no-cache-dir pip && \
     pip install --no-deps --no-cache-dir -r requirements.txt && \
-    apk del --purge build-base gcc
+    apk del --purge .deps
 
 ENV PYTHONPATH $PYTHONPATH:/app
 EXPOSE 8000
 
 COPY . /app
 
-# symlink version object to serve /__version__ endpoint
+# Symlink version object to serve /__version__ endpoint
 RUN rm /app/miracle/static/version.json ; \
     ln -s /app/version.json /app/miracle/static/version.json
 

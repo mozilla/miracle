@@ -19,15 +19,19 @@ def configure(config):
 
 
 def heartbeat_view(request):
-    success = request.registry.cache.ping(request.registry.raven)
+    cache_success = request.registry.cache.ping(request.registry.raven)
+    db_success = request.registry.db.ping(request.registry.raven)
 
-    if not success:
+    if not (cache_success and db_success):
         response = HTTPServiceUnavailable()
         response.content_type = 'application/json'
-        response.json = {'redis': {'up': False}}
+        response.json = {
+            'cache': {'up': cache_success},
+            'db': {'up': db_success}
+        }
         return response
 
-    return {'redis': {'up': True}}
+    return {'cache': {'up': True}, 'db': {'up': True}}
 
 
 _index_response = Response(content_type='text/plain', body='''\

@@ -3,6 +3,7 @@ from pyramid.tweens import EXCVIEW
 
 from miracle.api.views import configure as configure_api_views
 from miracle.cache import create_cache
+from miracle.db import create_db
 from miracle.config import REDIS_URI
 from miracle.log import (
     configure_logging,
@@ -25,7 +26,8 @@ def application(environ, start_response):  # pragma: no cover
     return _APP(environ, start_response)
 
 
-def create_app(redis_uri=REDIS_URI, _cache=None, _raven=None, _stats=None):
+def create_app(redis_uri=REDIS_URI, _cache=None, _db=None,
+               _raven=None, _stats=None):
     configure_logging()
 
     config = Configurator(settings={
@@ -37,10 +39,12 @@ def create_app(redis_uri=REDIS_URI, _cache=None, _raven=None, _stats=None):
     configure_web_views(config)
 
     config.registry.cache = create_cache(_cache=_cache)
+    config.registry.db = create_db(_db=_db)
     config.registry.raven = create_raven(transport='gevent', _raven=_raven)
     config.registry.stats = create_stats(_stats=_stats)
 
     config.registry.cache.ping(config.registry.raven)
+    config.registry.db.ping(config.registry.raven)
 
     return config.make_wsgi_app()
 
@@ -50,6 +54,8 @@ def shutdown_app(app):
     if registry is not None:
         registry.cache.close()
         del registry.cache
+        registry.db.close()
+        del registry.db
         del registry.raven
         registry.stats.close()
         del registry.stats

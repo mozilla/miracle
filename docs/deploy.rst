@@ -10,6 +10,7 @@ In a production environment the following services are typically used:
 - Amazon ELB handling SSL termination
 - Amazon EC2 running Docker containers for both web and worker roles
 - Amazon ElastiCache Redis
+- Amazon RDS Postgres
 - Amazon S3 for persistent storage
 - Nginx running on the web role EC2 instances, proxying HTTP traffic
 - A Datadog/StatsD daemon running on each EC2 instance
@@ -36,6 +37,10 @@ variables.
 
 Both roles expect:
 
+* ``DB_HOST``, example ``example.rds.amazonaws.com``
+* ``DB_NAME``, example ``miracle``
+* ``DB_USER``, example ``miracle``
+* ``DB_PASSWORD``, example ``secret``
 * ``REDIS_HOST``, example ``example.cache.amazonaws.com``
 * ``SENTRY_DSN``, example ``https://public:secret@sentry.example.com/id``
 * ``STATSD_HOST``, example ``172.17.42.1``
@@ -49,7 +54,8 @@ AWS Permissions
 ===============
 
 Both roles expect to have access from inside the Docker containers
-to the ElastiCache Redis instance, Sentry and the StatsD daemon.
+to the ElastiCache Redis instance, the RDS Postgres instance,
+Sentry and the StatsD daemon.
 
 Only the worker role should have access to the Amazon S3 bucket from
 inside the docker container.
@@ -89,8 +95,8 @@ endpoint supported by the application to do so.
 Status Checks
 =============
 
-Both roles will try to connect to Redis during app startup, and send
-an error report to Sentry if they fail.
+Both roles will try to connect to Redis and Postgres during app startup,
+and send an error report to Sentry if they fail.
 
 The worker role will also try to connect to the S3 bucket and send
 an error to Sentry if it fails.
@@ -98,5 +104,5 @@ an error to Sentry if it fails.
 The web role exposes three URL endpoints to check its status:
 
 * ``__lbheartbeat__`` - Returns 200 OK if the web app is responding.
-* ``__heartbeat__`` - Returns 200 OK if the web app can connect to Redis.
+* ``__heartbeat__`` - Returns 200 OK if the web app can connect to services.
 * ``__version__`` - Returns version data about the running software.

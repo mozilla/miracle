@@ -58,6 +58,7 @@ case "$1" in
         docker build -t miracle .
         docker run -d \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+          -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
           -p 8000:8000/tcp --name="miracle_web" miracle web
         ;;
 
@@ -69,6 +70,7 @@ case "$1" in
         docker build -t miracle .
         docker run -d \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+          -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
           --name="miracle_worker" miracle worker
         ;;
 
@@ -129,6 +131,7 @@ case "$1" in
     docker build -t miracle .
     docker run -it \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+        -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
         miracle shell
     ;;
 
@@ -138,6 +141,7 @@ case "$1" in
     docker build -t miracle .
     docker run -it \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
+        -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
         miracle test
     ;;
 

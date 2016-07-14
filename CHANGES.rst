@@ -5,6 +5,8 @@ Changelog
 1.0.2 (unreleased)
 ==================
 
+- Add Postgres database to the stack.
+
 - Rename to miracle.
 
 
