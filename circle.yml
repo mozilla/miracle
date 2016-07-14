@@ -44,12 +44,12 @@ dependencies:
     - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save app:build | pigz --fast -c > ~/docker/$I; ls -l ~/docker
 
     # Pull down images for Redis container.
-    - docker-compose pull redis
+    - docker-compose pull
 
 test:
   override:
-    - docker-compose up -d redis
-    - docker run -e "REDIS_HOST=`ip route | awk '/docker0/ { print $NF }'`" app:build test
+    - docker-compose up -d
+    - docker run -e "REDIS_HOST=`ip route | awk '/docker0/ { print $NF }'`" -e "DB_HOST=`ip route | awk '/docker0/ { print $NF }'`" app:build test
 
 # appropriately tag and push the container to dockerhub
 deployment:
