@@ -19,7 +19,7 @@ setup(
     long_description=long_description,
     url='https://github.com/mozilla/miracle',
     author='Mozilla',
-    author_email='testpilot-dev@mozilla.org',
+    author_email='context-graph@lists.mozilla.org',
     license='MPL 2.0',
     classifiers=[
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',

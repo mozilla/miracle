@@ -3,7 +3,7 @@
 # VERSION 0.1
 
 FROM python:3.5-alpine
-MAINTAINER https://mail.mozilla.org/listinfo/testpilot-dev
+MAINTAINER context-graph@lists.mozilla.org
 
 # add a non-privileged user for installing and running
 # the application
