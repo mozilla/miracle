@@ -43,12 +43,13 @@ dependencies:
     # Clean up any old images; save the new one.
     - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save app:build | pigz --fast -c > ~/docker/$I; ls -l ~/docker
 
-    # Pull down images for Redis container.
+    # Pull down images for service containers.
     - docker-compose pull
 
 test:
   override:
     - docker-compose up -d
+    - DB_HOST=`ip route | awk '/docker0/ { print $NF }'` make postgres
     - docker run -e "REDIS_HOST=`ip route | awk '/docker0/ { print $NF }'`" -e "DB_HOST=`ip route | awk '/docker0/ { print $NF }'`" app:build test
 
 # appropriately tag and push the container to dockerhub
