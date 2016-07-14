@@ -18,7 +18,6 @@ CMD ["web"]
 
 # Install runtime dependencies
 RUN apk add --no-cache \
-    make \
     postgresql-libs
 
 COPY ./requirements.txt /app/requirements.txt
