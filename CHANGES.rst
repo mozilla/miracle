@@ -5,6 +5,8 @@ Changelog
 1.0.2 (unreleased)
 ==================
 
+- Add alembic migrations scaffold.
+
 - Add Postgres database to the stack.
 
 - Rename to miracle.

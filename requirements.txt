@@ -1,3 +1,4 @@
+alembic==0.8.6
 amqp==1.4.9  # rq.filter: <2.0
 anyjson==0.3.3
 beautifulsoup4==4.4.1
@@ -18,6 +19,8 @@ gunicorn==19.6.0
 hiredis==0.2.0
 jmespath==0.9.0
 kombu==3.0.35
+Mako==1.0.4
+MarkupSafe==0.23
 mccabe==0.5.0
 PasteDeploy==1.5.2
 psycogreen==1.0
@@ -29,6 +32,7 @@ pyramid==1.7
 pytest==2.9.2
 pytest-cov==2.3.0
 python-dateutil==2.5.3
+python-editor==1.0.1
 pytz==2016.6.1
 raven==5.22.0
 redis==2.10.5

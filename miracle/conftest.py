@@ -1,6 +1,7 @@
 import gc
 import warnings
 
+from alembic import command
 import pytest
 from sqlalchemy import (
     inspect,
@@ -10,11 +11,13 @@ import webtest
 
 from miracle.bucket import create_bucket
 from miracle.cache import create_cache
+from miracle.config import ALEMBIC_CFG
 from miracle.db import create_db
 from miracle.log import (
     create_raven,
     create_stats,
 )
+from miracle.models import Model
 from miracle.web.app import (
     create_app,
     shutdown_app,
@@ -27,9 +30,19 @@ from miracle.worker.app import (
 
 
 def setup_db(engine):
-    # Drop all tables currently in the database.
+    with engine.connect() as conn:
+        # Create all tables from model definition.
+        trans = conn.begin()
+        Model.metadata.create_all(engine)
+        trans.commit()
+    # Finally stamp the database with the latest alembic version.
+    command.stamp(ALEMBIC_CFG, 'head')
+
+
+def teardown_db(engine):
     inspector = inspect(engine)
     with engine.connect() as conn:
+        # Drop all tables currently in the database.
         trans = conn.begin()
         names = inspector.get_table_names()
         if names:  # pragma: no cover
@@ -89,6 +102,7 @@ def cache(global_cache):
 @pytest.yield_fixture(scope='session')
 def global_db():
     db = create_db()
+    teardown_db(db.engine)
     setup_db(db.engine)
     yield db
     db.close()

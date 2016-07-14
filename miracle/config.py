@@ -1,5 +1,7 @@
 import os
 
+from alembic.config import Config as AlembicConfig
+
 TESTING = 'TESTING' in os.environ
 
 HERE = os.path.dirname(__file__)
@@ -21,3 +23,7 @@ REDIS_URI = 'redis://%s:6379/%s' % (REDIS_HOST, REDIS_DB)
 S3_BUCKET = os.environ.get('S3_BUCKET', None)
 SENTRY_DSN = os.environ.get('SENTRY_DSN', None)
 STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
+
+ALEMBIC_CFG = AlembicConfig()
+ALEMBIC_CFG.set_section_option('alembic', 'script_location', 'miracle/alembic')
+ALEMBIC_CFG.set_section_option('alembic', 'sqlalchemy.url', DB_URI)

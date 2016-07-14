@@ -18,7 +18,9 @@ CMD ["web"]
 
 # Install runtime dependencies
 RUN apk add --no-cache \
-    postgresql-libs
+    postgresql-client \
+    postgresql-libs \
+    redis
 
 COPY ./requirements.txt /app/requirements.txt
 
