@@ -33,14 +33,29 @@ def current_db_revision(engine):
     return None if alembic_rev is None else alembic_rev[0]
 
 
+def compare_schema(engine, metadata):
+    opts = {
+        'compare_server_default': True,
+    }
+    with engine.connect() as conn:
+        context = MigrationContext.configure(connection=conn, opts=opts)
+        diff = compare_metadata(context, metadata)
+    return diff
+
+
 def test_migration(fresh_db):
     engine = fresh_db.engine
+
     # capture state of fresh database
-    metadata = MetaData()
-    metadata.reflect(bind=engine)
+    fresh_metadata = MetaData()
+    fresh_metadata.reflect(bind=engine)
 
     # delete all tables
     teardown_db(engine)
+
+    # capture state of an empty database
+    empty_metadata = MetaData()
+    empty_metadata.reflect(bind=engine)
 
     # setup old database schema
     with engine.connect() as conn:
@@ -66,17 +81,14 @@ def test_migration(fresh_db):
 
     # compare the db schema from a migrated database to
     # one created fresh from the model definitions
-    opts = {
-        'compare_server_default': True,
-    }
-    with engine.connect() as conn:
-        context = MigrationContext.configure(connection=conn, opts=opts)
-        metadata_diff = compare_metadata(context, metadata)
-
-    assert metadata_diff == []
+    assert compare_schema(engine, fresh_metadata) == []
 
     # downgrade back to the beginning
     with engine.connect() as conn:
         trans = conn.begin()
         alembic_command.downgrade(ALEMBIC_CFG, 'base')
         trans.commit()
+
+    # compare the db schema from a downgraded database to
+    # an empty one
+    assert compare_schema(engine, empty_metadata) == []
