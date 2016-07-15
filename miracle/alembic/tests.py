@@ -13,7 +13,7 @@ from miracle.conftest import (
 
 SQL_BASE = '''\
 CREATE TABLE alembic_version (
-  version_num varchar(32) NOT NULL
+    version_num character varying(32) NOT NULL
 );
 '''
 

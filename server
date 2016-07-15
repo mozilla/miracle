@@ -126,28 +126,34 @@ case "$1" in
     esac
     ;;
 
-  # Open a shell inside the container.
-  shell)
-    docker build -t miracle .
-    docker run -it \
-        -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
-        -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
-        miracle shell
-    ;;
-
-  # Run the tests inside the container.
-  test)
+  # Runs command inside the container.
+  run)
     $0 start services
     docker build -t miracle .
     docker run -it \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
         -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
-        miracle test
+        miracle $2 $3 $4 $5 $6 $7 $8 $9
+    ;;
+
+  # Runs alembic inside the container.
+  alembic)
+    $0 run alembic $2 $3 $4 $5 $6 $7 $8 $9
+    ;;
+
+  # Open a shell inside the container.
+  shell)
+    $0 run shell
+    ;;
+
+  # Run the tests inside the container.
+  test)
+    $0 run test
     ;;
 
   # Shows usage information.
   help)
-    echo "Usage: $0 {start|stop|restart|shell|test|help}"
+    echo "Usage: $0 {start|stop|restart|run|shell|test|alembic|help}"
     ;;
 
   # Shows help message.

@@ -5,6 +5,8 @@ Changelog
 1.0.2 (unreleased)
 ==================
 
+- Document alembic and make it more easily accessible.
+
 - Add alembic migrations scaffold.
 
 - Add Postgres database to the stack.

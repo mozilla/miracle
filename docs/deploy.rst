@@ -50,6 +50,44 @@ The worker role additionally expects:
 * ``S3_BUCKET``, example ``com-example-dev-us-west-2-miracle``
 
 
+Database Setup
+==============
+
+Database setup and migrations are handled by alembic. The docker image
+exposes the "alembic" script as a command.
+
+The alembic command takes the database configuration from the environment,
+so pass on all required `DB_*` variables and call the command via:
+
+    docker run -e "DB_HOST=..." -e "DB_..." -it <image id> alembic [arguments]
+
+Get help for the available arguments:
+
+    docker ... alembic -h
+
+Setup the initial database structure:
+
+    docker ... alembic stamp base
+    docker ... alembic upgrade head
+
+Inspect the available migrations and the current database revision:
+
+    docker ... alembic history
+    docker ... alembic current
+
+Upgrade to the latest revision:
+
+    docker ... alembic upgrade head
+
+Downgrade to a previous revision:
+
+    docker ... alembic downgrade <revision id>
+
+Or by going back a number of steps, e.g. two:
+
+    docker ... alembic downgrade -2
+
+
 AWS Permissions
 ===============
 
