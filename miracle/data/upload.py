@@ -59,7 +59,19 @@ def validate(data):
     return output
 
 
-def main(task, user, payload):
+def filter_data(data):
+    # TODO: Add filtering
+    return data
+
+
+def upload_data(task, user, data):
+    key = ('user_%s' % user).encode('ascii')
+    output = json_encode(data)
+    task.cache.set(key, output, ex=3600)
+    return True
+
+
+def main(task, user, payload, _upload_data=upload_data):
     try:
         data = json.loads(payload)
     except json.JSONDecodeError:
@@ -69,7 +81,9 @@ def main(task, user, payload):
     if not validated_data:
         return False
 
-    key = ('user_%s' % user).encode('ascii')
-    output = json_encode(validated_data)
-    task.cache.set(key, output, ex=3600)
+    filtered_data = filter_data(validated_data)
+
+    if _upload_data:
+        # Testing hook.
+        return _upload_data(task, user, filtered_data)
     return True

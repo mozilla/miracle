@@ -22,5 +22,5 @@ def delete(self, user):
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
-def upload(self, user, payload):
-    return upload_main(self, user, payload)
+def upload(self, user, payload, _upload_data=True):
+    return upload_main(self, user, payload, _upload_data=_upload_data)

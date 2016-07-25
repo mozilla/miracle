@@ -28,17 +28,10 @@ _PAYLOAD = {'sessions': [
 ]}
 
 
-def test_upload(cache, celery, stats):
-    assert tasks.upload.delay(
-        'foo', json.dumps(_PAYLOAD).encode('utf-8')).get()
+class DummyTask(object):
 
-    assert b'user_foo' in cache.keys()
-    assert cache.get(b'user_foo') == upload.json_encode(_PAYLOAD)
-    assert cache.ttl(b'user_foo') <= 3600
-
-
-def test_upload_fail(cache, celery, stats):
-    assert not tasks.upload.delay('foo', b'no json').get()
+    def __init__(self, cache=None):
+        self.cache = cache
 
 
 def test_validate():
@@ -72,3 +65,36 @@ def test_validate():
     )]
     for input_, expected in corrected_inputs:
         assert upload.validate(input_) == expected
+
+
+def test_filter_data():
+    # TODO: Add filtering
+    assert upload.filter_data(_PAYLOAD) == _PAYLOAD
+
+
+def test_upload_data(cache):
+    task = DummyTask(cache=cache)
+    assert upload.upload_data(task, 'foo', _PAYLOAD)
+    assert b'user_foo' in cache.keys()
+    assert cache.get(b'user_foo') == upload.json_encode(_PAYLOAD)
+    assert cache.ttl(b'user_foo') <= 3600
+
+
+def test_upload_main(cache):
+    def _upload(task, user, data):
+        return (user, data)
+
+    task = DummyTask(cache=cache)
+    result = upload.main(
+        task, 'foo', json.dumps(_PAYLOAD), _upload_data=_upload)
+    assert result == ('foo', _PAYLOAD)
+
+
+def test_task(cache, celery, stats):
+    assert tasks.upload.delay(
+        'foo', json.dumps(_PAYLOAD).encode('utf-8'), _upload_data=False).get()
+
+
+def test_task_fail(cache, celery, stats):
+    assert not tasks.upload.delay(
+        'foo', b'no json', _upload_data=False).get()
