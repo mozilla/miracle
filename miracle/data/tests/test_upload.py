@@ -48,8 +48,8 @@ def test_validate():
         {'other_key': []},
         {'sessions': {}},
         {'sessions': [[]]},
-        {'sessions': [{'uri': ''}]},
-        {'sessions': [{'uri': 1}]},
+        {'sessions': [{'url': ''}]},
+        {'sessions': [{'url': 1}]},
     ]
     for invalid in invalid_inputs:
         assert not upload.validate(invalid)
