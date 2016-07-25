@@ -19,7 +19,7 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 
     curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
         -H 'Content-Type: application/json' \
-        https://miracle.stage.mozaws.net/v1/upload -d '{"some": "data"}'
+        https://miracle.stage.mozaws.net/v1/upload -d '<data>'
 
 If the data was accepted, you get a `200` response code.
 
@@ -29,6 +29,27 @@ service is unavailable or broken, you might get `5xx` responses.
 The upload endpoint optionally supports sending the body GZIP encoded.
 To do so, you need to additionally specify the ``Content-Encoding: gzip``
 header in the request.
+
+
+Payload
+-------
+
+The payload data is expected to be a JSON mapping with the following
+structure:
+
+.. code-block:: javascript
+
+{"history" : [
+    {
+        "lastAccessTime": 1468616293,
+        "uri": "http://www.apple.com/",
+        "title": "Apple"
+    }, {
+        "lastAccessTime": 1468616293,
+        "uri": "http://www.google.com/",
+        "title": "Google"
+    }
+]}
 
 
 Delete

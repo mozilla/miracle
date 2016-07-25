@@ -1,6 +1,5 @@
-import json
-
 from miracle.config import TESTING
+from miracle.data.upload import main as upload_main
 from miracle.worker.app import celery_app
 from miracle.worker.task import BaseTask
 
@@ -24,10 +23,4 @@ def delete(self, user):
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
 def upload(self, user, payload):
-    try:
-        data = json.loads(payload)
-    except json.JSONDecodeError:
-        return
-
-    key = ('user_%s' % user).encode('ascii')
-    self.cache.set(key, json.dumps(data), ex=3600)
+    return upload_main(self, user, payload)
