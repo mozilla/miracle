@@ -1,11 +1,25 @@
 import json
 
 HISTORY_SCHEMA = [
-    # (field name, field type, required)
-    ('url', str, True),
-    ('start_time', int, False),
-    ('duration', int, False),
+    # (field name, field type, required, min_value, max_value)
+    ('url', str, True, 0, 1024),
+    ('start_time', int, False, 2 ** 29, 2 ** 32),  # year 1987-2106
+    ('duration', int, False, 0, 1000 * 3600 * 24),  # max 1 day in ms
 ]
+
+
+def check_field(value, type_, min_value, max_value):
+    if not isinstance(value, type_):
+        return None
+
+    if (type_ in (int, float) and
+            not (min_value <= value < max_value)):
+        value = None
+    elif (type_ is str and
+          not (min_value <= len(value) < max_value)):
+        value = None
+
+    return value
 
 
 def json_encode(data):
@@ -26,12 +40,10 @@ def validate(data):
 
         missing_field = False
         validated_entry = {}
-        for field, type_, required in HISTORY_SCHEMA:
-            value = entry.get(field)
-            if not isinstance(value, type_):
-                value = None
+        for field, type_, required, min_value, max_value in HISTORY_SCHEMA:
+            value = check_field(entry.get(field), type_, min_value, max_value)
 
-            if not value and required:
+            if required and not value:
                 missing_field = True
                 break
 

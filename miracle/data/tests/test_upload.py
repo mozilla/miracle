@@ -43,6 +43,7 @@ def test_upload_fail(cache, celery, stats):
 
 def test_validate():
     url = 'https://example.com/path'
+    time = 1469400000
 
     invalid_inputs = [
         {'other_key': []},
@@ -50,15 +51,24 @@ def test_validate():
         {'sessions': [[]]},
         {'sessions': [{'url': ''}]},
         {'sessions': [{'url': 1}]},
+        {'sessions': [{'url': 'https://example.com/' + 'abc/' * 256}]},
     ]
     for invalid in invalid_inputs:
         assert not upload.validate(invalid)
 
     valid_inputs = [
         {'sessions': [{'url': url, 'start_time': None, 'duration': 0}]},
-        {'sessions': [{'url': url, 'start_time': 0, 'duration': 2400}]},
-        {'sessions': [{'url': url, 'start_time': 1469300000,
-                       'duration': 3700}]},
+        {'sessions': [{'url': url, 'start_time': time, 'duration': 2400}]},
     ]
     for valid in valid_inputs:
         assert upload.validate(valid) == valid
+
+    corrected_inputs = [(
+        {'sessions': [{'url': url, 'start_time': 10000, 'duration': 100}]},
+        {'sessions': [{'url': url, 'start_time': None, 'duration': 100}]}
+    ), (
+        {'sessions': [{'url': url, 'start_time': time, 'duration': -100}]},
+        {'sessions': [{'url': url, 'start_time': time, 'duration': None}]}
+    )]
+    for input_, expected in corrected_inputs:
+        assert upload.validate(input_) == expected
