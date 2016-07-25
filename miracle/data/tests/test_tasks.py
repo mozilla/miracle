@@ -22,9 +22,3 @@ def test_error(celery, raven, stats):
     stats.check(timer=[
         ('task', 1, ['task:data.tasks.error']),
     ])
-
-
-def test_delete(cache, celery, stats):
-    cache.set(b'user_foo', b'')
-    tasks.delete.delay('foo').get()
-    assert b'user_foo' not in cache.keys()

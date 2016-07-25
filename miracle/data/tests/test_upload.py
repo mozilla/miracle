@@ -90,11 +90,11 @@ def test_upload_main(cache):
     assert result == ('foo', _PAYLOAD)
 
 
-def test_task(cache, celery, stats):
+def test_task(celery):
     assert tasks.upload.delay(
         'foo', json.dumps(_PAYLOAD).encode('utf-8'), _upload_data=False).get()
 
 
-def test_task_fail(cache, celery, stats):
+def test_task_fail(celery):
     assert not tasks.upload.delay(
         'foo', b'no json', _upload_data=False).get()

@@ -71,7 +71,7 @@ def upload_data(task, user, data):
     return True
 
 
-def main(task, user, payload, _upload_data=upload_data):
+def main(task, user, payload, _upload_data=True):
     try:
         data = json.loads(payload)
     except json.JSONDecodeError:
@@ -83,7 +83,11 @@ def main(task, user, payload, _upload_data=upload_data):
 
     filtered_data = filter_data(validated_data)
 
-    if _upload_data:
-        # Testing hook.
-        return _upload_data(task, user, filtered_data)
-    return True
+    # Testing hooks.
+    if not _upload_data:
+        return True
+
+    if _upload_data is True:  # pragma: no cover
+        _upload_data = upload_data
+
+    return _upload_data(task, user, filtered_data)

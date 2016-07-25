@@ -1,4 +1,5 @@
 from miracle.config import TESTING
+from miracle.data.delete import main as delete_main
 from miracle.data.upload import main as upload_main
 from miracle.worker.app import celery_app
 from miracle.worker.task import BaseTask
@@ -16,9 +17,8 @@ if TESTING:
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
-def delete(self, user):
-    key = ('user_%s' % user).encode('ascii')
-    self.cache.delete(key)
+def delete(self, user, _delete_data=True):
+    return delete_main(self, user, _delete_data=_delete_data)
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
