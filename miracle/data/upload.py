@@ -2,20 +2,25 @@ import json
 
 HISTORY_SCHEMA = [
     # (field name, field type, required)
-    ('uri', str, True),
-    ('lastAccessTime', int, False),
-    ('title', str, False),
+    ('url', str, True),
+    ('start_time', int, False),
+    ('duration', int, False),
 ]
+
+
+def json_encode(data):
+    return json.dumps(
+        data, separators=(',', ':'), sort_keys=True).encode('utf-8')
 
 
 def validate(data):
     if (not isinstance(data, dict) or
-            'history' not in data or
-            not isinstance(data['history'], list)):
+            'sessions' not in data or
+            not isinstance(data['sessions'], list)):
         return
 
-    history = []
-    for entry in data['history']:
+    sessions = []
+    for entry in data['sessions']:
         if not isinstance(entry, dict):
             continue
 
@@ -33,11 +38,11 @@ def validate(data):
             validated_entry[field] = value
 
         if not missing_field:
-            history.append(validated_entry)
+            sessions.append(validated_entry)
 
     output = {}
-    if history:
-        output['history'] = history
+    if sessions:
+        output['sessions'] = sessions
 
     return output
 
@@ -53,6 +58,6 @@ def main(task, user, payload):
         return False
 
     key = ('user_%s' % user).encode('ascii')
-    output = json.dumps(validated_data, separators=(',', ':')).encode('utf-8')
+    output = json_encode(validated_data)
     task.cache.set(key, output, ex=3600)
     return True

@@ -39,15 +39,15 @@ structure:
 
 .. code-block:: javascript
 
-{"history" : [
+{"sessions" : [
     {
-        "lastAccessTime": 1468616293,
-        "uri": "http://www.apple.com/",
-        "title": "Apple"
+        "start_time": 1468616293,
+        "url": "http://www.apple.com/path/something",
+        "duration": 2400
     }, {
-        "lastAccessTime": 1468616293,
-        "uri": "http://www.google.com/",
-        "title": "Google"
+        "lastAccessTime": 1468616317,
+        "url": "http://www.google.com/another/path/",
+        "duration": 4400
     }
 ]}
 

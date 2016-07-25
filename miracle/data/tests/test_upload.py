@@ -3,26 +3,26 @@ import json
 from miracle.data import tasks
 from miracle.data import upload
 
-_PAYLOAD = {'history': [
+_PAYLOAD = {'sessions': [
     {
-        "lastAccessTime": 1468600000,
-        "uri": "http://www.example.com/",
-        "title": "Example",
+        "duration": 2400,
+        "start_time": 1468600000,
+        "url": "http://www.example.com/",
     },
     {
-        "lastAccessTime": 1468900000,
-        "uri": "https://www.foo.com/",
-        "title": "Fö\\\\u00f6",
+        "duration": 1300,
+        "start_time": 1468800000,
+        "url": "https://www.foo.com/",
     },
     {
-        "lastAccessTime": 1469300000,
-        "uri": "https://www.example.com/login",
-        "title": "Example",
+        "duration": 5700,
+        "start_time": 1469200000,
+        "url": "https://www.example.com/login",
     },
     {
-        "lastAccessTime": 1469400000,
-        "uri": "http://www.example.com/search/?query=question",
-        "title": "Example",
+        "duration": 4600,
+        "start_time": 1469400000,
+        "url": "http://www.example.com/search/?query=question",
     },
 
 ]}
@@ -33,8 +33,7 @@ def test_upload(cache, celery, stats):
         'foo', json.dumps(_PAYLOAD).encode('utf-8')).get()
 
     assert b'user_foo' in cache.keys()
-    compact = json.dumps(_PAYLOAD, separators=(',', ':')).encode('utf-8')
-    assert cache.get(b'user_foo') == compact
+    assert cache.get(b'user_foo') == upload.json_encode(_PAYLOAD)
     assert cache.ttl(b'user_foo') <= 3600
 
 
@@ -43,23 +42,23 @@ def test_upload_fail(cache, celery, stats):
 
 
 def test_validate():
-    uri = 'https://example.com'
+    url = 'https://example.com/path'
 
     invalid_inputs = [
         {'other_key': []},
-        {'history': {}},
-        {'history': [[]]},
-        {'history': [{'uri': ''}]},
-        {'history': [{'uri': 1}]},
+        {'sessions': {}},
+        {'sessions': [[]]},
+        {'sessions': [{'uri': ''}]},
+        {'sessions': [{'uri': 1}]},
     ]
     for invalid in invalid_inputs:
         assert not upload.validate(invalid)
 
     valid_inputs = [
-        {'history': [{'uri': uri, 'lastAccessTime': None, 'title': ''}]},
-        {'history': [{'uri': uri, 'lastAccessTime': 0, 'title': 'abc'}]},
-        {'history': [{'uri': uri, 'lastAccessTime': 1469300000,
-                      'title': 'abc'}]},
+        {'sessions': [{'url': url, 'start_time': None, 'duration': 0}]},
+        {'sessions': [{'url': url, 'start_time': 0, 'duration': 2400}]},
+        {'sessions': [{'url': url, 'start_time': 1469300000,
+                       'duration': 3700}]},
     ]
     for valid in valid_inputs:
         assert upload.validate(valid) == valid
