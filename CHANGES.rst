@@ -5,6 +5,8 @@ Changelog
 1.0.2 (unreleased)
 ==================
 
+- Move JSON decoding from web app to backend celery tier.
+
 - Document alembic and make it more easily accessible.
 
 - Add alembic migrations scaffold.

@@ -23,6 +23,11 @@ def delete(self, user):
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
-def upload(self, user, data):
+def upload(self, user, payload):
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        return
+
     key = ('user_%s' % user).encode('ascii')
     self.cache.set(key, json.dumps(data), ex=3600)

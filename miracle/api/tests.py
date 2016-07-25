@@ -37,8 +37,12 @@ def test_upload(app, stats):
                         status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {'status': 'success'}
+    app.post('/v1/upload', b'no json',
+             headers={'Content-Type': 'application/json',
+                      'X-User': b'abc'},
+             status=200)
     stats.check(timer=[
-        ('task', 1, ['task:data.tasks.upload']),
+        ('task', 2, ['task:data.tasks.upload']),
     ])
 
 
@@ -50,7 +54,8 @@ def test_upload_fail(app, stats):
              headers={'Content-Type': 'application/json',
                       'X-User': b'abc'},
              status=400)
-    app.post('/v1/upload', b'invalid',
+    too_large = b'a' + b'0123456789' * 1024 * 1024
+    app.post('/v1/upload', too_large,
              headers={'Content-Type': 'application/json',
                       'X-User': b'abc'},
              status=400)

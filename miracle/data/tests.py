@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from miracle.data import tasks
@@ -32,10 +34,19 @@ def test_delete(cache, celery, stats):
 
 
 def test_upload(cache, celery, stats):
-    tasks.upload.delay('foo', {'bar': 7}).get()
+    payload = json.dumps({'bar': 7})
+    tasks.upload.delay('foo', payload).get()
     assert b'user_foo' in cache.keys()
     assert cache.get(b'user_foo') == b'{"bar": 7}'
     assert cache.ttl(b'user_foo') <= 3600
+    stats.check(timer=[
+        ('task', 1, ['task:data.tasks.upload']),
+    ])
+
+
+def test_upload_fail(cache, celery, stats):
+    tasks.upload.delay('foo', b'no json').get()
+    assert b'user_foo' not in cache.keys()
     stats.check(timer=[
         ('task', 1, ['task:data.tasks.upload']),
     ])

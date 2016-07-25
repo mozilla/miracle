@@ -1,5 +1,3 @@
-import json
-
 from pyramid.httpexceptions import (
     HTTPBadRequest,
     HTTPMethodNotAllowed,
@@ -97,6 +95,8 @@ class UploadView(View):
     _route_name = 'v1_upload'
     _route_path = '/v1/upload'
 
+    _max_size = 10 * 1024 * 1024  # 10 mib
+
     def __call__(self):
         user = self.user()
         if not user:
@@ -112,10 +112,8 @@ class UploadView(View):
             except GZIPDecodeError:
                 return HTTPBadRequest('Invalid GZIP body.')
 
-        try:
-            data = json.loads(body.decode('utf-8'))
-        except json.JSONDecodeError:
-            return HTTPBadRequest('Invalid JSON body.')
+        if len(body) > self._max_size:
+            return HTTPBadRequest('Uncompressed body too large.')
 
-        tasks.upload.delay(user, data)
+        tasks.upload.delay(user, body)
         return {'status': 'success'}
