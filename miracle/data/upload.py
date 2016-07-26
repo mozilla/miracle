@@ -1,9 +1,10 @@
 import json
+from urllib.parse import urlsplit
 
 HISTORY_SCHEMA = [
     # (field name, field type, required, min_value, max_value)
-    ('url', str, True, 0, 1024),
-    ('start_time', int, False, 2 ** 29, 2 ** 32),  # year 1987-2106
+    ('url', str, True, 0, 2048),
+    ('start_time', int, True, 2 ** 29, 2 ** 32),  # year 1987-2106
     ('duration', int, False, 0, 1000 * 3600 * 24),  # max 1 day in ms
 ]
 
@@ -50,7 +51,9 @@ def validate(data):
             validated_entry[field] = value
 
         if not missing_field:
-            sessions.append(validated_entry)
+            filtered_entry = filter_entry(validated_entry)
+            if filtered_entry:
+                sessions.append(filtered_entry)
 
     output = {}
     if sessions:
@@ -59,9 +62,12 @@ def validate(data):
     return output
 
 
-def filter_data(data):
-    # TODO: Add filtering
-    return data
+def filter_entry(entry):
+    url_result = urlsplit(entry['url'])
+    if url_result.username or url_result.password:
+        return None
+
+    return entry
 
 
 def upload_data(task, user, data):
@@ -77,11 +83,9 @@ def main(task, user, payload, _upload_data=True):
     except json.JSONDecodeError:
         return False
 
-    validated_data = validate(data)
-    if not validated_data:
+    parsed_data = validate(data)
+    if not parsed_data:
         return False
-
-    filtered_data = filter_data(validated_data)
 
     # Testing hooks.
     if not _upload_data:
@@ -90,4 +94,4 @@ def main(task, user, payload, _upload_data=True):
     if _upload_data is True:  # pragma: no cover
         _upload_data = upload_data
 
-    return _upload_data(task, user, filtered_data)
+    return _upload_data(task, user, parsed_data)

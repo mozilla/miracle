@@ -44,32 +44,28 @@ def test_validate():
         {'sessions': [[]]},
         {'sessions': [{'url': ''}]},
         {'sessions': [{'url': 1}]},
-        {'sessions': [{'url': 'https://example.com/' + 'abc/' * 256}]},
+        {'sessions': [{'url': url, 'start_time': None}]},
+        {'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
+                       'start_time': time}]},
+        {'sessions': [{'url': 'https://admin:admin@example.com/',
+                       'start_time': time}]},
     ]
     for invalid in invalid_inputs:
         assert not upload.validate(invalid)
 
     valid_inputs = [
-        {'sessions': [{'url': url, 'start_time': None, 'duration': 0}]},
+        {'sessions': [{'url': url, 'start_time': time, 'duration': None}]},
         {'sessions': [{'url': url, 'start_time': time, 'duration': 2400}]},
     ]
     for valid in valid_inputs:
         assert upload.validate(valid) == valid
 
     corrected_inputs = [(
-        {'sessions': [{'url': url, 'start_time': 10000, 'duration': 100}]},
-        {'sessions': [{'url': url, 'start_time': None, 'duration': 100}]}
-    ), (
         {'sessions': [{'url': url, 'start_time': time, 'duration': -100}]},
         {'sessions': [{'url': url, 'start_time': time, 'duration': None}]}
     )]
     for input_, expected in corrected_inputs:
         assert upload.validate(input_) == expected
-
-
-def test_filter_data():
-    # TODO: Add filtering
-    assert upload.filter_data(_PAYLOAD) == _PAYLOAD
 
 
 def test_upload_data(cache):
