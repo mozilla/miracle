@@ -7,10 +7,10 @@ from kombu.serialization import (
 
 class BaseTask(Task):
 
-    abstract = True  #:
-    acks_late = False  #:
-    ignore_result = True  #:
-    max_retries = 3  #:
+    abstract = True
+    acks_late = False
+    ignore_result = True
+    max_retries = 3
 
     def __call__(self, *args, **kw):
         """

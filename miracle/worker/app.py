@@ -19,7 +19,7 @@ from miracle.log import (
 
 CELERY_QUEUES = (
     Queue('celery_default', routing_key='celery_default'),
-)  #: List of :class:`kombu.Queue` instances.
+)
 
 
 def configure_celery(celery_app):

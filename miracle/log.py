@@ -19,11 +19,12 @@ from miracle.config import (
     TESTING,
 )
 
+# Mapping of raven transport names to classes.
 RAVEN_TRANSPORTS = {
     'gevent': GeventedHTTPTransport,
     'sync': HTTPTransport,
     'threaded': ThreadedHTTPTransport,
-}  #: Mapping of raven transport names to classes.
+}
 
 SKIP_LOGGING = frozenset((
     '/__lbheartbeat__',
