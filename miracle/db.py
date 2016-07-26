@@ -5,6 +5,9 @@ from sqlalchemy.orm import sessionmaker
 
 from miracle.config import DB_URI
 
+# Side-effect import which registers all models.
+from miracle.models import Model  # NOQA
+
 
 def create_db(db_uri=DB_URI, _db=None):
     if _db is not None:

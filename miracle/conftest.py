@@ -46,7 +46,7 @@ def teardown_db(engine):
         trans = conn.begin()
         names = inspector.get_table_names()
         if names:  # pragma: no cover
-            conn.execute(text('DROP TABLE %s' % ', '.join(names)))
+            conn.execute(text('DROP TABLE "%s"' % '", "'.join(names)))
         trans.commit()
 
 
