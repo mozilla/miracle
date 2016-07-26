@@ -5,8 +5,8 @@ from alembic import command
 import pytest
 from sqlalchemy import (
     inspect,
-    text,
 )
+from sqlalchemy import text
 import webtest
 
 from miracle.bucket import create_bucket
@@ -44,9 +44,9 @@ def teardown_db(engine):
     with engine.connect() as conn:
         # Drop all tables currently in the database.
         trans = conn.begin()
-        names = inspector.get_table_names()
-        if names:  # pragma: no cover
-            conn.execute(text('DROP TABLE "%s"' % '", "'.join(names)))
+        table_names = inspector.get_table_names()
+        for table_name in table_names:
+            conn.execute(text('DROP TABLE "%s" CASCADE' % table_name))
         trans.commit()
 
 

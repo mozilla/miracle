@@ -40,3 +40,14 @@ containers. It has a number of commands to help out:
 - `./server restart` - runs `./server stop`, then `./server start`.
 - `./server shell` - Opens a shell inside the application container.
 - `./server test` - Runs all tests inside the application container.
+- `./server alembic` - Runs alembic inside the application container.
+
+In order to inspect the database, you can open a shell inside the
+running Postgres container:
+
+    docker-compose exec postgres sh
+
+And run commands like:
+
+    pg_dump -U miracle miracle
+    psql -U miracle miracle

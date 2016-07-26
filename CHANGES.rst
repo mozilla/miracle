@@ -5,6 +5,7 @@ Changelog
 1.0.3 (unreleased)
 ==================
 
+- Add url, user and session database tables.
 
 1.0.2 (2016-07-26)
 ==================
