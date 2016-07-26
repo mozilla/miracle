@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.2 (unreleased)
+1.0.2 (2016-07-26)
 ==================
 
 - Move JSON decoding from web app to backend celery tier.
