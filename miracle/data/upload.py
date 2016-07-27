@@ -1,6 +1,9 @@
 from datetime import datetime
 import json
+import time
 from urllib.parse import urlsplit
+
+from sqlalchemy.exc import OperationalError
 
 from miracle.models import (
     URL,
@@ -72,9 +75,10 @@ def filter_entry(entry):
     return entry
 
 
-def upload_data(task, user_token, data):
-    new_urls = {sess['url'] for sess in data['sessions']}
+def _upload_data(task, user_token, data, new_urls, _lock_timeout=10000):
     with task.db.session() as session:
+        # Avoid waiting forever
+        session.execute('SET LOCAL lock_timeout = %s' % _lock_timeout)
         # Check for existing user
         user = session.query(User).filter(User.token == user_token).first()
         if user is None:
@@ -101,6 +105,24 @@ def upload_data(task, user_token, data):
             ))
 
     return True
+
+
+def upload_data(task, user_token, data,
+                _lock_timeout=10000, _retries=3, _retry_wait=1.0):
+    new_urls = {sess['url'] for sess in data['sessions']}
+    success = False
+    # Retry upload on SQL unique constraint conflict error
+    for i in range(_retries):
+        try:
+            success = _upload_data(task, user_token, data, new_urls,
+                                   _lock_timeout=_lock_timeout)
+        except OperationalError as exc:
+            time.sleep(_retry_wait * (i ** 2 + 1))
+
+        if success:
+            break
+
+    return success
 
 
 def main(task, user, payload, _upload_data=True):

@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from unittest import mock
 
 from miracle.data import tasks
 from miracle.data import upload
@@ -132,6 +133,38 @@ def test_upload_data_duplicated_sessions(db):
         assert upload.upload_data(task, 'foo', _PAYLOAD)
         assert upload.upload_data(task, 'foo', _PAYLOAD)
         assert session.query(Session).count() == 10
+
+
+def test_upload_data_conflict(cleanup_db, db):
+    # Use as secondary transaction to insert a conflicting user id,
+    # and keep it open while _upload_data runs the first time.
+    # Rollback the secondary transaction before _upload_data runs
+    # for the second time, to let it succeed.
+    with cleanup_db.engine.connect() as conn:
+        with conn.begin() as trans:
+            conn.execute('INSERT INTO "user" (token) VALUES (\'foo\')')
+
+            orig_upload_data = upload._upload_data
+            num = 0
+
+            def mock_upload_data(task, user_token, data, new_urls,
+                                 _lock_timeout=100):
+                nonlocal num
+                if num == 1:
+                    trans.rollback()
+                num += 1
+                return orig_upload_data(task, user_token, data, new_urls,
+                                        _lock_timeout=_lock_timeout)
+
+            with mock.patch.object(upload, '_upload_data', mock_upload_data):
+                with db.session(commit=False) as session:
+                    task = DummyTask(db=db)
+                    assert upload.upload_data(
+                        task, 'foo', _PAYLOAD,
+                        _lock_timeout=100, _retry_wait=0.01)
+                    assert num == 2
+                    assert session.query(User).count() == 1
+                    assert session.query(Session).count() == 5
 
 
 def test_upload_main(db):

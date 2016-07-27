@@ -5,6 +5,8 @@ Changelog
 1.0.3 (unreleased)
 ==================
 
+- Retry database insertion on conflict errors.
+
 - Store and delete session data into and from database.
 
 - Add url, user and session database tables.

@@ -109,6 +109,15 @@ def global_db():
 
 
 @pytest.yield_fixture(scope='function')
+def cleanup_db():
+    db = create_db()
+    yield db
+    teardown_db(db.engine)
+    setup_db(db.engine)
+    db.close()
+
+
+@pytest.yield_fixture(scope='function')
 def db(global_db):
     with global_db.engine.connect() as conn:
         with conn.begin() as trans:
