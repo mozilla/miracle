@@ -1,8 +1,15 @@
+from datetime import datetime
 import json
 
 from miracle.data import tasks
 from miracle.data import upload
+from miracle.models import (
+    URL,
+    User,
+    Session,
+)
 
+TEST_START = datetime.utcfromtimestamp(1469400000)
 _PAYLOAD = {'sessions': [
     {
         "duration": 2400,
@@ -24,14 +31,22 @@ _PAYLOAD = {'sessions': [
         "start_time": 1469400000,
         "url": "http://www.example.com/search/?query=question",
     },
-
+    {
+        "duration": 6200,
+        "start_time": 1469500000,
+        "url": "https://www.foo.com/",
+    },
 ]}
+_PAYLOAD_DURATIONS = {sess['duration'] for sess in _PAYLOAD['sessions']}
+_PAYLOAD_STARTS = {datetime.utcfromtimestamp(sess['start_time'])
+                   for sess in _PAYLOAD['sessions']}
+_PAYLOAD_URLS = {sess['url'] for sess in _PAYLOAD['sessions']}
 
 
 class DummyTask(object):
 
-    def __init__(self, cache=None):
-        self.cache = cache
+    def __init__(self, db=None):
+        self.db = db
 
 
 def test_validate():
@@ -68,19 +83,62 @@ def test_validate():
         assert upload.validate(input_) == expected
 
 
-def test_upload_data(cache):
-    task = DummyTask(cache=cache)
-    assert upload.upload_data(task, 'foo', _PAYLOAD)
-    assert b'user_foo' in cache.keys()
-    assert cache.get(b'user_foo') == upload.json_encode(_PAYLOAD)
-    assert cache.ttl(b'user_foo') <= 3600
+def test_upload_data_new_user(db):
+    with db.session(commit=False) as session:
+        url = URL.from_url('http://www.example.com/')
+        session.add(url)
+        session.commit()
+
+        task = DummyTask(db=db)
+        assert upload.upload_data(task, 'foo', _PAYLOAD)
+
+        assert session.query(URL).count() == 4
+        users = session.query(User).all()
+        assert len(users) == 1
+        assert users[0].token == 'foo'
+
+        sessions = session.query(Session).all()
+        assert len(sessions) == 5
+        assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
+        assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
+        assert {sess.url.full for sess in sessions} == _PAYLOAD_URLS
 
 
-def test_upload_main(cache):
+def test_upload_data_existing_user(db):
+    with db.session(commit=False) as session:
+        user = User(token='foo')
+        session.add(user)
+        session.commit()
+
+        task = DummyTask(db=db)
+        assert upload.upload_data(task, 'foo', _PAYLOAD)
+
+        assert session.query(URL).count() == 4
+        users = session.query(User).all()
+        assert len(users) == 1
+        assert users[0].id == user.id
+        assert users[0].token == 'foo'
+
+        sessions = session.query(Session).all()
+        assert len(sessions) == 5
+        assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
+        assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
+        assert {sess.url.full for sess in sessions} == _PAYLOAD_URLS
+
+
+def test_upload_data_duplicated_sessions(db):
+    with db.session(commit=False) as session:
+        task = DummyTask(db=db)
+        assert upload.upload_data(task, 'foo', _PAYLOAD)
+        assert upload.upload_data(task, 'foo', _PAYLOAD)
+        assert session.query(Session).count() == 10
+
+
+def test_upload_main(db):
     def _upload(task, user, data):
         return (user, data)
 
-    task = DummyTask(cache=cache)
+    task = DummyTask(db=db)
     result = upload.main(
         task, 'foo', json.dumps(_PAYLOAD), _upload_data=_upload)
     assert result == ('foo', _PAYLOAD)

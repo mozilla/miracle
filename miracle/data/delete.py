@@ -1,8 +1,9 @@
+from miracle.models import User
 
 
 def delete_data(task, user):
-    key = ('user_%s' % user).encode('ascii')
-    task.cache.delete(key)
+    with task.db.session() as session:
+        session.query(User).filter(User.token == user).delete()
     return True
 
 

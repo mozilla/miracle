@@ -5,7 +5,10 @@ Changelog
 1.0.3 (unreleased)
 ==================
 
+- Store and delete session data into and from database.
+
 - Add url, user and session database tables.
+
 
 1.0.2 (2016-07-26)
 ==================

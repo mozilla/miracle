@@ -1,25 +1,41 @@
+from datetime import datetime
+
 from miracle.data import delete
 from miracle.data import tasks
+from miracle.models import (
+    URL,
+    User,
+    Session,
+)
+
+TEST_START = datetime.utcfromtimestamp(1469400000)
 
 
 class DummyTask(object):
 
-    def __init__(self, cache=None):
-        self.cache = cache
+    def __init__(self, db=None):
+        self.db = db
 
 
-def test_delete_data(cache):
-    cache.set(b'user_foo', b'')
-    task = DummyTask(cache=cache)
-    assert delete.delete_data(task, 'foo')
-    assert b'user_foo' not in cache.keys()
+def test_delete_data(db):
+    with db.session(commit=False) as session:
+        url = URL.from_url('http://example.com')
+        user = User(token='foo')
+        session.add(Session(url=url, user=user, start_time=TEST_START))
+        session.commit()
+
+        task = DummyTask(db=db)
+        assert delete.delete_data(task, 'foo')
+
+        assert session.query(User).count() == 0
+        assert session.query(Session).count() == 0
 
 
-def test_delete_main(cache):
+def test_delete_main(db):
     def _delete(task, user):
         return user
 
-    task = DummyTask(cache=cache)
+    task = DummyTask(db=db)
     result = delete.main(task, 'foo', _delete_data=_delete)
     assert result == 'foo'
 

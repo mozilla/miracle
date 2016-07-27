@@ -54,6 +54,10 @@ class BaseTask(Task):
         return self.app.cache
 
     @property
+    def db(self):
+        return self.app.db
+
+    @property
     def raven(self):
         return self.app.raven
 

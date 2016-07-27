@@ -1,5 +1,12 @@
+from datetime import datetime
 import json
 from urllib.parse import urlsplit
+
+from miracle.models import (
+    URL,
+    User,
+    Session,
+)
 
 HISTORY_SCHEMA = [
     # (field name, field type, required, min_value, max_value)
@@ -21,11 +28,6 @@ def check_field(value, type_, min_value, max_value):
         value = None
 
     return value
-
-
-def json_encode(data):
-    return json.dumps(
-        data, separators=(',', ':'), sort_keys=True).encode('utf-8')
 
 
 def validate(data):
@@ -70,10 +72,34 @@ def filter_entry(entry):
     return entry
 
 
-def upload_data(task, user, data):
-    key = ('user_%s' % user).encode('ascii')
-    output = json_encode(data)
-    task.cache.set(key, output, ex=3600)
+def upload_data(task, user_token, data):
+    new_urls = {sess['url'] for sess in data['sessions']}
+    with task.db.session() as session:
+        # Check for existing user
+        user = session.query(User).filter(User.token == user_token).first()
+        if user is None:
+            user = User(token=user_token)
+            session.add(user)
+
+        # Get already known URLs
+        found_urls = (session.query(URL)
+                             .filter(URL.full.in_(new_urls)).all())
+        urls = {url.full: url for url in found_urls}
+
+        for entry in data['sessions']:
+            url = urls.get(entry['url'])
+            if not url:
+                url = URL.from_url(entry['url'])
+                urls[url.full] = url
+                session.add(url)
+
+            session.add(Session(
+                user_id=user.id,
+                url=url,
+                duration=entry['duration'],
+                start_time=datetime.utcfromtimestamp(entry['start_time']),
+            ))
+
     return True
 
 
