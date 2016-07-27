@@ -1,11 +1,19 @@
 
 
-def test_raven(raven):
+def _fail(raven, value):
     try:
-        raise ValueError('foo')
+        raise ValueError(value)
     except ValueError:
         raven.captureException()
+    return value
+
+
+def test_raven(raven):
+    _fail(raven, 'secret')
+    msgs = list(raven.msgs)
     raven.check(['ValueError'])
+    assert 'secret' not in repr(msgs[0])
+    assert '<removed>' in repr(msgs[0])
 
 
 def test_stats_counter(stats):

@@ -5,6 +5,8 @@ Changelog
 1.0.3 (unreleased)
 ==================
 
+- Remove stackframe content and exception values from Sentry.
+
 - Retry database insertion on conflict errors.
 
 - Store and delete session data into and from database.

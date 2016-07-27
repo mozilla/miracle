@@ -8,6 +8,7 @@ from pyramid.httpexceptions import (
     HTTPClientError,
 )
 from raven import Client as RavenClient
+from raven.processors import Processor
 from raven.transport.gevent import GeventedHTTPTransport
 from raven.transport.http import HTTPTransport
 from raven.transport.threaded import ThreadedHTTPTransport
@@ -94,6 +95,10 @@ def create_raven(sentry_dsn=SENTRY_DSN, transport='sync', _raven=None):
     client = klass(
         dsn=sentry_dsn,
         transport=RAVEN_TRANSPORTS[transport],
+        processors=(
+            'raven.processors.RemoveStackLocalsProcessor',
+            'miracle.log.SecretsProcessor',
+        ),
         release=VERSION)
 
     return client
@@ -110,6 +115,19 @@ def create_stats(statsd_host=STATSD_HOST, _stats=None):
         namespace=namespace, use_ms=True)
 
     return client
+
+
+class SecretsProcessor(Processor):
+
+    def process(self, data):
+        # Remove the exception value, as it might contain sensitive
+        # user data, e.g. on a JSONDecodeError.
+        data = super().process(data)
+        if 'exception' in data:
+            for value in data['exception'].get('values', []):
+                if 'value' in value:
+                    value['value'] = '<removed>'
+        return data
 
 
 class DebugRavenClient(RavenClient):

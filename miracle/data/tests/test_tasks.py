@@ -17,8 +17,11 @@ def test_dummy(celery, stats):
 
 def test_error(celery, raven, stats):
     with pytest.raises(ValueError):
-        tasks.error.delay().get()
-    raven.check(['ValueError'])
+        tasks.error.delay('secret').get()
     stats.check(timer=[
         ('task', 1, ['task:data.tasks.error']),
     ])
+    msgs = list(raven.msgs)
+    raven.check(['ValueError'])
+    assert 'secret' not in repr(msgs[0])
+    assert '<removed>' in repr(msgs[0])

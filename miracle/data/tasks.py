@@ -12,8 +12,8 @@ if TESTING:
         return int(self.cache.get('foo'))
 
     @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
-    def error(self):
-        raise ValueError('fail')
+    def error(self, value):
+        raise ValueError(value)
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
