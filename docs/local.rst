@@ -10,14 +10,15 @@ Architecture
 ============
 
 `miracle` is built as a containerized Docker application,
-but to run it, several additional services are required:
+with a web and worker role, using the same application image.
+In addition several services are required:
 
-- a `Celery <http://www.celeryproject.org/>`_ task queue
-- a `Redis <http://redis.io/>`_ broker for the task queue
+- a `Redis <http://redis.io/>`_ cache
+- a `Postgres <https://www.postgresql.org/>`_ database
 
 A `Docker Compose <https://docs.docker.com/compose/>`_ configuration is
 included to streamline setup and management of those services for local
-development. They are run alongside the application container on a
+development. They are run alongside the application containers on a
 single `Docker <https://docs.docker.com/>`_ host.
 
 
@@ -32,8 +33,8 @@ are on Mac OS, you need to install
 Development
 ===========
 
-A `./server` utility script is included to streamline use of the Docker
-containers. It has a number of commands to help out:
+A `./server` utility script is included to streamline the use of the
+Docker containers. It has a number of commands to help out:
 
 - `./server start` - builds and starts all containers.
 - `./server stop` - kills and removes all containers.
@@ -51,3 +52,11 @@ And run commands like:
 
     pg_dump -U miracle miracle
     psql -U miracle miracle
+
+To inspect and manipulate the Redis cache, open a shell:
+
+    docker-compose exec redis sh
+
+And open the Redis client:
+
+    redis-cli
