@@ -30,7 +30,7 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
         'Framework :: Pyramid',
     ],
-    keywords='mozilla miracle',
+    keywords='mozilla miracle context graph recommendation',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
