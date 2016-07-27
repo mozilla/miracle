@@ -12,3 +12,9 @@ def test_db(db):
 
 def test_ping(db, raven):
     assert db.ping(raven)
+
+
+def test_isolated(db):
+    with db.session() as session:
+        session.execute(text('create table foo (num integer)'))
+        session.commit()

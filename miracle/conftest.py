@@ -108,18 +108,14 @@ def global_db():
     db.close()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture(scope='function')
 def db(global_db):
-    conn = global_db.engine.connect()
-    trans = conn.begin()
-    global_db.session_factory.configure(bind=conn)
-    with global_db.session(commit=False) as session:
-        yield global_db
-        session.rollback()
-    global_db.session_factory.configure(bind=None)
-    trans.rollback()
-    trans.close()
-    conn.close()
+    with global_db.engine.connect() as conn:
+        with conn.begin() as trans:
+            global_db.session_factory.configure(bind=conn)
+            yield global_db
+            global_db.session_factory.configure(bind=None)
+            trans.rollback()
 
 
 @pytest.yield_fixture(scope='session')
