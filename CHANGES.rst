@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.3 (unreleased)
+1.0.3 (2016-07-28)
 ==================
 
 - Pin Python requirements to specific hashes.
