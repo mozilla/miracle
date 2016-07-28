@@ -22,15 +22,18 @@ RUN apk add --no-cache \
     postgresql-libs \
     redis
 
-COPY ./requirements.txt /app/requirements.txt
+COPY ./requirements/* /app/requirements/
 
 # Install build dependencies, build and cleanup
 RUN apk add --no-cache --virtual .deps \
     build-base \
     postgresql-dev && \
-    pip install --upgrade --no-cache-dir pip && \
-    pip install --no-deps --no-cache-dir -r requirements.txt && \
+    pip install --no-deps --no-cache-dir -r requirements/build.txt && \
+    pip install --no-deps --no-cache-dir -r requirements/binary.txt && \
     apk del --purge .deps
+
+# Install pure Python libraries
+RUN pip install --no-deps --no-cache-dir -r requirements/python.txt
 
 ENV PYTHONPATH $PYTHONPATH:/app
 EXPOSE 8000

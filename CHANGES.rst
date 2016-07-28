@@ -5,6 +5,8 @@ Changelog
 1.0.3 (unreleased)
 ==================
 
+- Split Python requirements into build, binary and pure-python files.
+
 - Add quantitative metrics about the incoming data.
 
 - Remove stackframe content and exception values from Sentry.
