@@ -16,11 +16,11 @@ if TESTING:
         raise ValueError(value)
 
 
-@celery_app.task(base=BaseTask, bind=True, queue='celery_default')
+@celery_app.task(base=BaseTask, bind=True, queue='celery_delete')
 def delete(self, user, _delete_data=True):
     return delete_main(self, user, _delete_data=_delete_data)
 
 
-@celery_app.task(base=BaseTask, bind=True, queue='celery_default')
+@celery_app.task(base=BaseTask, bind=True, queue='celery_upload')
 def upload(self, user, payload, _upload_data=True):
     return upload_main(self, user, payload, _upload_data=_upload_data)

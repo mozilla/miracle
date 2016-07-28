@@ -19,6 +19,8 @@ from miracle.log import (
 
 CELERY_QUEUES = (
     Queue('celery_default', routing_key='celery_default'),
+    Queue('celery_delete', routing_key='celery_delete'),
+    Queue('celery_upload', routing_key='celery_upload'),
 )
 
 
