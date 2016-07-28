@@ -1,4 +1,4 @@
-# miracle
+# mozilla/miracle
 #
 # VERSION 0.1
 
