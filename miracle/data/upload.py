@@ -37,8 +37,9 @@ def validate(data):
     if (not isinstance(data, dict) or
             'sessions' not in data or
             not isinstance(data['sessions'], list)):
-        return
+        return ({'sessions': []}, 0, 0)
 
+    drop_urls = 0
     sessions = []
     for entry in data['sessions']:
         if not isinstance(entry, dict):
@@ -59,12 +60,12 @@ def validate(data):
             filtered_entry = filter_entry(validated_entry)
             if filtered_entry:
                 sessions.append(filtered_entry)
+            else:
+                drop_urls += 1
 
-    output = {}
-    if sessions:
-        output['sessions'] = sessions
-
-    return output
+    return ({'sessions': sessions},
+            drop_urls,
+            len(data['sessions']) - len(sessions))
 
 
 def filter_entry(entry):
@@ -75,7 +76,12 @@ def filter_entry(entry):
     return entry
 
 
-def _upload_data(task, user_token, data, new_urls, _lock_timeout=10000):
+def _upload_data(task, user_token, data, _lock_timeout=10000):
+    new_urls = {sess['url'] for sess in data['sessions']}
+    metrics = {
+        'new_url': 0,
+        'new_user': 0,
+    }
     with task.db.session() as session:
         # Avoid waiting forever
         session.execute('SET LOCAL lock_timeout = %s' % _lock_timeout)
@@ -84,6 +90,7 @@ def _upload_data(task, user_token, data, new_urls, _lock_timeout=10000):
         if user is None:
             user = User(token=user_token)
             session.add(user)
+            metrics['new_user'] = 1
 
         # Get already known URLs
         found_urls = (session.query(URL)
@@ -96,6 +103,7 @@ def _upload_data(task, user_token, data, new_urls, _lock_timeout=10000):
                 url = URL.from_url(entry['url'])
                 urls[url.full] = url
                 session.add(url)
+                metrics['new_url'] += 1
 
             session.add(Session(
                 user_id=user.id,
@@ -104,17 +112,21 @@ def _upload_data(task, user_token, data, new_urls, _lock_timeout=10000):
                 start_time=datetime.utcfromtimestamp(entry['start_time']),
             ))
 
+    # Emit metrics outside of the db transaction.
+    task.stats.increment('data.url.new', metrics['new_url'])
+    task.stats.increment('data.user.new', metrics['new_user'])
+    task.stats.increment('data.session.new', len(data['sessions']))
+
     return True
 
 
 def upload_data(task, user_token, data,
                 _lock_timeout=10000, _retries=3, _retry_wait=1.0):
-    new_urls = {sess['url'] for sess in data['sessions']}
     success = False
     # Retry upload on SQL unique constraint conflict error
     for i in range(_retries):
         try:
-            success = _upload_data(task, user_token, data, new_urls,
+            success = _upload_data(task, user_token, data,
                                    _lock_timeout=_lock_timeout)
         except OperationalError as exc:
             time.sleep(_retry_wait * (i ** 2 + 1))
@@ -129,10 +141,14 @@ def main(task, user, payload, _upload_data=True):
     try:
         data = json.loads(payload)
     except json.JSONDecodeError:
+        task.stats.increment('data.upload.error.json')
         return False
 
-    parsed_data = validate(data)
-    if not parsed_data:
+    parsed_data, drop_urls, drop_sessions = validate(data)
+    task.stats.increment('data.url.drop', drop_urls)
+    task.stats.increment('data.session.drop', drop_sessions)
+    if not parsed_data['sessions']:
+        task.stats.increment('data.upload.error.validation')
         return False
 
     # Testing hooks.
@@ -142,4 +158,7 @@ def main(task, user, payload, _upload_data=True):
     if _upload_data is True:  # pragma: no cover
         _upload_data = upload_data
 
-    return _upload_data(task, user, parsed_data)
+    success = _upload_data(task, user, parsed_data)
+    if not success:  # pragma: no cover
+        task.stats.increment('data.upload.error.db')
+    return success

@@ -5,6 +5,8 @@ Changelog
 1.0.3 (unreleased)
 ==================
 
+- Add quantitative metrics about the incoming data.
+
 - Remove stackframe content and exception values from Sentry.
 
 - Retry database insertion on conflict errors.

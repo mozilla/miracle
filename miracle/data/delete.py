@@ -2,9 +2,12 @@ from miracle.models import User
 
 
 def delete_data(task, user):
+    exists = False
     with task.db.session() as session:
-        session.query(User).filter(User.token == user).delete()
-    return True
+        exists = bool(session.query(User).filter(User.token == user).delete())
+    if exists:
+        task.stats.increment('data.user.delete')
+    return exists
 
 
 def main(task, user, _delete_data=True):
