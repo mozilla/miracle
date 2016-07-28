@@ -20,9 +20,11 @@ def test_stats_counter(stats):
     stats.increment('foo', 1)
     stats.increment('foo', 1)
     stats.increment('bar', 3, tags=['baz:11'])
+    stats.increment('baz', 0)
     stats.check(counter=[
         ('foo', 2, 1),
         ('bar', 1, 3, ['baz:11']),
+        ('baz', 0),
     ])
 
 

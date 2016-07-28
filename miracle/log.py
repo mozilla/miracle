@@ -171,6 +171,12 @@ class StatsClient(DogStatsd):
             self.socket.close()
             self.socket = None
 
+    def increment(self, metric, value=1, tags=None, sample_rate=1):
+        if value:
+            # Filter out counter increment with a value of 0.
+            super().increment(
+                metric, value=value, tags=tags, sample_rate=sample_rate)
+
 
 class DebugStatsClient(StatsClient):
 
