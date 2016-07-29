@@ -35,7 +35,7 @@ def heartbeat_view(request):
 
 
 _index_response = Response(content_type='text/plain', body='''\
-It works!
+See https://wiki.mozilla.org/Context_Graph for details about this service.
 ''')
 
 
@@ -52,6 +52,8 @@ User-agent: *
 Disallow: /__heartbeat__
 Disallow: /__lbheartbeat__
 Disallow: /__version__
+Disallow: /v1/delete
+Disallow: /v1/upload
 ''')
 
 

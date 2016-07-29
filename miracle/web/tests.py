@@ -60,7 +60,7 @@ def test_heartbeat_error(broken_app, raven, stats):
 def test_index(app, stats):
     res = app.get('/')
     assert res.status_code == 200
-    assert res.text.startswith('It works')
+    assert res.text.startswith('See https://')
     stats.check(counter=[
         ('request', 1, ['path:', 'method:get', 'status:200']),
     ], timer=[

@@ -5,6 +5,8 @@ Changelog
 1.0.5 (unreleased)
 ==================
 
+- Add a link to project description on the homepage.
+
 
 1.0.4 (2016-07-29)
 ==================
