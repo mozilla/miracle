@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.4 (unreleased)
+1.0.4 (2016-07-29)
 ==================
 
 - Filter out URLs containing private IP addresses.
