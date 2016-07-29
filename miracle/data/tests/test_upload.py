@@ -72,6 +72,8 @@ def test_validate():
         {'sessions': [{'url': url, 'start_time': None}]},
         {'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
                        'start_time': time}]},
+        {'sessions': [{'url': 'about:config', 'start_time': time}]},
+        {'sessions': [{'url': 'file:///etc/hosts', 'start_time': time}]},
         {'sessions': [{'url': 'https://admin:admin@example.com/',
                        'start_time': time}]},
     ]

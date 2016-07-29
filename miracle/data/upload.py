@@ -73,6 +73,9 @@ def filter_entry(entry):
     if url_result.username or url_result.password:
         return None
 
+    if url_result.scheme not in ('http', 'https'):
+        return None
+
     return entry
 
 
