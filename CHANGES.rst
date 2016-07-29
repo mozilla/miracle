@@ -5,6 +5,8 @@ Changelog
 1.0.4 (unreleased)
 ==================
 
+- Filter out URLs containing private IP addresses.
+
 - Filter out non-HTTP/S URLs.
 
 - Provide pre-compiled wheels for binary Python dependencies.

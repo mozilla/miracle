@@ -1,4 +1,5 @@
 from datetime import datetime
+from ipaddress import ip_address
 import json
 import time
 from urllib.parse import urlsplit
@@ -75,6 +76,14 @@ def filter_entry(entry):
 
     if url_result.scheme not in ('http', 'https'):
         return None
+
+    try:
+        ip = ip_address(url_result.hostname)
+    except ValueError:
+        pass
+    else:
+        if not ip.is_global:
+            return None
 
     return entry
 

@@ -72,6 +72,7 @@ def test_validate():
         {'sessions': [{'url': url, 'start_time': None}]},
         {'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
                        'start_time': time}]},
+        {'sessions': [{'url': 'http://127.0.0.1/home', 'start_time': time}]},
         {'sessions': [{'url': 'about:config', 'start_time': time}]},
         {'sessions': [{'url': 'file:///etc/hosts', 'start_time': time}]},
         {'sessions': [{'url': 'https://admin:admin@example.com/',
@@ -83,6 +84,8 @@ def test_validate():
     valid_inputs = [
         {'sessions': [{'url': url, 'start_time': time, 'duration': None}]},
         {'sessions': [{'url': url, 'start_time': time, 'duration': 2400}]},
+        {'sessions': [{'url': 'http://13.0.0.1/home',
+                       'start_time': time, 'duration': None}]},
     ]
     for valid in valid_inputs:
         assert upload.validate(valid)[0] == valid
