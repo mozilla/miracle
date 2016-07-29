@@ -39,17 +39,23 @@ _PAYLOAD = {'sessions': [
         'url': 'https://www.foo.com/',
     },
 ]}
-_INVALID_SESSION = {
-    'duration': 800,
-    'start_time': 1469700000,
-    'url': 'https://foo:admin@www.foo.com/',
-}
+_INVALID_SESSIONS = [
+    {
+        'duration': 800,
+        'start_time': 1469700000,
+        'url': 'https://foo:admin@www.foo.com/',
+    }, {
+        'duration': 1000,
+        'start_time': 1469800000,
+        'url': 'https://foo:admin@www.foo.com/',
+    }
+]
 _PAYLOAD_DURATIONS = {sess['duration'] for sess in _PAYLOAD['sessions']}
 _PAYLOAD_STARTS = {datetime.utcfromtimestamp(sess['start_time'])
                    for sess in _PAYLOAD['sessions']}
 _PAYLOAD_URLS = {sess['url'] for sess in _PAYLOAD['sessions']}
 _COMBINED_PAYLOAD = deepcopy(_PAYLOAD)
-_COMBINED_PAYLOAD['sessions'].append(_INVALID_SESSION)
+_COMBINED_PAYLOAD['sessions'].extend(_INVALID_SESSIONS)
 
 
 class DummyTask(object):
@@ -214,8 +220,8 @@ def test_task(celery, stats):
         _upload_data=False).get()
 
     stats.check(counter=[
-        ('data.url.drop', 1),
-        ('data.session.drop', 1),
+        ('data.url.drop', 1, 1),
+        ('data.session.drop', 1, 2),
     ])
 
 

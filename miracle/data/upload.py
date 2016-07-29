@@ -21,6 +21,8 @@ HISTORY_SCHEMA = [
 
 
 def check_field(value, type_, min_value, max_value):
+    # Ensure that each field is of the expected type and
+    # inside the expected min/max range.
     if not isinstance(value, type_):
         return None
 
@@ -35,12 +37,14 @@ def check_field(value, type_, min_value, max_value):
 
 
 def validate(data):
+    # Validate the incoming data against the schema and filter out
+    # any unwanted sessions.
     if (not isinstance(data, dict) or
             'sessions' not in data or
             not isinstance(data['sessions'], list)):
         return ({'sessions': []}, 0, 0)
 
-    drop_urls = 0
+    drop_urls = set()
     sessions = []
     for entry in data['sessions']:
         if not isinstance(entry, dict):
@@ -62,21 +66,23 @@ def validate(data):
             if filtered_entry:
                 sessions.append(filtered_entry)
             else:
-                drop_urls += 1
+                drop_urls.add(validated_entry['url'])
 
+    # Return filtered session data, the number of dropped URLs and
+    # the number of dropped sessions.
     return ({'sessions': sessions},
-            drop_urls,
+            len(drop_urls),
             len(data['sessions']) - len(sessions))
 
 
-def filter_entry(entry):
-    url_result = urlsplit(entry['url'])
-    if url_result.username or url_result.password:
+def filter_entry(session_entry):
+    # Check each session entry and filter some of them out.
+    url_result = urlsplit(session_entry['url'])
+    if (url_result.username or url_result.password or
+            url_result.scheme not in ('http', 'https')):
         return None
 
-    if url_result.scheme not in ('http', 'https'):
-        return None
-
+    # Filter out private IP addresses.
     try:
         ip = ip_address(url_result.hostname)
     except ValueError:
@@ -85,10 +91,11 @@ def filter_entry(entry):
         if not ip.is_global:
             return None
 
-    return entry
+    return session_entry
 
 
 def _upload_data(task, user_token, data, _lock_timeout=10000):
+    # Insert data into the database.
     new_urls = {sess['url'] for sess in data['sessions']}
     metrics = {
         'new_url': 0,
@@ -128,14 +135,13 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
     task.stats.increment('data.url.new', metrics['new_url'])
     task.stats.increment('data.user.new', metrics['new_user'])
     task.stats.increment('data.session.new', len(data['sessions']))
-
     return True
 
 
 def upload_data(task, user_token, data,
                 _lock_timeout=10000, _retries=3, _retry_wait=1.0):
+    # Upload data wrapper, to retry upload on database errors.
     success = False
-    # Retry upload on SQL unique constraint conflict error
     for i in range(_retries):
         try:
             success = _upload_data(task, user_token, data,
@@ -163,12 +169,11 @@ def main(task, user, payload, _upload_data=True):
         task.stats.increment('data.upload.error.validation')
         return False
 
-    # Testing hooks.
-    if not _upload_data:
-        return True
-
+    # Testing hooks
     if _upload_data is True:  # pragma: no cover
         _upload_data = upload_data
+    elif not _upload_data:
+        return True
 
     success = _upload_data(task, user, parsed_data)
     if not success:  # pragma: no cover
