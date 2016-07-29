@@ -2,6 +2,10 @@
 Changelog
 =========
 
+1.0.5 (unreleased)
+==================
+
+
 1.0.4 (2016-07-29)
 ==================
 
@@ -10,6 +14,7 @@ Changelog
 - Filter out non-HTTP/S URLs.
 
 - Provide pre-compiled wheels for binary Python dependencies.
+
 
 1.0.3 (2016-07-28)
 ==================
