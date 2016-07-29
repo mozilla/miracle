@@ -5,6 +5,7 @@ Changelog
 1.0.4 (unreleased)
 ==================
 
+- Provide pre-compiled wheels for binary Python dependencies.
 
 1.0.3 (2016-07-28)
 ==================

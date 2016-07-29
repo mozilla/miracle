@@ -22,18 +22,22 @@ RUN apk add --no-cache \
     postgresql-libs \
     redis
 
+COPY ./wheelhouse/* /app/wheelhouse/
 COPY ./requirements/* /app/requirements/
 
 # Install build dependencies, build and cleanup
 RUN apk add --no-cache --virtual .deps \
     build-base \
     postgresql-dev && \
-    pip install --no-deps --no-cache-dir -r requirements/build.txt && \
-    pip install --no-deps --no-cache-dir -r requirements/binary.txt && \
+    pip install --no-deps --no-cache-dir --require-hashes \
+        -r requirements/build.txt && \
+    pip install --no-deps --no-cache-dir --require-hashes \
+        -f /app/wheelhouse -r requirements/binary.txt && \
     apk del --purge .deps
 
 # Install pure Python libraries
-RUN pip install --no-deps --no-cache-dir -r requirements/python.txt
+RUN pip install --no-deps --no-cache-dir --require-hashes \
+    -r requirements/python.txt
 
 ENV PYTHONPATH $PYTHONPATH:/app
 EXPOSE 8000
