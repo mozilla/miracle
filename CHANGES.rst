@@ -5,6 +5,8 @@ Changelog
 1.0.5 (unreleased)
 ==================
 
+- Use bulk inserts and upserts in session upload task.
+
 - Add a link to project description on the homepage.
 
 

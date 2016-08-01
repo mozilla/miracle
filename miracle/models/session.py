@@ -33,13 +33,14 @@ class URL(Model):
         'Session', back_populates='url', lazy='dynamic',
         cascade='all, delete-orphan', passive_deletes=True)
 
-    @classmethod
-    def from_url(cls, url):
+    @staticmethod
+    def from_url(url):
         result = urlsplit(url)
-        return cls(
-            full=url,
-            scheme=result.scheme,
-            hostname=result.hostname)
+        return {
+            'full': url,
+            'scheme': result.scheme,
+            'hostname': result.hostname,
+        }
 
 
 class User(Model):

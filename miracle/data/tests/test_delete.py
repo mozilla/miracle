@@ -20,7 +20,7 @@ class DummyTask(object):
 
 def test_delete_data(db, stats):
     with db.session(commit=False) as session:
-        url = URL.from_url('http://example.com')
+        url = URL(**URL.from_url('http://example.com'))
         user = User(token='foo')
         session.add(Session(url=url, user=user, start_time=TEST_START))
         session.commit()

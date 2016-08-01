@@ -13,7 +13,7 @@ TEST_URL2 = 'https://example.com/something/else'
 
 def test_url(db):
     with db.session(commit=False) as session:
-        session.add(URL.from_url(TEST_URL))
+        session.add(URL(**URL.from_url(TEST_URL)))
         session.commit()
 
         url = session.query(URL).first()
@@ -37,7 +37,7 @@ def test_user(db):
 
 def test_session(db):
     with db.session(commit=False) as session:
-        url = URL.from_url(TEST_URL)
+        url = URL(**URL.from_url(TEST_URL))
         user = User(token='foo')
         session.add(Session(
             user=user, url=url, start_time=TEST_START, duration=2400))
@@ -57,8 +57,8 @@ def test_session(db):
 
 def test_session_url_delete(db):
     with db.session(commit=False) as session:
-        url1 = URL.from_url(TEST_URL)
-        url2 = URL.from_url(TEST_URL2)
+        url1 = URL(**URL.from_url(TEST_URL))
+        url2 = URL(**URL.from_url(TEST_URL2))
         user = User(token='foo')
         session.add(Session(
             user=user, url=url1, start_time=TEST_START, duration=1000))
@@ -76,7 +76,7 @@ def test_session_url_delete(db):
 
 def test_session_user_delete(db):
     with db.session(commit=False) as session:
-        url = URL.from_url(TEST_URL)
+        url = URL(**URL.from_url(TEST_URL))
         user1 = User(token='foo')
         user2 = User(token='bar')
         session.add(Session(

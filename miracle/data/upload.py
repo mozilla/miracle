@@ -4,7 +4,9 @@ import json
 import time
 from urllib.parse import urlsplit
 
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
+from sqlalchemy import select
 
 from miracle.models import (
     URL,
@@ -94,46 +96,88 @@ def filter_entry(session_entry):
     return session_entry
 
 
+def _create_urls(session, new_urls):
+    # Get or create URLs
+    added_urls = 0
+    url_values = []
+
+    urls = dict(session.query(URL.full, URL.id)
+                       .filter(URL.full.in_(new_urls)).all())
+    for new_url in new_urls:
+        if new_url not in urls:
+            added_urls += 1
+            urls[new_url] = None
+            url_values.append(URL.from_url(new_url))
+
+    if url_values:
+        stmt = insert(URL.__table__).on_conflict_do_nothing()
+        session.execute(stmt, url_values)
+
+    return (added_urls, urls)
+
+
+def _create_user(session, user_token):
+    # Get or create user
+    added_user = 0
+    user_id = None
+
+    row = (session.query(User.id)
+                  .filter(User.token == user_token)).first()
+    if row:
+        user_id = row[0]
+    else:
+        added_user = 1
+        stmt = (insert(User.__table__)
+                .on_conflict_do_nothing()
+                .values(token=user_token))
+        result = session.execute(stmt)
+        user_id = result.inserted_primary_key[0]
+
+    return (added_user, user_id)
+
+
 def _upload_data(task, user_token, data, _lock_timeout=10000):
     # Insert data into the database.
     new_urls = {sess['url'] for sess in data['sessions']}
-    metrics = {
-        'new_url': 0,
-        'new_user': 0,
-    }
+
     with task.db.session() as session:
-        # Avoid waiting forever
+        # First do UPSERTs for new URLs and the user in its own transaction.
+        # This lets the DB do conflict resolution via
+        # "insert on conflict do nothing".
         session.execute('SET LOCAL lock_timeout = %s' % _lock_timeout)
-        # Check for existing user
-        user = session.query(User).filter(User.token == user_token).first()
-        if user is None:
-            user = User(token=user_token)
-            session.add(user)
-            metrics['new_user'] = 1
+        added_urls, urls = _create_urls(session, new_urls)
+        added_user, user_id = _create_user(session, user_token)
 
-        # Get already known URLs
-        found_urls = (session.query(URL)
-                             .filter(URL.full.in_(new_urls)).all())
-        urls = {url.full: url for url in found_urls}
+    # Determine newly created URLs without an id.
+    missing_url_ids = {url for url, url_id in urls.items() if url_id is None}
 
+    with task.db.session() as session:
+        # In the second transaction add sessions and find all
+        # newly created URL ids.
+
+        if missing_url_ids:
+            # Get missing URL ids.
+            found_urls = dict(session.query(URL.full, URL.id)
+                                     .filter(URL.full.in_(missing_url_ids))
+                                     .all())
+            urls.update(found_urls)
+
+        session_values = []
         for entry in data['sessions']:
-            url = urls.get(entry['url'])
-            if not url:
-                url = URL.from_url(entry['url'])
-                urls[url.full] = url
-                session.add(url)
-                metrics['new_url'] += 1
+            session_values.append({
+                'user_id': user_id,
+                'url_id': urls[entry['url']],
+                'duration': entry['duration'],
+                'start_time': datetime.utcfromtimestamp(entry['start_time']),
+            })
 
-            session.add(Session(
-                user_id=user.id,
-                url=url,
-                duration=entry['duration'],
-                start_time=datetime.utcfromtimestamp(entry['start_time']),
-            ))
+        if session_values:
+            # Bulk insert new sessions.
+            session.execute(insert(Session.__table__), session_values)
 
-    # Emit metrics outside of the db transaction.
-    task.stats.increment('data.url.new', metrics['new_url'])
-    task.stats.increment('data.user.new', metrics['new_user'])
+    # Emit metrics outside of the db transaction scope.
+    task.stats.increment('data.url.new', added_urls)
+    task.stats.increment('data.user.new', added_user)
     task.stats.increment('data.session.new', len(data['sessions']))
     return True
 

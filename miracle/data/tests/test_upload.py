@@ -106,7 +106,7 @@ def test_validate():
 
 def test_upload_data_new_user(db, stats):
     with db.session(commit=False) as session:
-        url = URL.from_url('http://www.example.com/')
+        url = URL(**URL.from_url('http://www.example.com/'))
         session.add(url)
         session.commit()
 
