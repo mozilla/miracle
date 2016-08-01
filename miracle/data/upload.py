@@ -6,7 +6,6 @@ from urllib.parse import urlsplit
 
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
-from sqlalchemy import select
 
 from miracle.models import (
     URL,
@@ -190,7 +189,7 @@ def upload_data(task, user_token, data,
         try:
             success = _upload_data(task, user_token, data,
                                    _lock_timeout=_lock_timeout)
-        except OperationalError as exc:
+        except OperationalError:
             time.sleep(_retry_wait * (i ** 2 + 1))
 
         if success:
