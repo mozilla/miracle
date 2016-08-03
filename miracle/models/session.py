@@ -17,11 +17,11 @@ from miracle.models.base import Model
 
 
 class URL(Model):
-    __tablename__ = 'url'
+    __tablename__ = 'urls'
 
     __table_args__ = (
-        Index('url_hostname_idx', 'hostname'),
-        Index('url_scheme_idx', 'scheme'),
+        Index('urls_hostname_idx', 'hostname'),
+        Index('urls_scheme_idx', 'scheme'),
     )
 
     id = Column(BIGINT(), autoincrement=True, primary_key=True)
@@ -44,7 +44,7 @@ class URL(Model):
 
 
 class User(Model):
-    __tablename__ = 'user'
+    __tablename__ = 'users'
 
     id = Column(Integer(), autoincrement=True, primary_key=True)
     token = Column(String(36), nullable=False, unique=True)
@@ -55,16 +55,16 @@ class User(Model):
 
 
 class Session(Model):
-    __tablename__ = 'session'
+    __tablename__ = 'sessions'
 
     __table_args__ = (
-        Index('session_user_id_start_time_idx', 'user_id', 'start_time'),
+        Index('sessions_user_id_start_time_idx', 'user_id', 'start_time'),
     )
 
     id = Column(BIGINT(), autoincrement=True, primary_key=True)
 
-    url_id = Column(BIGINT(), ForeignKey('url.id', ondelete='CASCADE'))
-    user_id = Column(Integer(), ForeignKey('user.id', ondelete='CASCADE'))
+    url_id = Column(BIGINT(), ForeignKey('urls.id', ondelete='CASCADE'))
+    user_id = Column(Integer(), ForeignKey('users.id', ondelete='CASCADE'))
     start_time = Column(TIMESTAMP(), nullable=False)
 
     duration = Column(Integer())

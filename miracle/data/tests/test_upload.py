@@ -3,6 +3,8 @@ from datetime import datetime
 import json
 from unittest import mock
 
+from sqlalchemy.dialects.postgresql import insert
+
 from miracle.data import tasks
 from miracle.data import upload
 from miracle.models import (
@@ -182,7 +184,7 @@ def test_upload_data_conflict(bloom_domain, cleanup_db, db, stats):
     # for the second time, to let it succeed.
     with cleanup_db.engine.connect() as conn:
         with conn.begin() as trans:
-            conn.execute('INSERT INTO "user" (token) VALUES (\'foo\')')
+            conn.execute(insert(User.__table__), [{'token': 'foo'}])
 
             orig_upload_data = upload._upload_data
             num = 0

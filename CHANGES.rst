@@ -5,6 +5,8 @@ Changelog
 1.0.5 (unreleased)
 ==================
 
+- Database migration, pluralizing all table names.
+
 - Add a miracle_block script to remove blocklisted URLs from the database.
 
 
