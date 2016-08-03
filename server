@@ -52,11 +52,11 @@ case "$1" in
         if [ ! -z "$WEB_ID" ]; then
           $0 stop web
         fi
-        docker build -t mozilla/miracle:latest .
+        docker build -t mozilla/miracle .
         docker run -d \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
           -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
-          -p 8000:8000/tcp --name="miracle_web" mozilla/miracle:latest web
+          -p 8000:8000/tcp --name="miracle_web" mozilla/miracle web
         ;;
 
       # Builds and starts the worker container.
@@ -65,11 +65,11 @@ case "$1" in
         if [ ! -z "$WORKER_ID" ]; then
           $0 stop worker
         fi
-        docker build -t mozilla/miracle:latest .
+        docker build -t mozilla/miracle .
         docker run -d \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
           -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
-          --name="miracle_worker" mozilla/miracle:latest worker
+          --name="miracle_worker" mozilla/miracle worker
         ;;
 
       # Builds and starts the services supporting the application container.
@@ -129,11 +129,11 @@ case "$1" in
   # Runs command inside the container.
   run)
     $0 start services
-    docker build -t mozilla/miracle:latest .
+    docker build -t mozilla/miracle .
     docker run -it --rm \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
         -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
-        mozilla/miracle:latest $2 $3 $4 $5 $6 $7 $8 $9
+        mozilla/miracle $2 $3 $4 $5 $6 $7 $8 $9
     ;;
 
   # Runs alembic inside the container.
@@ -143,9 +143,9 @@ case "$1" in
 
   # Runs miracle_bloom inside the container.
   bloom)
-    docker build -q -t mozilla/miracle:latest .
+    docker build -q -t mozilla/miracle .
     docker run -d --name="miracle_bloom" \
-        mozilla/miracle:latest bloom $2 $3 $4 $5 $6 $7 $8 $9
+        mozilla/miracle bloom $2 $3 $4 $5 $6 $7 $8 $9
     # Give the container time to create the archive.
     sleep 2
     docker cp "miracle_bloom:/tmp/output.tar" "data/output.tar"
