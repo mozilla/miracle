@@ -14,8 +14,6 @@ dependencies:
     - "~/docker"
 
   pre:
-    - sudo service postgresql stop
-    - sudo service redis-server stop
     - sudo apt-get update; sudo apt-get install pigz
 
   override:
