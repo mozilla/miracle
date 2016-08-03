@@ -5,6 +5,8 @@ Changelog
 1.0.7 (unreleased)
 ==================
 
+- Set up logging for alembic migrations.
+
 
 1.0.6 (2016-08-03)
 ==================

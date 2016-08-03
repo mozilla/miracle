@@ -1,6 +1,12 @@
+from logging.config import fileConfig
+
 from alembic import context
 
 from miracle.db import create_db
+
+config = context.config
+if config.config_file_name:  # pragma: no cover
+    fileConfig(config.config_file_name)
 
 
 def run_migrations_online(_db=None):
