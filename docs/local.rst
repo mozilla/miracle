@@ -95,8 +95,8 @@ If the installed version is 1.0.5, the output should show:
 To start a container based on that image, do:
 
     docker run -it --rm \\
-        -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \
-        mozilla/miracle:1.0.5 shell
+    -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \\
+    mozilla/miracle:1.0.5 shell
 
 TODO: Figure out a convenient way to get and pass the environment
 variables into the docker container.
