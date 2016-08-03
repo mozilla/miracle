@@ -94,7 +94,7 @@ If the installed version is 1.0.5, the output should show:
 
 To start a container based on that image, do:
 
-    docker run -it --rm \
+    docker run -it --rm \\
         -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \
         mozilla/miracle:1.0.5 shell
 
@@ -105,7 +105,7 @@ The docker container includes a helper script to connect to the
 Postgres database with all connection information taken from the
 `DB_*` environment variables:
 
-    ./db.sh -c "\d+"
+    ./db.sh -c "\\d+"
 
 Or open the prompt:
 
