@@ -76,3 +76,37 @@ files containing the binary version of the Hydra bloom filter.
 
 If there is an error during creation, try increasing the `sleep` values
 inside `./server` and `./conf/run.sh` in their bloom sections.
+
+
+Production
+==========
+
+In production you can inspect the database from inside a running
+docker container.
+
+First find out what the installed application version is:
+
+    docker images | grep miracle
+
+If the installed version is 1.0.5, the output should show:
+
+    mozilla/miracle    1.0.5    eb9495318562    5 days ago    151.9 MB
+
+To start a container based on that image, do:
+
+    docker run -it --rm \
+        -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \
+        mozilla/miracle:1.0.5 shell
+
+TODO: Figure out a convenient way to get and pass the environment
+variables into the docker container.
+
+The docker container includes a helper script to connect to the
+Postgres database with all connection information taken from the
+`DB_*` environment variables:
+
+    ./db.sh -c "\d+"
+
+Or open the prompt:
+
+    ./db.sh
