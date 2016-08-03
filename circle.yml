@@ -35,13 +35,13 @@ dependencies:
     - cp version.json $CIRCLE_ARTIFACTS
 
     # build the actual deployment container
-    - docker build -t mozilla/miracle:latest .
+    - docker build -t mozilla/miracle:dev .
 
     # write the sha256 sum to an artifact to make image verification easier
     - docker images --no-trunc | awk '/^app/ {print $3}' | tee $CIRCLE_ARTIFACTS/docker-image-shasum256.txt
 
     # Clean up any old images; save the new one.
-    - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save mozilla/miracle:latest | pigz --fast -c > ~/docker/$I; ls -l ~/docker
+    - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save mozilla/miracle:dev | pigz --fast -c > ~/docker/$I; ls -l ~/docker
 
     # Pull down images for service containers.
     - docker-compose pull
@@ -57,7 +57,7 @@ deployment:
     commands:
       - "[ ! -z $DOCKERHUB_REPO ]"
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - "docker tag mozilla/miracle:latest ${DOCKERHUB_REPO}:latest"
+      - "docker tag mozilla/miracle:dev ${DOCKERHUB_REPO}:latest"
       - "docker push ${DOCKERHUB_REPO}:latest"
 
   hub_releases:
@@ -67,6 +67,6 @@ deployment:
       - "[ ! -z $DOCKERHUB_REPO ]"
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - "echo ${DOCKERHUB_REPO}:${CIRCLE_TAG}"
-      - "docker tag mozilla/miracle:latest ${DOCKERHUB_REPO}:${CIRCLE_TAG}"
+      - "docker tag mozilla/miracle:dev ${DOCKERHUB_REPO}:${CIRCLE_TAG}"
       - "docker images"
       - "docker push ${DOCKERHUB_REPO}:${CIRCLE_TAG}"
