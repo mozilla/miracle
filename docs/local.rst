@@ -44,20 +44,20 @@ Docker containers. It has a number of commands to help out:
 - `./server alembic` - Runs alembic inside the application container.
 
 In order to inspect the database, you can open a shell inside the
-running Postgres container:
+running Postgres container::
 
     docker-compose exec postgres sh
 
-And run commands like:
+And run commands like::
 
     pg_dump -U miracle miracle
     psql -U miracle miracle
 
-To inspect and manipulate the Redis cache, open a shell:
+To inspect and manipulate the Redis cache, open a shell::
 
     docker-compose exec redis sh
 
-And open the Redis client:
+And open the Redis client::
 
     redis-cli
 
@@ -67,7 +67,7 @@ Bloom Filter
 
 To create or update a bloom filter file, create a newline separated,
 utf-8 encoded plain text file containing one entry per line, for
-example in `data/domain_blocklist.txt`. Then run:
+example in `data/domain_blocklist.txt`. Then run::
 
     ./server bloom data/domain_blocklist.txt
 
@@ -84,29 +84,29 @@ Production
 In production you can inspect the database from inside a running
 docker container.
 
-First find out what the installed application version is:
+First find out what the installed application version is::
 
     docker images | grep miracle
 
-If the installed version is 1.0.5, the output should show:
+If the installed version is 1.0.5, the output should show::
 
     mozilla/miracle    1.0.5    eb9495318562    5 days ago    151.9 MB
 
-To start a container based on that image, do:
+To start a container based on that image, do::
 
-    docker run -it --rm \\
-    -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \\
-    mozilla/miracle:1.0.5 shell
+    docker run -it --rm \
+        -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \
+        mozilla/miracle:1.0.5 shell
 
 TODO: Figure out a convenient way to get and pass the environment
 variables into the docker container.
 
 The docker container includes a helper script to connect to the
 Postgres database with all connection information taken from the
-`DB_*` environment variables:
+`DB_*` environment variables::
 
-    ./db.sh -c "\\d+"
+    ./db.sh -c "\d+"
 
-Or open the prompt:
+Or open the prompt::
 
     ./db.sh
