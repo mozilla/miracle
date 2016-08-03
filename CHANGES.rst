@@ -5,6 +5,7 @@ Changelog
 1.0.5 (unreleased)
 ==================
 
+- Add a miracle_block script to remove blocklisted URLs from the database.
 
 
 1.0.5 (2016-08-03)
