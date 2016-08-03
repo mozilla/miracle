@@ -22,10 +22,9 @@ RUN apk add --no-cache \
     postgresql-libs \
     redis
 
+# Install build and binary dependencies, build and cleanup
 COPY ./wheelhouse/* /app/wheelhouse/
-COPY ./requirements/* /app/requirements/
-
-# Install build dependencies, build and cleanup
+COPY ./requirements/build.txt ./requirements/binary.txt /app/requirements/
 RUN apk add --no-cache --virtual .deps \
     build-base \
     postgresql-dev && \
@@ -36,6 +35,7 @@ RUN apk add --no-cache --virtual .deps \
     apk del --purge .deps
 
 # Install pure Python libraries
+COPY ./requirements/python.txt /app/requirements/
 RUN pip install --no-deps --no-cache-dir --require-hashes \
     -r requirements/python.txt
 
