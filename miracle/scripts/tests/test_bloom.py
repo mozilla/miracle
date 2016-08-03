@@ -1,20 +1,8 @@
 import os
-import shutil
-import tempfile
 
 import hydra
-import pytest
 
 from miracle.scripts import bloom
-
-
-@pytest.yield_fixture(scope='function')
-def tmp_path():
-    try:
-        path = tempfile.mkdtemp()
-        yield path
-    finally:
-        shutil.rmtree(path)
 
 
 def test_bloom_create(tmp_path):

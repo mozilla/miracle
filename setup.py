@@ -36,6 +36,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
+            'miracle_block=miracle.scripts.block:console_entry',
             'miracle_bloom=miracle.scripts.bloom:console_entry',
         ],
     },
