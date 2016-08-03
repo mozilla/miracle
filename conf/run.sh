@@ -26,6 +26,13 @@ case "$1" in
         cd ..
         alembic $2 $3 $4 $5 $6 $7 $8 $9
         ;;
+    bloom)
+        echo "Running Bloom"
+        cd ..
+        miracle_bloom $2 $3 $4 $5 $6 $7 $8 $9
+        # Wait around, so one can copy the archive from the container.
+        sleep 120
+        ;;
     *)
         echo "Usage: $0 {web|worker|shell|test|alembic}"
         exit 1

@@ -8,6 +8,8 @@ HERE = os.path.dirname(__file__)
 STATIC_DIR = os.path.abspath(os.path.join(HERE, 'static'))
 VERSION_FILE = os.path.join(STATIC_DIR, 'version.json')
 
+BLOOM_DOMAIN = os.path.join(HERE, os.pardir, 'data', 'domain_blocklist.dat')
+
 DB_USER = os.environ.get('DB_USER', 'miracle')
 DB_PASSWORD = os.environ.get('DB_PASSWORD', 'miracle')
 DB_HOST = os.environ.get('DB_HOST', 'localhost')

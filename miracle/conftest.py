@@ -9,6 +9,7 @@ from sqlalchemy import (
 from sqlalchemy import text
 import webtest
 
+from miracle.bloom import create_bloom_domain
 from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.config import ALEMBIC_CFG
@@ -72,6 +73,13 @@ def package():
         print('Uncollectable objects found:')
         for obj in gc.garbage:
             print(obj)
+
+
+@pytest.yield_fixture(scope='session')
+def bloom_domain():
+    bloom = create_bloom_domain()
+    yield bloom
+    bloom.close()
 
 
 @pytest.yield_fixture(scope='session')
@@ -155,10 +163,11 @@ def stats(global_stats):
 
 
 @pytest.yield_fixture(scope='session')
-def global_celery(global_bucket, global_cache, global_db,
-                  global_raven, global_stats):
+def global_celery(bloom_domain, global_bucket, global_cache,
+                  global_db, global_raven, global_stats):
     init_worker(
         celery_app,
+        _bloom_domain=bloom_domain,
         _bucket=global_bucket,
         _cache=global_cache,
         _db=global_db,

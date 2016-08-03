@@ -5,6 +5,8 @@ Changelog
 1.0.5 (unreleased)
 ==================
 
+- Add and use domain blocklist.
+
 - Add Hydra Bloom filter library.
 
 - Use bulk inserts and upserts in session upload task.

@@ -44,6 +44,9 @@ EXPOSE 8000
 
 COPY . /app
 
+# Call setup.py to create scripts
+RUN python setup.py develop
+
 # Symlink version object to serve /__version__ endpoint
 RUN rm /app/miracle/static/version.json ; \
     ln -s /app/version.json /app/miracle/static/version.json

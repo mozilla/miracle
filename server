@@ -130,7 +130,7 @@ case "$1" in
   run)
     $0 start services
     docker build -t miracle .
-    docker run -it \
+    docker run -it --rm \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
         -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
         miracle $2 $3 $4 $5 $6 $7 $8 $9
@@ -139,6 +139,19 @@ case "$1" in
   # Runs alembic inside the container.
   alembic)
     $0 run alembic $2 $3 $4 $5 $6 $7 $8 $9
+    ;;
+
+  # Runs miracle_bloom inside the container.
+  bloom)
+    docker build -q -t miracle .
+    docker run -d --name="miracle_bloom" \
+        miracle bloom $2 $3 $4 $5 $6 $7 $8 $9
+    # Give the container time to create the archive.
+    sleep 2
+    docker cp "miracle_bloom:/tmp/output.tar" "data/output.tar"
+    docker kill miracle_bloom >/dev/null
+    docker rm miracle_bloom >/dev/null
+    cd data && tar -xvf output.tar && rm output.tar
     ;;
 
   # Open a shell inside the container.

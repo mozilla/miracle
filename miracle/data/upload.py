@@ -37,7 +37,7 @@ def check_field(value, type_, min_value, max_value):
     return value
 
 
-def validate(data):
+def validate(data, bloom_domain):
     # Validate the incoming data against the schema and filter out
     # any unwanted sessions.
     if (not isinstance(data, dict) or
@@ -63,7 +63,7 @@ def validate(data):
             validated_entry[field] = value
 
         if not missing_field:
-            filtered_entry = filter_entry(validated_entry)
+            filtered_entry = filter_entry(validated_entry, bloom_domain)
             if filtered_entry:
                 sessions.append(filtered_entry)
             else:
@@ -76,11 +76,15 @@ def validate(data):
             len(data['sessions']) - len(sessions))
 
 
-def filter_entry(session_entry):
+def filter_entry(session_entry, bloom_domain):
     # Check each session entry and filter some of them out.
     url_result = urlsplit(session_entry['url'])
     if (url_result.username or url_result.password or
             url_result.scheme not in ('http', 'https')):
+        return None
+
+    if url_result.hostname in bloom_domain:
+        # Filter out domains based on a blocklist.
         return None
 
     # Filter out private IP addresses.
@@ -205,7 +209,7 @@ def main(task, user, payload, _upload_data=True):
         task.stats.increment('data.upload.error.json')
         return False
 
-    parsed_data, drop_urls, drop_sessions = validate(data)
+    parsed_data, drop_urls, drop_sessions = validate(data, task.bloom_domain)
     task.stats.increment('data.url.drop', drop_urls)
     task.stats.increment('data.session.drop', drop_sessions)
     if not parsed_data['sessions']:

@@ -60,3 +60,19 @@ To inspect and manipulate the Redis cache, open a shell:
 And open the Redis client:
 
     redis-cli
+
+
+Bloom Filter
+------------
+
+To create or update a bloom filter file, create a newline separated,
+utf-8 encoded plain text file containing one entry per line, for
+example in `data/domain_blocklist.txt`. Then run:
+
+    ./server bloom data/domain_blocklist.txt
+
+This creates matching `data/domain_blocklist.dat` and `.dat.desc`
+files containing the binary version of the Hydra bloom filter.
+
+If there is an error during creation, try increasing the `sleep` values
+inside `./server` and `./conf/run.sh` in their bloom sections.
