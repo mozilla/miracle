@@ -19,7 +19,7 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 
     curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
         -H 'Content-Type: application/json' \
-        https://miracle.stage.mozaws.net/v1/upload -d '<data>'
+        https://miracle.services.mozilla.com/v1/upload -d '<data>'
 
 If the data was accepted, you get a `200` response code.
 
@@ -39,17 +39,26 @@ structure:
 
 .. code-block:: javascript
 
-{"sessions" : [
-    {
-        "start_time": 1468616293,
-        "url": "http://www.apple.com/path/something",
-        "duration": 2400
-    }, {
-        "lastAccessTime": 1468616317,
-        "url": "http://www.google.com/another/path/",
-        "duration": 4400
-    }
-]}
+    {"sessions" : [
+        {
+            "url": "http://www.apple.com/path/to/something",
+            "start_time": 1468616293,
+            "duration": 2400
+        }, {
+            "url": "http://www.google.com/another/path/?argument=term",
+            "start_time": 1468616317,
+            "duration": 4400
+        }
+    ]}
+
+A session in our context is specific to a single URL and describes the
+interaction that happens between the user and that URL from the time
+the user first opens the URL (starts the session) and the time the user
+navigates away from the URL (ends the session). Closing a browser window
+or closing the browser itself also ends the session.
+
+The start_time is specified in timezone neutral Unix time.
+The duration is measured in milliseconds.
 
 
 Delete
@@ -63,7 +72,7 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 .. code-block:: bash
 
     curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
-        https://miracle.stage.mozaws.net/v1/delete -d ''
+        https://miracle.services.mozilla.com/v1/delete -d ''
 
 If the delete request was accepted, you get a `200` response code.
 
