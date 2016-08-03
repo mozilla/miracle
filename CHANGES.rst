@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.5 (unreleased)
+1.0.5 (2016-08-03)
 ==================
 
 - Add and use domain blocklist.
