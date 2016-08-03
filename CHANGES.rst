@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.5 (unreleased)
+1.0.6 (2016-08-03)
 ==================
 
 - Database migration, pluralizing all table names.
