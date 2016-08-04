@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.7 (unreleased)
+1.0.7 (2016-08-04)
 ==================
 
 - Add help messages and progress logging to command line scripts.
