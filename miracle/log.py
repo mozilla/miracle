@@ -1,5 +1,6 @@
 from collections import deque
 import logging
+from logging.config import dictConfig
 import time
 
 from datadog.dogstatsd.base import DogStatsd
@@ -20,6 +21,8 @@ from miracle.config import (
     TESTING,
 )
 
+LOGGER = logging.getLogger('miracle')
+
 # Mapping of raven transport names to classes.
 RAVEN_TRANSPORTS = {
     'gevent': GeventedHTTPTransport,
@@ -33,13 +36,54 @@ SKIP_LOGGING = frozenset((
     '/robots.txt',
 ))
 
+LOGGING_FORMAT = '%(asctime)s - %(levelname)-5.5s [%(name)s] %(message)s'
+LOGGING_DATEFMT = '%Y-%m-%d %H:%M:%S'
+LOGGING_CONFIG = dict(
+    version=1,
+    formatters={
+        'generic': {
+            'format': LOGGING_FORMAT,
+            'datefmt': LOGGING_DATEFMT,
+        },
+    },
+    handlers={
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'generic',
+            'level': logging.DEBUG,
+            'stream': 'ext://sys.stderr',
+        },
+    },
+    root={
+        'handlers': ['console'],
+        'level': logging.WARN,
+    },
+    loggers=dict(
+        alembic={
+            'level': logging.INFO,
+            'qualname': 'alembic',
+        },
+        miracle={
+            'level': logging.INFO,
+            'qualname': 'miracle',
+        },
+        sqlalchemny={
+            'level': logging.WARN,
+            'qualname': 'sqlalchemy.engine',
+        },
+    ),
+)
+
 
 def configure_logging():
     """Configure basic Python logging."""
-    logging.basicConfig(
-        format='%(asctime)s - %(levelname)-5.5s [%(name)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
+    if TESTING:
+        logging.basicConfig(
+            format=LOGGING_FORMAT,
+            datefmt=LOGGING_DATEFMT,
+        )
+    else:  # pragma: no cover
+        dictConfig(LOGGING_CONFIG)
 
 
 def log_tween_factory(handler, registry):
