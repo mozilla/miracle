@@ -25,7 +25,7 @@ class URL(Model):
     )
 
     id = Column(BIGINT(), autoincrement=True, primary_key=True)
-    full = Column(String(2048), nullable=False, unique=True)
+    url = Column(String(2048), nullable=False, unique=True)
     hostname = Column(String(256))
     scheme = Column(String(8))
 
@@ -37,7 +37,7 @@ class URL(Model):
     def from_url(url):
         result = urlsplit(url)
         return {
-            'full': url,
+            'url': url,
             'scheme': result.scheme,
             'hostname': result.hostname,
         }
@@ -58,7 +58,8 @@ class Session(Model):
     __tablename__ = 'sessions'
 
     __table_args__ = (
-        Index('sessions_user_id_start_time_idx', 'user_id', 'start_time'),
+        Index('sessions_url_id_idx', 'url_id'),
+        Index('sessions_user_id_idx', 'user_id'),
     )
 
     id = Column(BIGINT(), autoincrement=True, primary_key=True)

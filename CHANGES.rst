@@ -5,6 +5,8 @@ Changelog
 1.0.7 (unreleased)
 ==================
 
+- Database migration, renaming "full" column and optimizing indices.
+
 - Set up logging for alembic migrations.
 
 

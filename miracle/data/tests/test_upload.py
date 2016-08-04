@@ -126,7 +126,7 @@ def test_upload_data_new_user(bloom_domain, db, stats):
         assert len(sessions) == 5
         assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
         assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
-        assert {sess.url.full for sess in sessions} == _PAYLOAD_URLS
+        assert {sess.url.url for sess in sessions} == _PAYLOAD_URLS
 
     stats.check(counter=[
         ('data.session.new', 1, 5),
@@ -154,7 +154,7 @@ def test_upload_data_existing_user(bloom_domain, db, stats):
         assert len(sessions) == 5
         assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
         assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
-        assert {sess.url.full for sess in sessions} == _PAYLOAD_URLS
+        assert {sess.url.url for sess in sessions} == _PAYLOAD_URLS
 
     stats.check(counter=[
         ('data.session.new', 1, 5),

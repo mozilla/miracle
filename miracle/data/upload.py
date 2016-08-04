@@ -106,7 +106,7 @@ def _create_urls(session, new_urls):
     url_values = []
 
     urls = dict(session.execute(
-        select([URL.full, URL.id]).where(URL.full.in_(new_urls))).fetchall())
+        select([URL.url, URL.id]).where(URL.url.in_(new_urls))).fetchall())
 
     for new_url in new_urls:
         if new_url not in urls:
@@ -163,8 +163,8 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
         if missing_url_ids:
             # Get missing URL ids.
             found_urls = dict(session.execute(
-                select([URL.full, URL.id]).where(
-                    URL.full.in_(missing_url_ids))).fetchall())
+                select([URL.url, URL.id]).where(
+                    URL.url.in_(missing_url_ids))).fetchall())
 
             urls.update(found_urls)
 

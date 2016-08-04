@@ -20,7 +20,7 @@ def test_url(db):
 
         url = session.query(URL).first()
         assert isinstance(url.id, int)
-        assert url.full == TEST_URL
+        assert url.url == TEST_URL
         assert url.scheme == 'https'
         assert url.hostname == 'www.example.com'
         assert url.sessions.all() == []
