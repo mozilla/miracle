@@ -35,9 +35,10 @@ class Database(object):
 
     def ping(self, raven):
         try:
-            res = self.engine.execute('select 1')
-            res.fetchall()
-            res.close()
+            with self.session(commit=False) as session:
+                res = session.execute('select 1')
+                res.fetchall()
+                res.close()
         except Exception:
             raven.captureException()
             return False

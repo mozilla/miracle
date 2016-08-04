@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy import delete
+
 from miracle.models.session import (
     URL,
     User,
@@ -49,7 +51,7 @@ def test_session(db):
         assert sess.duration == 2400
 
         # Deleting a session, leaves the user and URL untouched
-        session.query(Session).delete()
+        session.execute(delete(Session))
         session.commit()
         assert session.query(URL).count() == 1
         assert session.query(User).count() == 1
@@ -67,7 +69,7 @@ def test_session_url_delete(db):
         session.commit()
 
         # Deleting a URL, deletes all the URL's sessions
-        session.query(URL).filter(URL.id == url1.id).delete()
+        session.execute(delete(URL).where(URL.id == url1.id))
         session.commit()
         sessions = session.query(Session).all()
         assert len(sessions) == 1
@@ -86,7 +88,7 @@ def test_session_user_delete(db):
         session.commit()
 
         # Deleting the user, deletes all the user's sessions
-        session.query(User).filter(User.id == user1.id).delete()
+        session.execute(delete(User).where(User.id == user1.id))
         session.commit()
         sessions = session.query(Session).all()
         assert len(sessions) == 1

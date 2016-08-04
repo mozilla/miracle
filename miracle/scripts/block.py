@@ -1,5 +1,10 @@
 import sys
 
+from sqlalchemy import (
+    delete,
+    select,
+)
+
 from miracle.config import BLOOM_DOMAIN_SOURCE
 from miracle.db import create_db
 from miracle.models import URL
@@ -26,16 +31,17 @@ def remove_urls(db, lines):
         for i in range(0, len(lines), 100):
             name_batch = lines[i:i + 100]
             if name_batch:
-                rows = (session.query(URL.id)
-                               .filter(URL.hostname.in_(name_batch)).all())
-            if rows:
-                found_url_ids.extend([row[0] for row in rows])
+                rows = session.execute(
+                    select([URL.id]).where(
+                        URL.hostname.in_(name_batch))).fetchall()
+                if rows:
+                    found_url_ids.extend([row[0] for row in rows])
 
     if not found_url_ids:
         return 0
 
-    found_url_ids.sort()
     actually_deleted = 0
+    found_url_ids.sort()
     for i in range(0, len(found_url_ids), 10):
         # Delete URLs by id in small transactional batches, as these
         # can result in large numbers of sessions to be deleted at the
@@ -43,10 +49,8 @@ def remove_urls(db, lines):
         id_batch = found_url_ids[i:i + 10]
         if id_batch:
             with db.session() as session:
-                result = (session.query(URL)
-                                 .filter(URL.id.in_(id_batch))
-                                 .delete(synchronize_session=False))
-                actually_deleted += result
+                res = session.execute(delete(URL).where(URL.id.in_(id_batch)))
+                actually_deleted += res.rowcount
 
     return actually_deleted
 

@@ -1,3 +1,5 @@
+from sqlalchemy import delete
+
 from miracle.models import User
 
 
@@ -5,7 +7,8 @@ def delete_data(task, user):
     # Delete user data from the database.
     exists = False
     with task.db.session() as session:
-        exists = bool(session.query(User).filter(User.token == user).delete())
+        result = session.execute(delete(User).where(User.token == user))
+        exists = bool(result.rowcount)
     if exists:
         task.stats.increment('data.user.delete')
     return exists

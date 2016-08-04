@@ -4,6 +4,7 @@ import json
 import time
 from urllib.parse import urlsplit
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
 
@@ -104,8 +105,9 @@ def _create_urls(session, new_urls):
     added_urls = 0
     url_values = []
 
-    urls = dict(session.query(URL.full, URL.id)
-                       .filter(URL.full.in_(new_urls)).all())
+    urls = dict(session.execute(
+        select([URL.full, URL.id]).where(URL.full.in_(new_urls))).fetchall())
+
     for new_url in new_urls:
         if new_url not in urls:
             added_urls += 1
@@ -113,7 +115,7 @@ def _create_urls(session, new_urls):
             url_values.append(URL.from_url(new_url))
 
     if url_values:
-        stmt = insert(URL.__table__).on_conflict_do_nothing()
+        stmt = insert(URL).on_conflict_do_nothing()
         session.execute(stmt, url_values)
 
     return (added_urls, urls)
@@ -124,13 +126,13 @@ def _create_user(session, user_token):
     added_user = 0
     user_id = None
 
-    row = (session.query(User.id)
-                  .filter(User.token == user_token)).first()
+    row = session.execute(
+        select([User.id]).where(User.token == user_token)).fetchone()
     if row:
         user_id = row[0]
     else:
         added_user = 1
-        stmt = (insert(User.__table__)
+        stmt = (insert(User)
                 .on_conflict_do_nothing()
                 .values(token=user_token))
         result = session.execute(stmt)
@@ -160,9 +162,10 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
 
         if missing_url_ids:
             # Get missing URL ids.
-            found_urls = dict(session.query(URL.full, URL.id)
-                                     .filter(URL.full.in_(missing_url_ids))
-                                     .all())
+            found_urls = dict(session.execute(
+                select([URL.full, URL.id]).where(
+                    URL.full.in_(missing_url_ids))).fetchall())
+
             urls.update(found_urls)
 
         session_values = []
@@ -176,7 +179,7 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
 
         if session_values:
             # Bulk insert new sessions.
-            session.execute(insert(Session.__table__), session_values)
+            session.execute(insert(Session), session_values)
 
     # Emit metrics outside of the db transaction scope.
     task.stats.increment('data.url.new', added_urls)
