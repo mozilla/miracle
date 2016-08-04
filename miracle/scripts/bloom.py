@@ -1,8 +1,12 @@
+import argparse
 import os
 import shutil
 import sys
 
 import hydra
+
+from miracle.config import BLOOM_DOMAIN_SOURCE
+from miracle.log import configure_logging
 
 
 def create(in_filename, out_filename, archive_path, tmp_path):
@@ -38,6 +42,20 @@ def main(in_filename, base='/tmp'):
 
 
 def console_entry():  # pragma: no cover
+    configure_logging()
     argv = sys.argv
-    in_filename = argv[1]
-    main(in_filename)
+
+    parser = argparse.ArgumentParser(
+        prog=argv[0],
+        description='Create bloom filter from blocklist file.')
+    parser.add_argument('filename',
+                        help='Path to the blocklist file, e.g. %s' %
+                             BLOOM_DOMAIN_SOURCE)
+
+    args = parser.parse_args(argv[1:])
+    filename = os.path.abspath(args.filename)
+    if not os.path.isfile(filename):
+        print('File not found.')
+        sys.exit(1)
+
+    main(filename)

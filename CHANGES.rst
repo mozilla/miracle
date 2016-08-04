@@ -5,6 +5,8 @@ Changelog
 1.0.7 (unreleased)
 ==================
 
+- Add help messages and progress logging to command line scripts.
+
 - Database migration, renaming "full" column and optimizing indices.
 
 - Set up logging for alembic migrations.
