@@ -38,17 +38,22 @@ def init_worker(celery_app,
                 _bloom_domain=None, _bucket=None, _cache=None,
                 _db=None, _raven=None, _stats=None):
     configure_logging()
+    raven = create_raven(transport='threaded', _raven=_raven)
 
-    celery_app.bloom_domain = create_bloom_domain(_bloom=_bloom_domain)
-    celery_app.bucket = create_bucket(_bucket=_bucket)
-    celery_app.cache = create_cache(_cache=_cache)
-    celery_app.db = create_db(_db=_db)
-    celery_app.raven = create_raven(transport='threaded', _raven=_raven)
-    celery_app.stats = create_stats(_stats=_stats)
+    try:
+        celery_app.bloom_domain = create_bloom_domain(_bloom=_bloom_domain)
+        celery_app.bucket = create_bucket(_bucket=_bucket)
+        celery_app.cache = create_cache(_cache=_cache)
+        celery_app.db = create_db(_db=_db)
+        celery_app.raven = raven
+        celery_app.stats = create_stats(_stats=_stats)
 
-    celery_app.bucket.connect(celery_app.raven)
-    celery_app.cache.ping(celery_app.raven)
-    celery_app.db.ping(celery_app.raven)
+        celery_app.bucket.connect(celery_app.raven)
+        celery_app.cache.ping(celery_app.raven)
+        celery_app.db.ping(celery_app.raven)
+    except Exception:  # pragma: no cover
+        raven.captureException()
+        raise
 
 
 def shutdown_worker(celery_app):

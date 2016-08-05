@@ -5,6 +5,8 @@ Changelog
 1.0.8 (unreleased)
 ==================
 
+- Capture exceptions in the startup process and send them to Sentry.
+
 
 1.0.7 (2016-08-04)
 ==================
