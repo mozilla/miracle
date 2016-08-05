@@ -209,14 +209,14 @@ def main(task, user, payload, _upload_data=True):
     try:
         data = json.loads(payload)
     except json.JSONDecodeError:
-        task.stats.increment('data.upload.error.json')
+        task.stats.increment('data.upload.error', tags=['reason:json'])
         return False
 
     parsed_data, drop_urls, drop_sessions = validate(data, task.bloom_domain)
     task.stats.increment('data.url.drop', drop_urls)
     task.stats.increment('data.session.drop', drop_sessions)
     if not parsed_data['sessions']:
-        task.stats.increment('data.upload.error.validation')
+        task.stats.increment('data.upload.error', tags=['reason:validation'])
         return False
 
     # Testing hooks
@@ -227,5 +227,5 @@ def main(task, user, payload, _upload_data=True):
 
     success = _upload_data(task, user, parsed_data)
     if not success:  # pragma: no cover
-        task.stats.increment('data.upload.error.db')
+        task.stats.increment('data.upload.error', tags=['reason:db'])
     return success

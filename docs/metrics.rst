@@ -39,11 +39,12 @@ Each data upload emits a variety of metrics, depending on the data
 that it gets.
 
 In case an error occurred during the upload or the data was invalid,
-one of the following counters will be emitted:
+a counter called ``data.upload.error` will be emitted. It will be
+tagged with a ``reason:<value>`` tag with one of the following values:
 
-    - ``data.upload.error.json``: The data was not valid JSON.
-    - ``data.upload.error.validation``: The data didn't match the schema.
-    - ``data.upload.error.db``: The data couldn't be inserted into the db.
+    - ``reason:json``: The data was not valid JSON.
+    - ``reason:validation``: The data didn't match the schema.
+    - ``reason:db``: The data couldn't be inserted into the db.
 
 For successful and valid data uploads, additional metrics capture facts
 about the data itself:

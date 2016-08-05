@@ -239,6 +239,6 @@ def test_task_fail(celery, stats):
 
     stats.check(counter=[
         ('data.session.drop', 1),
-        ('data.upload.error.json', 1),
-        ('data.upload.error.validation', 1),
+        ('data.upload.error', 1, ['reason:json']),
+        ('data.upload.error', 1, ['reason:validation']),
     ])
