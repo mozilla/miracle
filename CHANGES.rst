@@ -5,6 +5,8 @@ Changelog
 1.0.8 (unreleased)
 ==================
 
+- No longer set up a DB connection from the web app.
+
 - Capture exceptions in the startup process and send them to Sentry.
 
 

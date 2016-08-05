@@ -183,11 +183,10 @@ def celery(global_celery, bucket, cache, db, raven, stats):
 
 
 @pytest.yield_fixture(scope='session')
-def global_app(global_cache, global_celery, global_db,
+def global_app(global_cache, global_celery,
                global_raven, global_stats):
     wsgiapp = create_app(
         _cache=global_cache,
-        _db=global_db,
         _raven=global_raven,
         _stats=global_stats)
     app = webtest.TestApp(wsgiapp)
@@ -196,5 +195,5 @@ def global_app(global_cache, global_celery, global_db,
 
 
 @pytest.yield_fixture(scope='function')
-def app(global_app, cache, celery, db, raven, stats):
+def app(global_app, cache, celery, raven, stats):
     yield global_app

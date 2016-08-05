@@ -2,7 +2,6 @@ import pytest
 import webtest
 
 from miracle.cache import create_cache
-from miracle.db import create_db
 from miracle.web.app import (
     create_app,
     shutdown_app,
@@ -12,24 +11,22 @@ from miracle.web.app import (
 @pytest.yield_fixture(scope='function')
 def broken_app(raven, stats):
     cache = create_cache('redis://127.0.0.1:9/15')
-    db = create_db('postgresql+psycopg2://user:pass@127.0.0.1:9/none')
 
-    wsgiapp = create_app(_cache=cache, _db=db, _raven=raven, _stats=stats)
-    raven.check(['ConnectionError', 'OperationalError'])
+    wsgiapp = create_app(_cache=cache, _raven=raven, _stats=stats)
+    raven.check(['ConnectionError'])
 
     app = webtest.TestApp(wsgiapp)
     yield app
     shutdown_app(app.app)
 
     cache.close()
-    db.close()
 
 
 def test_config(app):
     assert hasattr(app, 'app')
     assert hasattr(app.app, 'registry')
     assert hasattr(app.app.registry, 'cache')
-    assert hasattr(app.app.registry, 'db')
+    assert not hasattr(app.app.registry, 'db')
     assert hasattr(app.app.registry, 'raven')
     assert hasattr(app.app.registry, 'stats')
 
@@ -37,7 +34,7 @@ def test_config(app):
 def test_heartbeat(app, stats):
     res = app.get('/__heartbeat__')
     assert res.status_code == 200
-    assert res.json == {'cache': {'up': True}, 'db': {'up': True}}
+    assert res.json == {'cache': {'up': True}}
     stats.check(counter=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:200']),
     ], timer=[
@@ -48,13 +45,13 @@ def test_heartbeat(app, stats):
 def test_heartbeat_error(broken_app, raven, stats):
     res = broken_app.get('/__heartbeat__', status=503)
     assert res.status_code == 503
-    assert res.json == {'cache': {'up': False}, 'db': {'up': False}}
+    assert res.json == {'cache': {'up': False}}
     stats.check(counter=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:503']),
     ], timer=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:503']),
     ])
-    raven.check(['ConnectionError', 'OperationalError'])
+    raven.check(['ConnectionError'])
 
 
 def test_index(app, stats):
