@@ -62,6 +62,21 @@ And open the Redis client::
     redis-cli
 
 
+Docker Tips
+-----------
+
+While working with docker, one tends to accumulate large numbers of
+orphaned containers and images.
+
+To clean up all containers (excluding those which are running), do::
+
+    docker rm $(docker ps -a -q)
+
+Afterwards you can remove all images, which are no longer in use::
+
+    docker rmi $(docker images -f "dangling=true" -q)
+
+
 Bloom Filter
 ------------
 
