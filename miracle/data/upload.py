@@ -1,12 +1,12 @@
 from datetime import datetime
-from ipaddress import ip_address
+from ipaddress import _BaseAddress
 import json
 import time
-from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
+from uritools import urisplit
 
 from miracle.models import (
     URL,
@@ -79,23 +79,25 @@ def validate(data, bloom_domain):
 
 def filter_entry(session_entry, bloom_domain):
     # Check each session entry and filter some of them out.
-    url_result = urlsplit(session_entry['url'])
-    if (url_result.username or url_result.password or
-            url_result.scheme not in ('http', 'https')):
-        return None
-
-    if url_result.hostname in bloom_domain:
-        # Filter out domains based on a blocklist.
-        return None
-
-    # Filter out private IP addresses.
     try:
-        ip = ip_address(url_result.hostname)
-    except ValueError:
-        pass
-    else:
-        if not ip.is_global:
+        url_result = urisplit(session_entry['url'])
+        host = url_result.gethost()
+    except ValueError:  # pragma: no cover
+        return None
+
+    if (url_result.scheme not in ('http', 'https') or url_result.userinfo):
+        return None
+
+    if isinstance(host, str):
+        if host in bloom_domain:
+            # Filter out domains based on a blocklist.
             return None
+    elif isinstance(host, _BaseAddress):
+        # Filter out private IP addresses.
+        if not host.is_global:
+            return None
+    else:  # pragma: no cover
+        return None
 
     return session_entry
 

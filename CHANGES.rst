@@ -5,6 +5,8 @@ Changelog
 1.0.9 (unreleased)
 ==================
 
+- Use uritools for URL splitting.
+
 
 1.0.8 (2016-08-05)
 ==================
