@@ -1,6 +1,8 @@
 
 
-def test_bucket(bucket):
+def test_bucket(bucket, raven):
+    assert bucket.connect(raven)
+
     bucket.put('foo', b'bar')
     obj = bucket.get('foo')
     assert obj['ContentEncoding'] is None

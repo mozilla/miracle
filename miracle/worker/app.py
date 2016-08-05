@@ -48,7 +48,6 @@ def init_worker(celery_app,
         celery_app.raven = raven
         celery_app.stats = create_stats(_stats=_stats)
 
-        celery_app.bucket.connect(raven)
         celery_app.cache.ping(raven)
         celery_app.db.ping(raven)
     except Exception:  # pragma: no cover
