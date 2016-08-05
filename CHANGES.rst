@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.8 (unreleased)
+1.0.8 (2016-08-05)
 ==================
 
 - Use tags for `data.upload.error` metrics.
