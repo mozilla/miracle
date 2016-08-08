@@ -5,6 +5,8 @@ Changelog
 1.0.9 (unreleased)
 ==================
 
+- Add a `/v1/stats` API endpoint.
+
 - Use uritools for URL splitting.
 
 

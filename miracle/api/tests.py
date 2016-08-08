@@ -29,6 +29,15 @@ def test_delete_fail(app, stats):
     ])
 
 
+def test_stats(app, stats):
+    res = app.get('/v1/stats', status=200)
+    assert CORS_HEADERS - set(res.headers.keys()) == set()
+    assert res.json == {}
+    stats.check(timer=[
+        ('request', 1, ['path:v1.stats', 'method:get', 'status:200']),
+    ])
+
+
 def test_upload(app, stats):
     res = app.post_json('/v1/upload',
                         {'foo': 1},

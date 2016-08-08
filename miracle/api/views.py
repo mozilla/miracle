@@ -11,6 +11,7 @@ from miracle.util import gzip_decode
 
 def configure(config):
     DeleteView.configure(config)
+    StatsView.configure(config)
     UploadView.configure(config)
 
 
@@ -88,6 +89,18 @@ class DeleteView(View):
 
         tasks.delete.delay(user)
         return {'status': 'success'}
+
+
+class StatsView(View):
+
+    _route_name = 'v1_stats'
+    _route_path = '/v1/stats'
+
+    _supported_methods = ('GET', )
+    _unsupported_methods = ('POST', 'PUT', 'DELETE', 'PATCH')
+
+    def __call__(self):
+        return {}
 
 
 class UploadView(View):

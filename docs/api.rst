@@ -78,3 +78,17 @@ If the delete request was accepted, you get a `200` response code.
 
 If the request was malformed, you can get `4xx` responses, if the
 service is unavailable or broken, you might get `5xx` responses.
+
+
+Stats
+=====
+
+To get general statistics from the service, you can do a HTTPS GET
+request to the ``/v1/stats`` API endpoint.
+
+.. code-block:: bash
+
+    curl https://miracle.services.mozilla.com/v1/stats
+
+The response contains a JSON body, with a mapping of metrics names
+to values.
