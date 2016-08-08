@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.0.9 (unreleased)
+1.0.9 (2016-08-08)
 ==================
 
 - Add a `/v1/stats` API endpoint.
