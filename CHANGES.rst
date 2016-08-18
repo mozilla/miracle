@@ -5,6 +5,8 @@ Changelog
 1.1.0 (unreleased)
 ==================
 
+- Update Python dependencies and add new cryptography dependency.
+
 
 1.0.9 (2016-08-08)
 ==================

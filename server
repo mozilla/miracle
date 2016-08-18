@@ -129,7 +129,7 @@ case "$1" in
   # Runs command inside the container.
   run)
     $0 start services
-    docker build -q -t mozilla/miracle .
+    docker build -t mozilla/miracle .
     docker run -it --rm \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
         -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \

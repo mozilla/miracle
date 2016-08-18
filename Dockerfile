@@ -18,6 +18,7 @@ CMD ["web"]
 
 # Install runtime dependencies
 RUN apk add --no-cache \
+    libffi \
     postgresql-client \
     postgresql-libs \
     redis
@@ -27,6 +28,7 @@ COPY ./wheelhouse/* /app/wheelhouse/
 COPY ./requirements/build.txt ./requirements/binary.txt /app/requirements/
 RUN apk add --no-cache --virtual .deps \
     build-base \
+    libffi-dev \
     postgresql-dev && \
     pip install --no-deps --no-cache-dir --require-hashes \
         -r requirements/build.txt && \
@@ -45,7 +47,9 @@ EXPOSE 8000
 COPY . /app
 
 # Call setup.py to create scripts
+RUN chown app:app /app
 RUN python setup.py develop
+RUN python -c "import compileall; compileall.compile_dir('miracle', quiet=1)"
 
 # Symlink version object to serve /__version__ endpoint
 RUN rm /app/miracle/static/version.json ; \
