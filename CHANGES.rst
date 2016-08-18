@@ -5,6 +5,8 @@ Changelog
 1.1.0 (unreleased)
 ==================
 
+- Add crypto helper module for RSA-OAEP based encryption.
+
 - Update Python dependencies and add new cryptography dependency.
 
 

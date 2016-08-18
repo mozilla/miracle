@@ -37,16 +37,18 @@ variables.
 
 Both roles expect:
 
-* ``DB_HOST``, example ``example.rds.amazonaws.com``
-* ``DB_NAME``, example ``miracle``
-* ``DB_USER``, example ``miracle``
-* ``DB_PASSWORD``, example ``secret``
 * ``REDIS_HOST``, example ``example.cache.amazonaws.com``
 * ``SENTRY_DSN``, example ``https://public:secret@sentry.example.com/id``
 * ``STATSD_HOST``, example ``172.17.42.1``
 
 The worker role additionally expects:
 
+* ``DB_HOST``, example ``example.rds.amazonaws.com``
+* ``DB_NAME``, example ``miracle``
+* ``DB_USER``, example ``miracle``
+* ``DB_PASSWORD``, example ``secret``
+* ``PRIVATE_KEY``, example ``-----BEGIN PRIVATE KEY-----\n...``
+* ``PUBLIC_KEY``, example ``-----BEGIN PUBLIC KEY-----\n...``
 * ``S3_BUCKET``, example ``com-example-dev-us-west-2-miracle``
 
 

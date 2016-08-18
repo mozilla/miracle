@@ -13,6 +13,7 @@ from miracle.bloom import create_bloom_domain
 from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.config import ALEMBIC_CFG
+from miracle.crypto import create_crypto
 from miracle.db import create_db
 from miracle.log import (
     create_raven,
@@ -108,6 +109,12 @@ def cache(global_cache):
 
 
 @pytest.yield_fixture(scope='session')
+def crypto():
+    crypto = create_crypto()
+    yield crypto
+
+
+@pytest.yield_fixture(scope='session')
 def global_db():
     db = create_db()
     teardown_db(db.engine)
@@ -163,13 +170,14 @@ def stats(global_stats):
 
 
 @pytest.yield_fixture(scope='session')
-def global_celery(bloom_domain, global_bucket, global_cache,
+def global_celery(bloom_domain, crypto, global_bucket, global_cache,
                   global_db, global_raven, global_stats):
     init_worker(
         celery_app,
         _bloom_domain=bloom_domain,
         _bucket=global_bucket,
         _cache=global_cache,
+        _crypto=crypto,
         _db=global_db,
         _raven=global_raven,
         _stats=global_stats)

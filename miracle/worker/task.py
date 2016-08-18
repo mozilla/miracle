@@ -58,6 +58,10 @@ class BaseTask(Task):
         return self.app.cache
 
     @property
+    def crypto(self):
+        return self.app.crypto
+
+    @property
     def db(self):
         return self.app.db
 

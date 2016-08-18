@@ -19,7 +19,6 @@ DB_NAME = os.environ.get('DB_NAME', 'miracle')
 DB_URI = 'postgresql+psycopg2://%s:%s@%s:5432/%s' % (
     DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
 
-
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_DB = '1' if TESTING else '0'
 REDIS_URI = 'redis://%s:6379/%s' % (REDIS_HOST, REDIS_DB)
@@ -31,3 +30,12 @@ STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
 ALEMBIC_CFG = AlembicConfig()
 ALEMBIC_CFG.set_section_option('alembic', 'script_location', 'miracle/alembic')
 ALEMBIC_CFG.set_section_option('alembic', 'sqlalchemy.url', DB_URI)
+
+PRIVATE_KEY = os.environ.get('PRIVATE_KEY')
+PUBLIC_KEY = os.environ.get('PUBLIC_KEY')
+
+if TESTING:
+    with open(os.path.join(DATA_DIR, 'test_key.pem'), 'rb') as fd:
+        PRIVATE_KEY = fd.read()
+    with open(os.path.join(DATA_DIR, 'test_key.pem.pub'), 'rb') as fd:
+        PUBLIC_KEY = fd.read()
