@@ -1,15 +1,28 @@
 import pytest
 
 
+def test_jwk(crypto):
+    priv = crypto._private_jwk
+    assert priv.key_type == 'RSA'
+    pub = crypto._public_jwk
+    assert pub.key_type == 'RSA'
+    assert priv.thumbprint() == pub.thumbprint()
+
+
+def test_pyca(crypto):
+    assert crypto._private.key_size == 2048
+    assert crypto._public.key_size == 2048
+
+
 def test_encrypt(crypto):
     data = crypto.encrypt(b'{"foo": 1, "bar": []}')
-    assert isinstance(data, bytes)
-    assert b'{"foo' not in data
+    assert isinstance(data, str)
+    assert '{"foo' not in data
 
 
 def test_encrypt_fail(crypto):
     with pytest.raises(ValueError):
-        crypto.encrypt('')
+        crypto.encrypt(None)
 
 
 def test_decrypt(crypto):
@@ -19,4 +32,4 @@ def test_decrypt(crypto):
 
 def test_decrypt_fail(crypto):
     with pytest.raises(ValueError):
-        crypto.decrypt(b'plain text')
+        crypto.decrypt(None)

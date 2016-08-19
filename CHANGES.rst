@@ -5,6 +5,8 @@ Changelog
 1.1.0 (unreleased)
 ==================
 
+- Change crypto helper module to use JWE RSA-OAEP/A256GCM encryption.
+
 - Add crypto helper module for RSA-OAEP based encryption.
 
 - Update Python dependencies and add new cryptography dependency.
