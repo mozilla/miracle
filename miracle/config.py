@@ -35,7 +35,7 @@ ALEMBIC_CFG.set_section_option('alembic', 'sqlalchemy.url', DB_URI)
 PRIVATE_KEY = os.environ.get('PRIVATE_KEY')
 PUBLIC_KEY = os.environ.get('PUBLIC_KEY')
 
-if TESTING:
+if not PRIVATE_KEY and not PUBLIC_KEY:
     with open(os.path.join(DATA_DIR, 'test_key.pem'), 'rb') as fd:
         PRIVATE_KEY = base64.b64encode(fd.read())
     with open(os.path.join(DATA_DIR, 'test_key.pem.pub'), 'rb') as fd:

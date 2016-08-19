@@ -1,6 +1,4 @@
-from base64 import (
-    b64decode,
-)
+from base64 import b64decode
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -67,7 +65,7 @@ class Crypto(object):
         try:
             jwe = JWE()
             jwe.deserialize(ciphertext, key=self._private_jwk)
-            plaintext = jwe.payload
+            plaintext = jwe.payload.decode('utf-8')
         except Exception:
             raise ValueError("Couldn't decrypt message.")
         return plaintext

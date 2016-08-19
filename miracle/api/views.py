@@ -1,3 +1,5 @@
+import json
+
 from pyramid.httpexceptions import (
     HTTPBadRequest,
     HTTPMethodNotAllowed,
@@ -11,12 +13,14 @@ from miracle.util import gzip_decode
 
 def configure(config):
     DeleteView.configure(config)
+    JWKView.configure(config)
     StatsView.configure(config)
     UploadView.configure(config)
 
 
 class View(object):
 
+    _renderer = 'json'
     _route_name = None
     _route_path = None
 
@@ -35,7 +39,7 @@ class View(object):
         config.add_route(cls._route_name, cls._route_path)
         config.add_view(cls,
                         route_name=cls._route_name,
-                        renderer='json',
+                        renderer=cls._renderer,
                         request_method=cls._supported_methods)
         config.add_view(cls,
                         attr='head',
@@ -89,6 +93,20 @@ class DeleteView(View):
 
         tasks.delete.delay(user)
         return {'status': 'success'}
+
+
+class JWKView(View):
+
+    _route_name = 'v1_jwk'
+    _route_path = '/v1/jwk'
+
+    _supported_methods = ('GET', )
+    _unsupported_methods = ('POST', 'PUT', 'DELETE', 'PATCH')
+
+    def __call__(self):
+        jwk = self.request.registry.crypto._public_jwk
+        data = jwk.export(private_key=False)
+        return json.loads(data)
 
 
 class StatsView(View):

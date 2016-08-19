@@ -2,9 +2,32 @@
 API
 ===
 
-The miracle service provides two API endpoints. One to share your
-data with and upload it to the service. Another one to ask the service
-to forget and delete all data about you.
+The miracle service provides a couple of API endpoints. The two primary
+endpoints allow you to share your data with and upload it to the service.
+The other allows you to ask the service to forget and delete all data
+about you.
+
+
+JWK
+===
+
+The service requires you to send in any data in an encrypted form
+using JWE encryption using the RSA-OAEP algorithm and A256GCM stream
+encryption.
+
+The service provides an endpoint exposing the public RSA key you need
+to use in JWK format. You can issue a HTTPS GET request to ``/v1/jwk``
+to get the key:
+
+.. code-block:: bash
+
+    curl https://miracle.services.mozilla.com/v1/jwk
+
+The response contains a JSON body, of the form:
+
+.. code-block:: javascript
+
+    {"e": "AQAB", "kty": "RSA", "n": "..."}
 
 
 Upload
@@ -18,7 +41,7 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 .. code-block:: bash
 
     curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
-        -H 'Content-Type: application/json' \
+        -H 'Content-Type: text/plain' \
         https://miracle.services.mozilla.com/v1/upload -d '<data>'
 
 If the data was accepted, you get a `200` response code.
@@ -34,8 +57,12 @@ header in the request.
 Payload
 -------
 
-The payload data is expected to be a JSON mapping with the following
-structure:
+The payload data is expected to be an JWE encrypted blob, using the
+service provided public key. The algorithm needs to be RSA-OAEP with
+A256GCM encryption.
+
+The data inside the blob is a stringified JSON mapping with the
+following structure:
 
 .. code-block:: javascript
 

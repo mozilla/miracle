@@ -15,7 +15,7 @@ def test_pyca(crypto):
 
 
 def test_encrypt(crypto):
-    data = crypto.encrypt(b'{"foo": 1, "bar": []}')
+    data = crypto.encrypt('{"foo": 1, "bar": []}')
     assert isinstance(data, str)
     assert '{"foo' not in data
 
@@ -26,8 +26,8 @@ def test_encrypt_fail(crypto):
 
 
 def test_decrypt(crypto):
-    data = crypto.encrypt(b'{"foo": 1, "bar": []}')
-    assert crypto.decrypt(data) == b'{"foo": 1, "bar": []}'
+    data = crypto.encrypt('{"foo": 1, "bar": []}')
+    assert crypto.decrypt(data) == '{"foo": 1, "bar": []}'
 
 
 def test_decrypt_fail(crypto):

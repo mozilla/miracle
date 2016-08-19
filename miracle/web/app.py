@@ -3,6 +3,7 @@ from pyramid.tweens import EXCVIEW
 
 from miracle.api.views import configure as configure_api_views
 from miracle.cache import create_cache
+from miracle.crypto import create_crypto
 from miracle.log import (
     configure_logging,
     create_raven,
@@ -24,7 +25,7 @@ def application(environ, start_response):  # pragma: no cover
     return _APP(environ, start_response)
 
 
-def create_app(_cache=None, _raven=None, _stats=None):
+def create_app(_cache=None, _crypto=None, _raven=None, _stats=None):
     configure_logging()
     raven = create_raven(transport='gevent', _raven=_raven)
 
@@ -36,6 +37,7 @@ def create_app(_cache=None, _raven=None, _stats=None):
         configure_web_views(config)
 
         config.registry.cache = create_cache(_cache=_cache)
+        config.registry.crypto = create_crypto(_crypto=_crypto)
         config.registry.raven = raven
         config.registry.stats = create_stats(_stats=_stats)
 
@@ -54,6 +56,7 @@ def shutdown_app(app):
     if registry is not None:
         registry.cache.close()
         del registry.cache
+        del registry.crypto
         del registry.raven
         registry.stats.close()
         del registry.stats

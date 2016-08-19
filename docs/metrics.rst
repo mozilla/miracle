@@ -42,6 +42,7 @@ In case an error occurred during the upload or the data was invalid,
 a counter called ``data.upload.error` will be emitted. It will be
 tagged with a ``reason:<value>`` tag with one of the following values:
 
+    - ``reason:encryption``: The data was not correctly encrypted.
     - ``reason:json``: The data was not valid JSON.
     - ``reason:validation``: The data didn't match the schema.
     - ``reason:db``: The data couldn't be inserted into the db.

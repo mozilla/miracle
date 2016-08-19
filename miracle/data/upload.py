@@ -209,7 +209,13 @@ def upload_data(task, user_token, data,
 
 def main(task, user, payload, _upload_data=True):
     try:
-        data = json.loads(payload)
+        data = task.crypto.decrypt(payload)
+    except ValueError:
+        task.stats.increment('data.upload.error', tags=['reason:encryption'])
+        return False
+
+    try:
+        data = json.loads(data)
     except json.JSONDecodeError:
         task.stats.increment('data.upload.error', tags=['reason:json'])
         return False

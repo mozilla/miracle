@@ -62,8 +62,9 @@ _COMBINED_PAYLOAD['sessions'].extend(_INVALID_SESSIONS)
 
 class DummyTask(object):
 
-    def __init__(self, bloom_domain=None, db=None, stats=None):
+    def __init__(self, bloom_domain=None, crypto=None, db=None, stats=None):
         self.bloom_domain = bloom_domain
+        self.crypto = crypto
         self.db = db
         self.stats = stats
 
@@ -209,19 +210,21 @@ def test_upload_data_conflict(bloom_domain, cleanup_db, db, stats):
                     assert session.query(Session).count() == 5
 
 
-def test_upload_main(bloom_domain, db, stats):
+def test_upload_main(bloom_domain, crypto, db, stats):
     def _upload(task, user, data):
         return (user, data)
 
-    task = DummyTask(bloom_domain=bloom_domain, db=db, stats=stats)
+    task = DummyTask(bloom_domain=bloom_domain,
+                     crypto=crypto, db=db, stats=stats)
     result = upload.main(
-        task, 'foo', json.dumps(_PAYLOAD), _upload_data=_upload)
+        task, 'foo', crypto.encrypt(json.dumps(_PAYLOAD)),
+        _upload_data=_upload)
     assert result == ('foo', _PAYLOAD)
 
 
-def test_task(celery, stats):
+def test_task(celery, crypto, stats):
     assert tasks.upload.delay(
-        'foo', json.dumps(_COMBINED_PAYLOAD).encode('utf-8'),
+        'foo', crypto.encrypt(json.dumps(_COMBINED_PAYLOAD)),
         _upload_data=False).get()
 
     stats.check(counter=[
@@ -230,12 +233,12 @@ def test_task(celery, stats):
     ])
 
 
-def test_task_fail(celery, stats):
+def test_task_fail(celery, crypto, stats):
     assert not tasks.upload.delay(
-        'foo', b'no json', _upload_data=False).get()
+        'foo', crypto.encrypt(b'no json'), _upload_data=False).get()
 
     assert not tasks.upload.delay(
-        'foo', b'{"sessions": [{}]}', _upload_data=False).get()
+        'foo', crypto.encrypt(b'{"sessions": [{}]}'), _upload_data=False).get()
 
     stats.check(counter=[
         ('data.session.drop', 1),

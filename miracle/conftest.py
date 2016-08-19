@@ -191,10 +191,11 @@ def celery(global_celery, bucket, cache, db, raven, stats):
 
 
 @pytest.yield_fixture(scope='session')
-def global_app(global_cache, global_celery,
+def global_app(crypto, global_cache, global_celery,
                global_raven, global_stats):
     wsgiapp = create_app(
         _cache=global_cache,
+        _crypto=crypto,
         _raven=global_raven,
         _stats=global_stats)
     app = webtest.TestApp(wsgiapp)
