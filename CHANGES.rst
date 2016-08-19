@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.0 (unreleased)
+1.1.0 (2016-08-19)
 ==================
 
 - Remove support for GZIP encoded upload requests.
