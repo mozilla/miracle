@@ -47,9 +47,15 @@ The worker role additionally expects:
 * ``DB_NAME``, example ``miracle``
 * ``DB_USER``, example ``miracle``
 * ``DB_PASSWORD``, example ``secret``
-* ``PRIVATE_KEY``, example ``-----BEGIN PRIVATE KEY-----\n...``
-* ``PUBLIC_KEY``, example ``-----BEGIN PUBLIC KEY-----\n...``
+* ``PRIVATE_KEY``, example ``LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCg==...``
+* ``PUBLIC_KEY``, example ``LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0K\n...``
 * ``S3_BUCKET``, example ``com-example-dev-us-west-2-miracle``
+
+The ``PRIVATE_KEY`` and ``PUBLIC_KEY`` are both base64 encoded versions
+of PEM files. So the private key should start with
+``-----BEGIN PRIVATE KEY-----\n`` before being base64 encoded and the
+public key should start with ``-----BEGIN PUBLIC KEY-----`` before being
+base64 encoded.
 
 
 Database Setup

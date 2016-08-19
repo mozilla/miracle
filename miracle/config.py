@@ -1,3 +1,4 @@
+import base64
 import os
 
 from alembic.config import Config as AlembicConfig
@@ -36,6 +37,6 @@ PUBLIC_KEY = os.environ.get('PUBLIC_KEY')
 
 if TESTING:
     with open(os.path.join(DATA_DIR, 'test_key.pem'), 'rb') as fd:
-        PRIVATE_KEY = fd.read()
+        PRIVATE_KEY = base64.b64encode(fd.read())
     with open(os.path.join(DATA_DIR, 'test_key.pem.pub'), 'rb') as fd:
-        PUBLIC_KEY = fd.read()
+        PUBLIC_KEY = base64.b64encode(fd.read())

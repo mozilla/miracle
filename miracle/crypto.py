@@ -1,3 +1,7 @@
+from base64 import (
+    b64decode,
+)
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
@@ -30,7 +34,7 @@ class Crypto(object):
     def _load_private(self, data):
         try:
             return serialization.load_pem_private_key(
-                data, password=None, backend=self._backend)
+                b64decode(data), password=None, backend=self._backend)
         except Exception:  # pragma: no cover
             LOGGER.error(
                 'Failed to parse private key starting with: %s', data[:28])
@@ -38,7 +42,7 @@ class Crypto(object):
     def _load_public(self, data):
         try:
             return serialization.load_pem_public_key(
-                data, backend=self._backend)
+                b64decode(data), backend=self._backend)
         except Exception:  # pragma: no cover
             LOGGER.error(
                 'Failed to parse public key starting with: %s', data[:26])
