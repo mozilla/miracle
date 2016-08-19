@@ -5,6 +5,8 @@ Changelog
 1.1.0 (unreleased)
 ==================
 
+- Remove support for GZIP encoded upload requests.
+
 - Change the upload API to expect a JWE encrypted body.
 
 - Change crypto helper module to use JWE RSA-OAEP/A256GCM encryption.

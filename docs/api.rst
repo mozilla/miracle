@@ -49,10 +49,6 @@ If the data was accepted, you get a `200` response code.
 If the request was malformed, you can get `4xx` responses, if the
 service is unavailable or broken, you might get `5xx` responses.
 
-The upload endpoint optionally supports sending the body GZIP encoded.
-To do so, you need to additionally specify the ``Content-Encoding: gzip``
-header in the request.
-
 
 Payload
 -------

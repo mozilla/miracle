@@ -7,8 +7,6 @@ from pyramid.httpexceptions import (
 from pyramid.response import Response
 
 from miracle.data import tasks
-from miracle.exceptions import GZIPDecodeError
-from miracle.util import gzip_decode
 
 
 def configure(config):
@@ -136,12 +134,6 @@ class UploadView(View):
         body = self.request.body
         if not body:
             return HTTPBadRequest('Empty body.')
-
-        if self.request.headers.get('Content-Encoding') == 'gzip':
-            try:
-                body = gzip_decode(body, encoding=None)
-            except GZIPDecodeError:
-                return HTTPBadRequest('Invalid GZIP body.')
 
         if len(body) > self._max_size:
             return HTTPBadRequest('Uncompressed body too large.')

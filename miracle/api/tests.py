@@ -1,7 +1,5 @@
 import json
 
-from miracle.util import gzip_encode
-
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin',
@@ -89,26 +87,6 @@ def test_upload_fail(app, stats):
     stats.check(timer=[
         ('request', 3, ['path:v1.upload', 'method:post', 'status:400']),
     ])
-
-
-def test_upload_gzip(app, crypto):
-    data = gzip_encode(crypto.encrypt(b'{"foo": 1}'))
-    res = app.post('/v1/upload',
-                   data,
-                   headers={'Content-Encoding': 'gzip',
-                            'Content-Type': 'text/plain',
-                            'X-User': b'abc'},
-                   status=200)
-    assert res.json == {'status': 'success'}
-
-
-def test_upload_gzip_fail(app):
-    app.post('/v1/upload',
-             b'invalid',
-             headers={'Content-Encoding': 'gzip',
-                      'Content-Type': 'text/plain',
-                      'X-User': b'abc'},
-             status=400)
 
 
 def test_head(app, stats):

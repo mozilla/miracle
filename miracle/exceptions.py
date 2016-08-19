@@ -1,3 +1,0 @@
-
-class GZIPDecodeError(Exception):
-    pass
