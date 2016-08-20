@@ -13,12 +13,19 @@ DATA_DIR = os.path.abspath(os.path.join(HERE, os.pardir, 'data'))
 BLOOM_DOMAIN = os.path.join(DATA_DIR, 'domain_blocklist.dat')
 BLOOM_DOMAIN_SOURCE = os.path.join(DATA_DIR, 'domain_blocklist.txt')
 
+DB_ROOT_CERT = os.environ.get('DB_ROOT_CERT', 'rds_root_ca.pem')
+if TESTING:
+    DB_ROOT_CERT = 'postgres_dev_ssl.pem'
+DB_ROOT_CERT = os.path.join(DATA_DIR, DB_ROOT_CERT)
+
 DB_USER = os.environ.get('DB_USER', 'miracle')
 DB_PASSWORD = os.environ.get('DB_PASSWORD', 'miracle')
 DB_HOST = os.environ.get('DB_HOST', 'localhost')
 DB_NAME = os.environ.get('DB_NAME', 'miracle')
-DB_URI = 'postgresql+psycopg2://%s:%s@%s:5432/%s' % (
-    DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+DB_URI = (
+    'postgresql+psycopg2://%s:%s@%s:5432/%s?'
+    'client_encoding=utf8&sslmode=verify-ca&sslrootcert=%s') % (
+    DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_ROOT_CERT)
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_DB = '1' if TESTING else '0'
@@ -36,6 +43,7 @@ PRIVATE_KEY = os.environ.get('PRIVATE_KEY')
 PUBLIC_KEY = os.environ.get('PUBLIC_KEY')
 
 if not PRIVATE_KEY and not PUBLIC_KEY:
+    # Provide keys for testing and local development.
     with open(os.path.join(DATA_DIR, 'test_key.pem'), 'rb') as fd:
         PRIVATE_KEY = base64.b64encode(fd.read())
     with open(os.path.join(DATA_DIR, 'test_key.pem.pub'), 'rb') as fd:

@@ -5,6 +5,7 @@ Changelog
 1.1.1 (unreleased)
 ==================
 
+- Enforce SSL for database connections.
 
 1.1.0 (2016-08-19)
 ==================

@@ -19,7 +19,6 @@ class Database(object):
 
     def __init__(self, db_uri):
         options = {
-            'connect_args': {'client_encoding': 'utf8'},
             'pool_recycle': 3600,
             'pool_size': 10,
             'pool_timeout': 10,
