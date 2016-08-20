@@ -52,7 +52,7 @@ def teardown_db(engine):
         trans.commit()
 
 
-@pytest.yield_fixture(scope='session', autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def package():
     # Apply gevent monkey patches as early as possible during tests.
     from gevent.monkey import patch_all
@@ -76,45 +76,45 @@ def package():
             print(obj)
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def bloom_domain():
     bloom = create_bloom_domain()
     yield bloom
     bloom.close()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def global_bucket():
     bucket = create_bucket()
     yield bucket
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def bucket(global_bucket):
     yield global_bucket
     global_bucket.clear()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def global_cache():
     cache = create_cache()
     yield cache
     cache.close()
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def cache(global_cache):
     yield global_cache
     global_cache.flushdb()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def crypto():
     crypto = create_crypto()
     yield crypto
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def global_db():
     db = create_db()
     teardown_db(db.engine)
@@ -123,7 +123,7 @@ def global_db():
     db.close()
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def cleanup_db():
     db = create_db()
     yield db
@@ -132,7 +132,7 @@ def cleanup_db():
     db.close()
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def db(global_db):
     with global_db.engine.connect() as conn:
         with conn.begin() as trans:
@@ -142,13 +142,13 @@ def db(global_db):
             trans.rollback()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def global_raven():
     raven = create_raven()
     yield raven
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def raven(global_raven):
     yield global_raven
     messages = [msg['message'] for msg in global_raven.msgs]
@@ -156,20 +156,20 @@ def raven(global_raven):
     assert not messages
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def global_stats():
     stats = create_stats()
     yield stats
     stats.close()
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def stats(global_stats):
     yield global_stats
     global_stats.clear()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def global_celery(bloom_domain, crypto, global_bucket, global_cache,
                   global_db, global_raven, global_stats):
     init_worker(
@@ -185,12 +185,12 @@ def global_celery(bloom_domain, crypto, global_bucket, global_cache,
     shutdown_worker(celery_app)
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def celery(global_celery, bucket, cache, db, raven, stats):
     yield global_celery
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def global_app(crypto, global_cache, global_celery,
                global_raven, global_stats):
     wsgiapp = create_app(
@@ -203,6 +203,6 @@ def global_app(crypto, global_cache, global_celery,
     shutdown_app(app.app)
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def app(global_app, cache, celery, raven, stats):
     yield global_app

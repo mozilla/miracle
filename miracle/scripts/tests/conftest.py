@@ -4,7 +4,7 @@ import tempfile
 import pytest
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def tmp_path():
     try:
         path = tempfile.mkdtemp()

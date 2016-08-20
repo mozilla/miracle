@@ -19,7 +19,7 @@ case "$1" in
         echo "Running Tests"
         cd ..
         flake8 miracle
-        TESTING=true py.test --cov-config=.coveragerc --cov=miracle miracle
+        TESTING=true pytest --cov-config=.coveragerc --cov=miracle miracle
         ;;
     alembic)
         echo "Running Alembic"

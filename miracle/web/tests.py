@@ -8,7 +8,7 @@ from miracle.web.app import (
 )
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def broken_app(raven, stats):
     cache = create_cache('redis://127.0.0.1:9/15')
 

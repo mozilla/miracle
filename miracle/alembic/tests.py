@@ -18,7 +18,7 @@ CREATE TABLE alembic_version (
 '''
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def fresh_db(global_db):
     yield global_db
     teardown_db(global_db.engine)
