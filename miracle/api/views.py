@@ -23,9 +23,8 @@ class View(object):
     _route_path = None
 
     _cors_headers = {
-        'Access-Control-Allow-Headers':
-            'Content-Encoding, Content-Type, X-User',
-        'Access-Control-Allow-Methods': 'HEAD, OPTIONS, POST, PUT',
+        'Access-Control-Allow-Headers': 'Content-Type, X-User',
+        'Access-Control-Allow-Methods': '',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Max-Age': str(86400 * 30),  # 30 days
     }
@@ -54,10 +53,17 @@ class View(object):
 
     def __init__(self, request):
         self.request = request
-        self.request.response.headers.update(self._cors_headers)
+        self.request.response.headers.update(self.cors_headers)
 
     def __call__(self):
         raise NotImplementedError()
+
+    @property
+    def cors_headers(self):
+        supported = self._supported_methods + ('HEAD', 'OPTIONS')
+        cors_headers = self._cors_headers.copy()
+        cors_headers['Access-Control-Allow-Methods'] = ', '.join(supported)
+        return cors_headers
 
     def user(self):
         user = self.request.headers.get('X-User')
@@ -71,7 +77,7 @@ class View(object):
         return Response()
 
     def options(self):
-        return Response(headers=self._cors_headers)
+        return Response(headers=self.cors_headers)
 
     def unsupported(self):
         raise HTTPMethodNotAllowed()

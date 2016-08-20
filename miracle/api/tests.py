@@ -33,6 +33,9 @@ def test_jwk(app, stats):
     res = app.get('/v1/jwk', status=200)
     assert set(res.json.keys()) == {'n', 'e', 'kty'}
     assert res.json['kty'] == 'RSA'
+    stats.check(timer=[
+        ('request', 1, ['path:v1.jwk', 'method:get', 'status:200']),
+    ])
 
 
 def test_stats(app, stats):
@@ -90,34 +93,44 @@ def test_upload_fail(app, stats):
 
 
 def test_head(app, stats):
-    app.head('/v1/delete', status=200)
-    app.head('/v1/upload', status=200)
-    stats.check(timer=[
-        ('request', ['path:v1.delete', 'method:head', 'status:200']),
-        ('request', ['path:v1.upload', 'method:head', 'status:200']),
-    ])
+    urls = [
+        '/v1/delete',
+        '/v1/jwk',
+        '/v1/stats',
+        '/v1/upload',
+    ]
+    for url in urls:
+        app.head(url, status=200)
 
 
 def test_options(app, stats):
-    res = app.options('/v1/delete', status=200)
-    assert CORS_HEADERS - set(res.headers.keys()) == set()
-
-    res = app.options('/v1/upload', status=200)
-    assert CORS_HEADERS - set(res.headers.keys()) == set()
-
-    stats.check(timer=[
-        ('request', ['path:v1.delete', 'method:options', 'status:200']),
-        ('request', ['path:v1.upload', 'method:options', 'status:200']),
-    ])
+    urls = {
+        # url: primary supported method
+        '/v1/delete': 'POST',
+        '/v1/jwk': 'GET',
+        '/v1/stats': 'GET',
+        '/v1/upload': 'POST',
+    }
+    for url, method in urls.items():
+        res = app.options(url, status=200)
+        assert CORS_HEADERS - set(res.headers.keys()) == set()
+        assert method in res.headers['Access-Control-Allow-Methods']
 
 
 def test_unsupported(app, stats):
-    app.delete('/v1/delete', status=405)
-    app.get('/v1/delete', status=405)
-    app.patch('/v1/delete', status=405)
-
-    app.delete('/v1/upload', status=405)
-    app.get('/v1/upload', status=405)
-    app.patch('/v1/upload', status=405)
+    urls = {
+        # url: unsupported method
+        '/v1/delete': 'get',
+        '/v1/jwk': 'post',
+        '/v1/stats': 'post',
+        '/v1/upload': 'get',
+    }
+    for url, method in urls.items():
+        app.delete(url, status=405)
+        app.patch(url, status=405)
+        if method == 'post':
+            getattr(app, method)(url, b'', status=405)
+        else:
+            getattr(app, method)(url, status=405)
 
     assert not stats.msgs

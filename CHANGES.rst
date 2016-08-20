@@ -5,6 +5,8 @@ Changelog
 1.1.1 (unreleased)
 ==================
 
+- Correct CORS headers for jwk and stats HTTP APIs.
+
 - Enforce SSL for database connections.
 
 1.1.0 (2016-08-19)
