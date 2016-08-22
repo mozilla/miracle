@@ -16,6 +16,7 @@ def test_delete(app, stats):
                    status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {'status': 'success'}
+    assert 'Strict-Transport-Security' in res.headers
     stats.check(timer=[
         ('task', 1, ['task:data.tasks.delete']),
     ])
@@ -33,6 +34,7 @@ def test_jwk(app, stats):
     res = app.get('/v1/jwk', status=200)
     assert set(res.json.keys()) == {'n', 'e', 'kty'}
     assert res.json['kty'] == 'RSA'
+    assert 'Strict-Transport-Security' in res.headers
     stats.check(timer=[
         ('request', 1, ['path:v1.jwk', 'method:get', 'status:200']),
     ])
@@ -42,6 +44,7 @@ def test_stats(app, stats):
     res = app.get('/v1/stats', status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {}
+    assert 'Strict-Transport-Security' in res.headers
     stats.check(timer=[
         ('request', 1, ['path:v1.stats', 'method:get', 'status:200']),
     ])
@@ -56,6 +59,7 @@ def test_upload(app, crypto, stats):
                    status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {'status': 'success'}
+    assert 'Strict-Transport-Security' in res.headers
 
     data = crypto.encrypt(b'encrypted no json')
     app.post('/v1/upload', data,

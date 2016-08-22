@@ -58,6 +58,8 @@ def test_index(app, stats):
     res = app.get('/', status=200)
     assert res.content_type == 'text/html'
     assert res.text.startswith('<!DOCTYPE html>')
+    assert res.headers['Strict-Transport-Security'] == 'max-age=31536000'
+    assert res.headers['Content-Security-Policy'] == "default-src 'self'"
     stats.check(counter=[
         ('request', 1, ['path:', 'method:get', 'status:200']),
     ], timer=[

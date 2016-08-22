@@ -5,6 +5,8 @@ Changelog
 1.1.1 (unreleased)
 ==================
 
+- Emit HSTS headers and add CSP for the homepage.
+
 - Correct CORS headers for jwk and stats HTTP APIs.
 
 - Enforce SSL for database connections.

@@ -1,3 +1,4 @@
+from pyramid.events import NewResponse
 from pyramid.httpexceptions import HTTPServiceUnavailable
 from pyramid.response import (
     FileResponse,
@@ -8,6 +9,8 @@ from miracle.config import VERSION_FILE
 
 
 def configure(config):
+    config.add_subscriber(security_headers, iface=NewResponse)
+
     config.add_view(heartbeat_view,
                     name='__heartbeat__', renderer='json')
     config.add_view(lbheartbeat_view,
@@ -16,6 +19,16 @@ def configure(config):
     config.add_view(index_view)
     config.add_view(robotstxt_view, name='robots.txt')
     config.add_view(version_view, name='__version__')
+
+
+def security_headers(event):
+    response = event.response
+    response.headers.add('Strict-Transport-Security', 'max-age=31536000')
+    if response.content_type == 'text/html':
+        response.headers.add('Content-Security-Policy', "default-src 'self'")
+        response.headers.add('X-Content-Type-Options', 'nosniff')
+        response.headers.add('X-XSS-Protection', '1; mode=block')
+        response.headers.add('X-Frame-Options', 'DENY')
 
 
 def heartbeat_view(request):
