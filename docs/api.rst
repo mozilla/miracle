@@ -46,8 +46,11 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 
 If the data was accepted, you get a `200` response code.
 
-If the request was malformed, you can get `4xx` responses, if the
-service is unavailable or broken, you might get `5xx` responses.
+If the request was malformed, you can get `4xx` responses and you
+should discard the data.
+
+If the service is unavailable or broken, you might get `5xx` responses
+and you should retry the request after a back-off interval.
 
 
 Payload
@@ -88,7 +91,7 @@ Delete
 ======
 
 To delete your data from the service, you can do a HTTPS POST request to
-the ``/v1/delete`` API endpoint.
+the ``/v1/delete`` API endpoint with an empty body.
 
 You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 
@@ -99,8 +102,9 @@ You need to send your unique user id (a UUID 4) in a ``X-User`` header.
 
 If the delete request was accepted, you get a `200` response code.
 
-If the request was malformed, you can get `4xx` responses, if the
-service is unavailable or broken, you might get `5xx` responses.
+If the request was malformed, you can get `4xx` responses. If the
+service is unavailable or broken, you might get `5xx` responses and
+you should retry the request after a back-off interval.
 
 
 Stats

@@ -36,7 +36,7 @@ Upload
 ------
 
 Each data upload emits a variety of metrics, depending on the data
-that it gets.
+it gets.
 
 In case an error occurred during the upload or the data was invalid,
 a counter called ``data.upload.error` will be emitted. It will be
@@ -52,11 +52,11 @@ about the data itself:
 
     - ``data.user.new``: A new user has contributed data.
 
-    - ``data.url.drop``: A number of URLs was filtered out / dropped.
-    - ``data.url.new``: A number of new URLs was first recorded.
+    - ``data.url.drop``: A number of URLs were filtered out / dropped.
+    - ``data.url.new``: A number of new URLs were first recorded.
 
-    - ``data.session.drop``: A number of sessions was filtered out.
-    - ``data.session.new``: A number of new sessions was recorded.
+    - ``data.session.drop``: A number of sessions were filtered out.
+    - ``data.session.new``: A number of new sessions were recorded.
 
 Delete
 ------
@@ -65,5 +65,5 @@ Data deletion tasks can emit a single metric:
 
     - ``data.user.delete``: An existing user was deleted.
 
-This metric is only emitted if the user that we were asked to delete
+This metric is only emitted if the user which we were asked to delete
 did previously exist.

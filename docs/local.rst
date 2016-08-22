@@ -3,7 +3,7 @@ Local Development
 =================
 
 A multiple-container Docker configuration is available to support
-local development.
+local development and CI testing.
 
 
 Architecture
@@ -42,6 +42,7 @@ Docker containers. It has a number of commands to help out:
 - `./server shell` - Opens a shell inside the application container.
 - `./server test` - Runs all tests inside the application container.
 - `./server alembic` - Runs alembic inside the application container.
+- `./server bloom` - Creates a bloom filter from a plain text file.
 
 In order to inspect the database, you can open a shell inside the
 running Postgres container::
@@ -66,7 +67,7 @@ Docker Tips
 -----------
 
 While working with docker, one tends to accumulate large numbers of
-orphaned containers and images.
+orphaned containers, images and volumes.
 
 To clean up all containers (excluding those which are running), do::
 
@@ -75,6 +76,10 @@ To clean up all containers (excluding those which are running), do::
 Afterwards you can remove all images, which are no longer in use::
 
     docker rmi $(docker images -f "dangling=true" -q)
+
+And finally all unused volumes::
+
+    docker volume rm $(docker volume ls -q)
 
 
 Bloom Filter
@@ -86,8 +91,9 @@ example in `data/domain_blocklist.txt`. Then run::
 
     ./server bloom data/domain_blocklist.txt
 
-This creates matching `data/domain_blocklist.dat` and `.dat.desc`
-files containing the binary version of the Hydra bloom filter.
+This creates matching `data/domain_blocklist.dat` and
+`domain_blocklist.dat.desc` files containing the binary version of
+the Hydra bloom filter.
 
 If there is an error during creation, try increasing the `sleep` values
 inside `./server` and `./conf/run.sh` in their bloom sections.
@@ -112,9 +118,6 @@ To start a container based on that image, do::
     docker run -it --rm \
         -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \
         mozilla/miracle:1.0.5 shell
-
-TODO: Figure out a convenient way to get and pass the environment
-variables into the docker container.
 
 The docker container includes a helper script to connect to the
 Postgres database with all connection information taken from the
