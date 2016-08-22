@@ -61,9 +61,15 @@ about the data itself:
 Delete
 ------
 
-Data deletion tasks can emit a single metric:
+Data deletion tasks can emit two metrics:
 
     - ``data.user.delete``: An existing user was deleted.
+    - ``data.user.delete_hours``: After how many hours did the user leave.
 
-This metric is only emitted if the user which we were asked to delete
-did previously exist.
+The ``delete_hours`` metric looks at the creation time of the user
+(when that user first contributed data) and compares it to the time
+of the deletion request. The difference is rounded to hours and emitted
+as a timer metric.
+
+These metrics are only emitted if the user, which we were asked to
+delete, did previously exist.

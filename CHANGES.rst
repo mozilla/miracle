@@ -5,6 +5,8 @@ Changelog
 1.1.1 (unreleased)
 ==================
 
+- Add ``data.user.delete_hours`` metric to track user participation time.
+
 - Add creation date to users table.
 
 - Emit HSTS headers and add CSP for the homepage.

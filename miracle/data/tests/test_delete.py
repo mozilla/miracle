@@ -8,7 +8,7 @@ from miracle.models import (
     Session,
 )
 
-TEST_START = datetime.utcfromtimestamp(1469400000)
+TEST_TIME = datetime.utcfromtimestamp(1469400000)
 
 
 class DummyTask(object):
@@ -21,8 +21,8 @@ class DummyTask(object):
 def test_delete_data(db, stats):
     with db.session(commit=False) as session:
         url = URL(**URL.from_url('http://example.com'))
-        user = User(token='foo')
-        session.add(Session(url=url, user=user, start_time=TEST_START))
+        user = User(token='foo', created=TEST_TIME)
+        session.add(Session(url=url, user=user, start_time=TEST_TIME))
         session.commit()
 
         task = DummyTask(db=db, stats=stats)
@@ -36,6 +36,8 @@ def test_delete_data(db, stats):
 
     stats.check(counter=[
         ('data.user.delete', 1),
+    ], timer=[
+        ('data.user.delete_hours', 1),
     ])
 
 
