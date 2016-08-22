@@ -5,6 +5,8 @@ Changelog
 1.1.1 (unreleased)
 ==================
 
+- #4: Add a end date for the experiment.
+
 - Add ``data.user.delete_hours`` metric to track user participation time.
 
 - Add creation date to users table.

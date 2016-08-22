@@ -1,11 +1,14 @@
+from datetime import datetime
 import json
 
 from pyramid.httpexceptions import (
     HTTPBadRequest,
+    HTTPForbidden,
     HTTPMethodNotAllowed,
 )
 from pyramid.response import Response
 
+from miracle.config import END_DATE
 from miracle.data import tasks
 
 
@@ -14,6 +17,11 @@ def configure(config):
     JWKView.configure(config)
     StatsView.configure(config)
     UploadView.configure(config)
+
+
+def check_end_date(end=END_DATE):
+    if datetime.utcnow().date() >= end:
+        raise HTTPForbidden('Experiment has ended.')
 
 
 class View(object):
@@ -89,6 +97,7 @@ class DeleteView(View):
     _route_path = '/v1/delete'
 
     def __call__(self):
+        check_end_date()
         user = self.user()
         if not user:
             return HTTPBadRequest('Missing X-User header.')
@@ -133,6 +142,7 @@ class UploadView(View):
     _max_size = 10 * 1024 * 1024  # 10 mib
 
     def __call__(self):
+        check_end_date()
         user = self.user()
         if not user:
             return HTTPBadRequest('Missing or invalid X-User header.')

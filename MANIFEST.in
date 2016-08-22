@@ -1,8 +1,8 @@
 include LICENSE
 include MANIFEST.in
 include *.ini
+include *.json
 include *.rst
-include *.txt
 
 recursive-include miracle *
-recursive-exclude miracle *.pyc *.pyo *.so *.dll .DS_Store __pycache__
+recursive-exclude miracle *.pyc
