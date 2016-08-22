@@ -8,7 +8,7 @@ from miracle.models.session import (
     Session,
 )
 
-TEST_START = datetime.utcfromtimestamp(1469400000)
+TEST_TIME = datetime.utcfromtimestamp(1469400000)
 TEST_URL = 'https://www.example.com:80/path?query=foo'
 TEST_URL2 = 'https://example.com/something/else'
 
@@ -28,12 +28,13 @@ def test_url(db):
 
 def test_user(db):
     with db.session(commit=False) as session:
-        session.add(User(token='abc'))
+        session.add(User(token='abc', created=TEST_TIME))
         session.commit()
 
         user = session.query(User).first()
         assert isinstance(user.id, int)
         assert user.token == 'abc'
+        assert user.created == TEST_TIME
         assert user.sessions.all() == []
 
 
@@ -42,12 +43,12 @@ def test_session(db):
         url = URL(**URL.from_url(TEST_URL))
         user = User(token='foo')
         session.add(Session(
-            user=user, url=url, start_time=TEST_START, duration=2400))
+            user=user, url=url, start_time=TEST_TIME, duration=2400))
         session.commit()
 
         sess = session.query(Session).first()
         assert isinstance(sess.id, int)
-        assert sess.start_time == TEST_START
+        assert sess.start_time == TEST_TIME
         assert sess.duration == 2400
 
         # Deleting a session, leaves the user and URL untouched
@@ -63,9 +64,9 @@ def test_session_url_delete(db):
         url2 = URL(**URL.from_url(TEST_URL2))
         user = User(token='foo')
         session.add(Session(
-            user=user, url=url1, start_time=TEST_START, duration=1000))
+            user=user, url=url1, start_time=TEST_TIME, duration=1000))
         session.add(Session(
-            user=user, url=url2, start_time=TEST_START, duration=2000))
+            user=user, url=url2, start_time=TEST_TIME, duration=2000))
         session.commit()
 
         # Deleting a URL, deletes all the URL's sessions
@@ -82,9 +83,9 @@ def test_session_user_delete(db):
         user1 = User(token='foo')
         user2 = User(token='bar')
         session.add(Session(
-            user=user1, url=url, start_time=TEST_START, duration=1000))
+            user=user1, url=url, start_time=TEST_TIME, duration=1000))
         session.add(Session(
-            user=user2, url=url, start_time=TEST_START, duration=2000))
+            user=user2, url=url, start_time=TEST_TIME, duration=2000))
         session.commit()
 
         # Deleting the user, deletes all the user's sessions

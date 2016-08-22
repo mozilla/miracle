@@ -126,6 +126,7 @@ def _create_urls(session, new_urls):
 def _create_user(session, user_token):
     # Get or create user
     added_user = 0
+    now = datetime.utcnow().replace(second=0, microsecond=0)
     user_id = None
 
     row = session.execute(
@@ -136,7 +137,7 @@ def _create_user(session, user_token):
         added_user = 1
         stmt = (insert(User)
                 .on_conflict_do_nothing()
-                .values(token=user_token))
+                .values(token=user_token, created=now))
         result = session.execute(stmt)
         user_id = result.inserted_primary_key[0]
 

@@ -48,6 +48,7 @@ class User(Model):
 
     id = Column(Integer(), autoincrement=True, primary_key=True)
     token = Column(String(36), nullable=False, unique=True)
+    created = Column(TIMESTAMP())
 
     sessions = relationship(
         'Session', back_populates='user', lazy='dynamic',

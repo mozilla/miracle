@@ -13,7 +13,7 @@ from miracle.models import (
     Session,
 )
 
-TEST_START = datetime.utcfromtimestamp(1469400000)
+TEST_TIME = datetime.utcfromtimestamp(1469400000)
 _PAYLOAD = {'sessions': [
     {
         'duration': 2400,
@@ -122,6 +122,7 @@ def test_upload_data_new_user(bloom_domain, db, stats):
         users = session.query(User).all()
         assert len(users) == 1
         assert users[0].token == 'foo'
+        assert users[0].created.date() == datetime.utcnow().date()
 
         sessions = session.query(Session).all()
         assert len(sessions) == 5
@@ -138,7 +139,7 @@ def test_upload_data_new_user(bloom_domain, db, stats):
 
 def test_upload_data_existing_user(bloom_domain, db, stats):
     with db.session(commit=False) as session:
-        user = User(token='foo')
+        user = User(token='foo', created=TEST_TIME)
         session.add(user)
         session.commit()
 
@@ -150,6 +151,7 @@ def test_upload_data_existing_user(bloom_domain, db, stats):
         assert len(users) == 1
         assert users[0].id == user.id
         assert users[0].token == 'foo'
+        assert users[0].created == TEST_TIME
 
         sessions = session.query(Session).all()
         assert len(sessions) == 5
