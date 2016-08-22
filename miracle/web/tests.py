@@ -26,14 +26,14 @@ def test_config(app):
     assert hasattr(app, 'app')
     assert hasattr(app.app, 'registry')
     assert hasattr(app.app.registry, 'cache')
+    assert hasattr(app.app.registry, 'crypto')
     assert not hasattr(app.app.registry, 'db')
     assert hasattr(app.app.registry, 'raven')
     assert hasattr(app.app.registry, 'stats')
 
 
 def test_heartbeat(app, stats):
-    res = app.get('/__heartbeat__')
-    assert res.status_code == 200
+    res = app.get('/__heartbeat__', status=200)
     assert res.json == {'cache': {'up': True}}
     stats.check(counter=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:200']),
@@ -55,9 +55,9 @@ def test_heartbeat_error(broken_app, raven, stats):
 
 
 def test_index(app, stats):
-    res = app.get('/')
-    assert res.status_code == 200
-    assert res.text.startswith('See https://')
+    res = app.get('/', status=200)
+    assert res.content_type == 'text/html'
+    assert res.text.startswith('<!DOCTYPE html>')
     stats.check(counter=[
         ('request', 1, ['path:', 'method:get', 'status:200']),
     ], timer=[
@@ -66,8 +66,7 @@ def test_index(app, stats):
 
 
 def test_lbheartbeat(app, stats):
-    res = app.get('/__lbheartbeat__')
-    assert res.status_code == 200
+    res = app.get('/__lbheartbeat__', status=200)
     assert res.json == {'status': 'OK'}
     stats.check(total=0)
 
@@ -79,21 +78,19 @@ def test_notfound(app, stats):
 
 
 def test_robots(app, stats):
-    res = app.get('/robots.txt')
-    assert res.status_code == 200
+    res = app.get('/robots.txt', status=200)
     assert res.text.startswith('User-agent:')
     stats.check(total=0)
 
 
 def test_settings():
     from miracle.web import settings
-    assert type(settings.max_requests_jitter) == int
+    assert isinstance(settings.max_requests_jitter, int)
 
 
 def test_version(app, stats):
     res = app.get('/__version__')
-    keys = set(res.json.keys())
-    assert keys == {'build', 'commit', 'source', 'version'}
+    assert set(res.json.keys()) == {'build', 'commit', 'source', 'version'}
     stats.check(total=0)
 
 

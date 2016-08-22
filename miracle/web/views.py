@@ -32,31 +32,42 @@ def heartbeat_view(request):
     return {'cache': {'up': True}}
 
 
-_index_response = Response(content_type='text/plain', body='''\
-See https://wiki.mozilla.org/Context_Graph for details about this service.
-''')
+_INDEX_RESPONSE = '''\
+<!DOCTYPE html><html><head>
+<meta charset="UTF-8" />
+<title>Mozilla Miracle</title>
+</head><body>
+<h1>Mozilla Miracle</h1>
+<p>For more information about this service please
+<a href="https://wiki.mozilla.org/Context_Graph">
+visit the Context Graph Wiki</a>.
+</p>
+</body></html>
+'''
 
 
 def index_view(request):
-    return _index_response
+    return Response(content_type='text/html', body=_INDEX_RESPONSE)
 
 
 def lbheartbeat_view(request):
     return {'status': 'OK'}
 
 
-_robots_response = Response(content_type='text/plain', body='''\
+_ROBOTS_RESPONSE = '''\
 User-agent: *
 Disallow: /__heartbeat__
 Disallow: /__lbheartbeat__
 Disallow: /__version__
 Disallow: /v1/delete
+Disallow: /v1/jwk
+Disallow: /v1/stats
 Disallow: /v1/upload
-''')
+'''
 
 
 def robotstxt_view(context, request):
-    return _robots_response
+    return Response(content_type='text/plain', body=_ROBOTS_RESPONSE)
 
 
 def version_view(request):
