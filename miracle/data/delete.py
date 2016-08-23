@@ -2,7 +2,6 @@ from datetime import datetime
 
 from sqlalchemy import (
     delete,
-    func,
     select,
 )
 
@@ -18,13 +17,12 @@ def delete_urls(task, url_ids):
     deleted_url_count = 0
     with task.db.session() as session:
         rows = session.execute(
-            select([URL.id, func.count(Session.id)])
+            select([URL.id])
             .select_from(URL.__table__.outerjoin(Session))
             .where(URL.id.in_(url_ids))
-            .group_by(URL.id)
-            .having(func.count(Session.id) == 0)
+            .where(Session.url_id.is_(None))
         ).fetchall()
-        orphaned_url_ids = [row.id for row in rows]
+        orphaned_url_ids = list({row.id for row in rows})
         if orphaned_url_ids:
             result = session.execute(
                 delete(URL).where(URL.id.in_(orphaned_url_ids)))
