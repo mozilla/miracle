@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.1 (unreleased)
+1.1.1 (2016-08-23)
 ==================
 
 - Validate JWE structure in HTTP upload API.
