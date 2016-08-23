@@ -208,7 +208,7 @@ def upload_data(task, user_token, data,
     return success
 
 
-def main(task, user, payload, _upload_data=True):
+def upload_main(task, user, payload, _upload_data=True):
     try:
         data = task.crypto.decrypt(payload)
     except ValueError:

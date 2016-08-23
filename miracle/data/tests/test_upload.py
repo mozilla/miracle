@@ -218,7 +218,7 @@ def test_upload_main(bloom_domain, crypto, db, stats):
 
     task = DummyTask(bloom_domain=bloom_domain,
                      crypto=crypto, db=db, stats=stats)
-    result = upload.main(
+    result = upload.upload_main(
         task, 'foo', crypto.encrypt(json.dumps(_PAYLOAD)),
         _upload_data=_upload)
     assert result == ('foo', _PAYLOAD)

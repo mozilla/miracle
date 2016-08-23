@@ -1,20 +1,67 @@
 from datetime import datetime
 
-from sqlalchemy import delete
-from sqlalchemy import select
+from sqlalchemy import (
+    delete,
+    func,
+    select,
+)
 
-from miracle.models import User
+from miracle.models import (
+    Session,
+    URL,
+    User,
+)
 
 
-def delete_data(task, user):
+def delete_urls(task, url_ids):
+    # Delete orphaned urls data from the database.
+    deleted_url_count = 0
+    with task.db.session() as session:
+        rows = session.execute(
+            select([URL.id, func.count(Session.id)])
+            .select_from(URL.__table__.outerjoin(Session))
+            .where(URL.id.in_(url_ids))
+            .group_by(URL.id)
+            .having(func.count(Session.id) == 0)
+        ).fetchall()
+        orphaned_url_ids = [row.id for row in rows]
+        if orphaned_url_ids:
+            result = session.execute(
+                delete(URL).where(URL.id.in_(orphaned_url_ids)))
+            deleted_url_count = result.rowcount
+    return deleted_url_count
+
+
+def delete_urls_main(task, url_ids, _delete_urls=True):
+    if not url_ids:
+        return False
+
+    # Testing hooks.
+    if _delete_urls is True:  # pragma: no cover
+        _delete_urls = delete_urls
+    elif not _delete_urls:
+        return True
+
+    return _delete_urls(task, url_ids)
+
+
+def delete_user(task, user):
     # Delete user data from the database.
     exists = False
+    url_ids = []
     with task.db.session() as session:
-        row = session.execute(
+        user_row = session.execute(
             select([User.id, User.created]).where(User.token == user)
         ).fetchone()
-        if row:
-            created = row[1]
+        if user_row:
+            created = user_row.created
+            rows = session.execute(
+                select([Session.url_id], distinct=True)
+                .where(Session.user_id == user_row.id)
+            ).fetchall()
+            # All urls associated with the to-be-deleted user.
+            url_ids = [row.url_id for row in rows]
+
             result = session.execute(delete(User).where(User.token == user))
             exists = bool(result.rowcount)
     if exists:
@@ -23,17 +70,22 @@ def delete_data(task, user):
             now = datetime.utcnow().replace(second=0, microsecond=0)
             diff_hours = int(round((now - created).total_seconds() / 3600.0))
             task.stats.timing('data.user.delete_hours', diff_hours)
-    return exists
+    return (exists, url_ids)
 
 
-def main(task, user, _delete_data=True):
+def delete_user_main(task, user, delete_urls, _delete_user=True):
     if not user:
         return False
 
     # Testing hooks.
-    if _delete_data is True:  # pragma: no cover
-        _delete_data = delete_data
-    elif not _delete_data:
+    if _delete_user is True:  # pragma: no cover
+        _delete_user = delete_user
+    elif not _delete_user:
         return True
 
-    return _delete_data(task, user)
+    user_deleted, url_ids = _delete_user(task, user)
+
+    if url_ids:
+        delete_urls.delay(url_ids)
+
+    return user_deleted

@@ -5,6 +5,8 @@ Changelog
 1.1.1 (unreleased)
 ==================
 
+- Remove orphaned URLs after user deletion.
+
 - #4: Add a end date for the experiment.
 
 - Add ``data.user.delete_hours`` metric to track user participation time.
