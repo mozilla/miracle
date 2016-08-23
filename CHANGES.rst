@@ -5,6 +5,8 @@ Changelog
 1.1.1 (unreleased)
 ==================
 
+- Validate JWE structure in HTTP upload API.
+
 - Remove orphaned URLs after user deletion.
 
 - #4: Add a end date for the experiment.

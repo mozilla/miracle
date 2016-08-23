@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import json
 
+from jwcrypto.jwk import JWK
 from pyramid.httpexceptions import HTTPForbidden
 import pytest
 
@@ -84,14 +85,8 @@ def test_upload(app, crypto, stats):
                       'X-User': b'abc'},
              status=200)
 
-    data = b'no json'
-    app.post('/v1/upload', data,
-             headers={'Content-Type': 'text/plain',
-                      'X-User': b'abc'},
-             status=200)
-
     stats.check(timer=[
-        ('task', 3, ['task:data.tasks.upload']),
+        ('task', 2, ['task:data.tasks.upload']),
     ])
 
 
@@ -103,14 +98,37 @@ def test_upload_fail(app, stats):
              headers={'Content-Type': 'text/plain',
                       'X-User': b'abc'},
              status=400)
-    too_large = b'a' + b'0123456789' * 1024 * 1024
-    app.post('/v1/upload', too_large,
+    app.post('/v1/upload', b'a' + b'0123456789' * 1024 * 1024,
              headers={'Content-Type': 'text/plain',
                       'X-User': b'abc'},
              status=400)
-    stats.check(timer=[
-        ('request', 3, ['path:v1.upload', 'method:post', 'status:400']),
-    ])
+    app.post('/v1/upload', b'no json',
+             headers={'Content-Type': 'text/plain',
+                      'X-User': b'abc'},
+             status=400)
+    app.post('/v1/upload', 'no\xfejson'.encode('latin-1'),
+             headers={'Content-Type': 'text/plain',
+                      'X-User': b'abc'},
+             status=400)
+
+
+def test_upload_jwe(app, stats):
+    # Encrypt the data with a wrong key.
+    jwk = JWK.generate(kty='RSA')
+    data = app.app.registry.crypto.encrypt(
+        b'{"key": "wrong"}', _public_jwk=jwk)
+    app.post('/v1/upload', data,
+             headers={'Content-Type': 'text/plain',
+                      'X-User': b'abc'},
+             status=200)
+    # Encrypt the data with a wrong algorithm.
+    data = app.app.registry.crypto.encrypt(
+        b'{"alg": "wrong"}',
+        _protected='{"alg":"RSA-OAEP","enc":"A128CBC-HS256"}')
+    app.post('/v1/upload', data,
+             headers={'Content-Type': 'text/plain',
+                      'X-User': b'abc'},
+             status=400)
 
 
 def test_head(app, stats):

@@ -154,5 +154,13 @@ class UploadView(View):
         if len(body) > self._max_size:
             return HTTPBadRequest('Uncompressed body too large.')
 
-        tasks.upload.delay(user, body)
+        try:
+            text = body.decode('ascii')
+        except UnicodeDecodeError:
+            return HTTPBadRequest('Invalid character encoding.')
+
+        if not self.request.registry.crypto.validate(text):
+            return HTTPBadRequest('Invalid JWE structure.')
+
+        tasks.upload.delay(user, text)
         return {'status': 'success'}

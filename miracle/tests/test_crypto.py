@@ -19,8 +19,6 @@ def test_encrypt(crypto):
     assert isinstance(data, str)
     assert '{"foo' not in data
 
-
-def test_encrypt_fail(crypto):
     with pytest.raises(ValueError):
         crypto.encrypt(None)
 
@@ -29,7 +27,19 @@ def test_decrypt(crypto):
     data = crypto.encrypt('{"foo": 1, "bar": []}')
     assert crypto.decrypt(data) == '{"foo": 1, "bar": []}'
 
-
-def test_decrypt_fail(crypto):
     with pytest.raises(ValueError):
         crypto.decrypt(None)
+
+
+def test_validate(crypto):
+    data = crypto.encrypt('{"foo": 1, "bar": []}')
+    assert crypto.validate(data)
+    assert not crypto.validate(b'garbage')
+    assert not crypto.validate('garbage')
+
+    data = crypto.encrypt(
+        '{"foo": 1}', _protected='{"alg":"RSA-OAEP","enc":"A128CBC-HS256"}')
+    assert not crypto.validate(data)
+    data = crypto.encrypt(
+        '{"foo": 1}', _protected='{"alg":"RSA-OAEP-256","enc":"A256GCM"}')
+    assert not crypto.validate(data)

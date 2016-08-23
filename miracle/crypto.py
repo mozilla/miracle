@@ -51,11 +51,14 @@ class Crypto(object):
             LOGGER.error(
                 'Failed to parse public key starting with: %s', data[:26])
 
-    def encrypt(self, plaintext):
+    def encrypt(self, plaintext,
+                _protected='{"alg":"RSA-OAEP","enc":"A256GCM"}',
+                _public_jwk=None):
         try:
             jwe = JWE(plaintext=plaintext,
-                      protected='{"alg":"RSA-OAEP","enc":"A256GCM"}')
-            jwe.add_recipient(self._public_jwk)
+                      protected=_protected)
+            _public_jwk = _public_jwk if _public_jwk else self._public_jwk
+            jwe.add_recipient(_public_jwk)
             ciphertext = jwe.serialize(compact=True)
         except Exception:
             raise ValueError("Couldn't encrypt message.")
@@ -69,3 +72,13 @@ class Crypto(object):
         except Exception:
             raise ValueError("Couldn't decrypt message.")
         return plaintext
+
+    def validate(self, ciphertext):
+        try:
+            jwe = JWE()
+            jwe.deserialize(ciphertext)
+            if jwe.jose_header != {'alg': 'RSA-OAEP', 'enc': 'A256GCM'}:
+                return False
+        except Exception:
+            return False
+        return True
