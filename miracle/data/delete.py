@@ -17,12 +17,11 @@ def delete_urls(task, url_ids):
     deleted_url_count = 0
     with task.db.session() as session:
         rows = session.execute(
-            select([URL.id])
-            .select_from(URL.__table__.outerjoin(Session))
-            .where(URL.id.in_(url_ids))
-            .where(Session.url_id.is_(None))
+            select([Session.url_id], distinct=True)
+            .where(Session.url_id.in_(url_ids))
         ).fetchall()
-        orphaned_url_ids = list({row.id for row in rows})
+        found_url_ids = {row.url_id for row in rows}
+        orphaned_url_ids = list(set(url_ids) - found_url_ids)
         if orphaned_url_ids:
             result = session.execute(
                 delete(URL).where(URL.id.in_(orphaned_url_ids)))

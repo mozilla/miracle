@@ -5,6 +5,8 @@ Changelog
 1.1.2 (unreleased)
 ==================
 
+- Speed up orphaned URL deletion.
+
 
 1.1.1 (2016-08-23)
 ==================
