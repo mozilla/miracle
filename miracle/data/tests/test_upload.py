@@ -212,38 +212,26 @@ def test_upload_data_conflict(bloom_domain, cleanup_db, db, stats):
                     assert session.query(Session).count() == 5
 
 
-def test_upload_main(bloom_domain, crypto, db, stats):
-    def _upload(task, user, data):
-        return (user, data)
+class TestUpload(object):
 
-    task = DummyTask(bloom_domain=bloom_domain,
-                     crypto=crypto, db=db, stats=stats)
-    result = upload.upload_main(
-        task, 'foo', crypto.encrypt(json.dumps(_PAYLOAD)),
-        _upload_data=_upload)
-    assert result == ('foo', _PAYLOAD)
+    def test_task(self, celery, crypto, stats):
+        assert tasks.upload.delay(
+            'foo', crypto.encrypt(json.dumps(_COMBINED_PAYLOAD))).get()
 
+        stats.check(counter=[
+            ('data.url.drop', 1, 1),
+            ('data.session.drop', 1, 2),
+        ])
 
-def test_task(celery, crypto, stats):
-    assert tasks.upload.delay(
-        'foo', crypto.encrypt(json.dumps(_COMBINED_PAYLOAD)),
-        _upload_data=False).get()
+    def test_task_fail(self, celery, crypto, stats):
+        assert not tasks.upload.delay(
+            'foo', crypto.encrypt(b'no json')).get()
 
-    stats.check(counter=[
-        ('data.url.drop', 1, 1),
-        ('data.session.drop', 1, 2),
-    ])
+        assert not tasks.upload.delay(
+            'foo', crypto.encrypt(b'{"sessions": [{}]}')).get()
 
-
-def test_task_fail(celery, crypto, stats):
-    assert not tasks.upload.delay(
-        'foo', crypto.encrypt(b'no json'), _upload_data=False).get()
-
-    assert not tasks.upload.delay(
-        'foo', crypto.encrypt(b'{"sessions": [{}]}'), _upload_data=False).get()
-
-    stats.check(counter=[
-        ('data.session.drop', 1),
-        ('data.upload.error', 1, ['reason:json']),
-        ('data.upload.error', 1, ['reason:validation']),
-    ])
+        stats.check(counter=[
+            ('data.session.drop', 1),
+            ('data.upload.error', 1, ['reason:json']),
+            ('data.upload.error', 1, ['reason:validation']),
+        ])

@@ -3,7 +3,7 @@ from miracle.data.delete import (
     DeleteUrls,
     DeleteUser,
 )
-from miracle.data.upload import upload_main
+from miracle.data.upload import Upload
 from miracle.worker.app import celery_app
 from miracle.worker.task import BaseTask
 
@@ -30,5 +30,5 @@ def delete(self, user):
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_upload')
-def upload(self, user, payload, _upload_data=True):
-    return upload_main(self, user, payload, _upload_data=_upload_data)
+def upload(self, user, payload):
+    return Upload(self)(user, payload)

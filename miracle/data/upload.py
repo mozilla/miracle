@@ -208,33 +208,39 @@ def upload_data(task, user_token, data,
     return success
 
 
-def upload_main(task, user, payload, _upload_data=True):
-    try:
-        data = task.crypto.decrypt(payload)
-    except ValueError:
-        task.stats.increment('data.upload.error', tags=['reason:encryption'])
-        return False
+class Upload(object):
 
-    try:
-        data = json.loads(data)
-    except json.JSONDecodeError:
-        task.stats.increment('data.upload.error', tags=['reason:json'])
-        return False
+    def __init__(self, task):
+        self.task = task
 
-    parsed_data, drop_urls, drop_sessions = validate(data, task.bloom_domain)
-    task.stats.increment('data.url.drop', drop_urls)
-    task.stats.increment('data.session.drop', drop_sessions)
-    if not parsed_data['sessions']:
-        task.stats.increment('data.upload.error', tags=['reason:validation'])
-        return False
+    def error_stat(self, reason):
+        self.task.stats.increment(
+            'data.upload.error', tags=['reason:%s' % reason])
 
-    # Testing hooks
-    if _upload_data is True:  # pragma: no cover
-        _upload_data = upload_data
-    elif not _upload_data:
-        return True
+    def __call__(self, user, payload):
+        try:
+            data = self.task.crypto.decrypt(payload)
+        except ValueError:
+            self.error_stat('encryption')
+            return False
 
-    success = _upload_data(task, user, parsed_data)
-    if not success:  # pragma: no cover
-        task.stats.increment('data.upload.error', tags=['reason:db'])
-    return success
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            self.error_stat('json')
+            return False
+
+        parsed_data, drop_urls, drop_sessions = validate(
+            data, self.task.bloom_domain)
+
+        self.task.stats.increment('data.url.drop', drop_urls)
+        self.task.stats.increment('data.session.drop', drop_sessions)
+
+        if not parsed_data['sessions']:
+            self.error_stat('validation')
+            return False
+
+        success = upload_data(self.task, user, parsed_data)
+        if not success:  # pragma: no cover
+            self.error_stat('db')
+        return success
