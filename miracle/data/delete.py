@@ -18,7 +18,7 @@ class DeleteUrls(object):
         self.task = task
 
     def __call__(self, url_ids):
-        # Delete orphaned URLs data from the database.
+        # Delete orphaned URLs from the database.
         if not url_ids:
             return None
 
