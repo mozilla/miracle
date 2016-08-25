@@ -49,7 +49,6 @@ The worker role additionally expects:
 * ``DB_USER``, example ``miracle``
 * ``DB_PASSWORD``, example ``secret``
 * ``PRIVATE_KEY``, example ``LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCg==...``
-* ``S3_BUCKET``, example ``com-example-dev-us-west-2-miracle``
 
 The ``PRIVATE_KEY`` and ``PUBLIC_KEY`` are both base64 encoded versions
 of PEM files. So the private key should start with
@@ -118,17 +117,7 @@ Both roles expect to have access from inside the Docker containers
 to the ElastiCache Redis instance, the Sentry and the StatsD daemon.
 
 Only the worker role should have access to the RDS Postgres instance
-and the Amazon S3 bucket from inside the docker container.
-
- It needs both read and write access to the bucket, so permissions:
-
-* ``s3:AbortMultipartUpload``
-* ``s3:DeleteObject``
-* ``s3:GetObject``
-* ``s3:ListBucket``
-* ``s3:ListBucketMultipartUploads``
-* ``s3:ListMultipartUploadParts``
-* ``s3:PutObject``
+from inside the docker container.
 
 
 Web Role Configuration
@@ -159,7 +148,7 @@ Both roles will try to connect to Redis during app startup, and send
 an error report to Sentry if they fail.
 
 The worker role will also try to connect to the Postgres database and
-the S3 bucket and send an error to Sentry if it fails.
+send an error to Sentry if it fails.
 
 The web role exposes three URL endpoints to check its status:
 

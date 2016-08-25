@@ -7,7 +7,6 @@ from celery.signals import (
 from kombu import Queue
 
 from miracle.bloom import create_bloom_domain
-from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.crypto import create_crypto
 from miracle.db import create_db
@@ -36,14 +35,13 @@ def configure_celery(celery_app):
 
 
 def init_worker(celery_app,
-                _bloom_domain=None, _bucket=None, _cache=None,
+                _bloom_domain=None, _cache=None,
                 _crypto=None, _db=None, _raven=None, _stats=None):
     configure_logging()
     raven = create_raven(transport='threaded', _raven=_raven)
 
     try:
         celery_app.bloom_domain = create_bloom_domain(_bloom=_bloom_domain)
-        celery_app.bucket = create_bucket(_bucket=_bucket)
         celery_app.cache = create_cache(_cache=_cache)
         celery_app.crypto = create_crypto(_crypto=_crypto)
         celery_app.db = create_db(_db=_db)
@@ -60,7 +58,6 @@ def init_worker(celery_app,
 def shutdown_worker(celery_app):
     celery_app.bloom_domain.close()
     del celery_app.bloom_domain
-    del celery_app.bucket
     celery_app.cache.close()
     del celery_app.cache
     del celery_app.crypto

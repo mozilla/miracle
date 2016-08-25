@@ -10,7 +10,6 @@ from sqlalchemy import text
 import webtest
 
 from miracle.bloom import create_bloom_domain
-from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.config import ALEMBIC_CFG
 from miracle.crypto import create_crypto
@@ -81,18 +80,6 @@ def bloom_domain():
     bloom = create_bloom_domain()
     yield bloom
     bloom.close()
-
-
-@pytest.fixture(scope='session')
-def global_bucket():
-    bucket = create_bucket()
-    yield bucket
-
-
-@pytest.fixture(scope='function')
-def bucket(global_bucket):
-    yield global_bucket
-    global_bucket.clear()
 
 
 @pytest.fixture(scope='session')
@@ -170,12 +157,11 @@ def stats(global_stats):
 
 
 @pytest.fixture(scope='session')
-def global_celery(bloom_domain, crypto, global_bucket, global_cache,
+def global_celery(bloom_domain, crypto, global_cache,
                   global_db, global_raven, global_stats):
     init_worker(
         celery_app,
         _bloom_domain=bloom_domain,
-        _bucket=global_bucket,
         _cache=global_cache,
         _crypto=crypto,
         _db=global_db,
@@ -186,7 +172,7 @@ def global_celery(bloom_domain, crypto, global_bucket, global_cache,
 
 
 @pytest.fixture(scope='function')
-def celery(global_celery, bucket, cache, db, raven, stats):
+def celery(global_celery, cache, db, raven, stats):
     yield global_celery
 
 
