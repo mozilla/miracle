@@ -3,7 +3,7 @@ from ipaddress import _BaseAddress
 import json
 import time
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
 from uritools import urisplit
@@ -152,7 +152,8 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
         # First do UPSERTs for new URLs and the user in its own transaction.
         # This lets the DB do conflict resolution via
         # "insert on conflict do nothing".
-        session.execute('SET LOCAL lock_timeout = %s' % _lock_timeout)
+        stmt = text('SET LOCAL lock_timeout = :lock_timeout')
+        session.execute(stmt.bindparams(lock_timeout=_lock_timeout))
         added_urls, urls = _create_urls(session, new_urls)
         added_user, user_id = _create_user(session, user_token)
 
