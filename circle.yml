@@ -35,7 +35,7 @@ dependencies:
     - cp version.json $CIRCLE_ARTIFACTS
 
     # build the actual deployment container
-    - docker build -t ${DOCKERHUB_REPO} .
+    - docker build --pull -t ${DOCKERHUB_REPO} .
 
     # write the sha256 sum to an artifact to make image verification easier
     - docker images --no-trunc | awk '/^app/ {print $3}' | tee $CIRCLE_ARTIFACTS/docker-image-shasum256.txt

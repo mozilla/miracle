@@ -52,7 +52,7 @@ case "$1" in
         if [ ! -z "$WEB_ID" ]; then
           $0 stop web
         fi
-        docker build -t mozilla/miracle .
+        docker build --pull -t mozilla/miracle .
         docker run -d \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
           -p 8000:8000/tcp --name="miracle_web" mozilla/miracle web
@@ -64,7 +64,7 @@ case "$1" in
         if [ ! -z "$WORKER_ID" ]; then
           $0 stop worker
         fi
-        docker build -t mozilla/miracle .
+        docker build --pull -t mozilla/miracle .
         docker run -d \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
           -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
@@ -74,7 +74,7 @@ case "$1" in
 
       # Builds and starts the services supporting the application container.
       services)
-        docker-compose build
+        docker-compose build --pull
         docker-compose up -d
         ;;
 
@@ -129,7 +129,7 @@ case "$1" in
   # Runs command inside the container.
   run)
     $0 start services
-    docker build -t mozilla/miracle .
+    docker build --pull -t mozilla/miracle .
     docker run -it --rm \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
         -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
@@ -145,7 +145,7 @@ case "$1" in
 
   # Runs miracle_bloom inside the container.
   bloom)
-    docker build -q -t mozilla/miracle .
+    docker build --pull -q -t mozilla/miracle .
     docker run -d --name="miracle_bloom" \
         mozilla/miracle bloom $2 $3 $4 $5 $6 $7 $8 $9
     # Give the container time to create the archive.
