@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import re
 
 from pyramid.httpexceptions import (
     HTTPBadRequest,
@@ -10,6 +11,10 @@ from pyramid.response import Response
 
 from miracle.config import END_DATE
 from miracle.data import tasks
+
+VALID_USER_TOKEN = re.compile(
+    r'^[!()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    r'_abcdefghijklmnopqrstuvwxyz~]*$')
 
 
 def configure(config):
@@ -22,6 +27,20 @@ def configure(config):
 def check_end_date(end=END_DATE):
     if datetime.utcnow().date() >= end:
         raise HTTPForbidden('Experiment has ended.')
+
+
+def check_user(user):
+    if not user:
+        return None
+    try:
+        user = user.decode('ascii')
+    except UnicodeDecodeError:
+        return None
+    if len(user) < 3 or len(user) > 36:
+        return None
+    if VALID_USER_TOKEN.match(user) is None:
+        return None
+    return user
 
 
 class View(object):
@@ -74,12 +93,7 @@ class View(object):
         return cors_headers
 
     def user(self):
-        user = self.request.headers.get('X-User')
-        if not user or len(user) < 3 or len(user) > 36:
-            return None
-        if isinstance(user, bytes):
-            user = user.decode('ascii')
-        return user
+        return check_user(self.request.headers.get('X-User'))
 
     def head(self):
         return Response()
@@ -152,7 +166,7 @@ class UploadView(View):
             return HTTPBadRequest('Empty body.')
 
         if len(body) > self._max_size:
-            return HTTPBadRequest('Uncompressed body too large.')
+            return HTTPBadRequest('Encrypted body too large.')
 
         try:
             text = body.decode('ascii')

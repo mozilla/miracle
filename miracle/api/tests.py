@@ -5,7 +5,10 @@ from jwcrypto.jwk import JWK
 from pyramid.httpexceptions import HTTPForbidden
 import pytest
 
-from miracle.api.views import check_end_date
+from miracle.api.views import (
+    check_end_date,
+    check_user,
+)
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin',
@@ -25,6 +28,19 @@ def test_check_end_date():
         check_end_date(today - timedelta(days=1))
     with pytest.raises(HTTPForbidden):
         check_end_date(today - timedelta(days=90))
+
+
+def test_check_user():
+    assert not check_user(None)
+    assert not check_user('')
+    assert not check_user(b'')
+    assert not check_user(b'ab')
+    assert not check_user(('a' * 40).encode('ascii'))
+    assert not check_user(b'abcd?')
+    assert not check_user(b'abcd\xfe')
+    assert check_user(b'abc')
+    assert check_user(b'fae006df902d4809aaddb176b6bdf8dd')
+    assert check_user(b'fae006df-902d-4809-aadd-b176b6bdf8dd')
 
 
 def test_delete(app, stats):
