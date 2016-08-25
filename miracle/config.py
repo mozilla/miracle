@@ -21,19 +21,21 @@ DB_ROOT_CERT = os.environ.get('DB_ROOT_CERT', 'rds_root_ca.pem')
 if TESTING:
     DB_ROOT_CERT = 'postgres_dev_ssl.pem'
 DB_ROOT_CERT = os.path.join(DATA_DIR, DB_ROOT_CERT)
+DB_SSL_MODE = 'verify-ca' if '_dev_' in DB_ROOT_CERT else 'verify-full'
 
 DB_USER = os.environ.get('DB_USER', 'miracle')
 DB_PASSWORD = os.environ.get('DB_PASSWORD', 'miracle')
 DB_HOST = os.environ.get('DB_HOST', 'localhost')
 DB_NAME = os.environ.get('DB_NAME', 'miracle')
 DB_URI = (
-    'postgresql+psycopg2://%s:%s@%s:5432/%s?'
-    'client_encoding=utf8&sslmode=verify-ca&sslrootcert=%s') % (
-    DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_ROOT_CERT)
+    'postgresql+psycopg2://{user}:{password}@{host}:5432/{name}?'
+    'client_encoding=utf8&sslmode={sslmode}&sslrootcert={rootcert}').format(
+    user=DB_USER, password=DB_PASSWORD, host=DB_HOST,
+    name=DB_NAME, sslmode=DB_SSL_MODE, rootcert=DB_ROOT_CERT)
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_DB = '1' if TESTING else '0'
-REDIS_URI = 'redis://%s:6379/%s' % (REDIS_HOST, REDIS_DB)
+REDIS_URI = 'redis://{host}:6379/{name}'.format(host=REDIS_HOST, name=REDIS_DB)
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN', None)
 STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
