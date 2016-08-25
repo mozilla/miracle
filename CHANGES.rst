@@ -5,6 +5,8 @@ Changelog
 1.1.2 (unreleased)
 ==================
 
+- Extend Redis ping by testing a write operation.
+
 - Remove unused AWS S3 bucket code.
 
 - Check user header against allowed character list.

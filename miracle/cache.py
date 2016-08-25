@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import redis
 
 from miracle.config import REDIS_URI
@@ -24,7 +26,10 @@ class RedisClient(redis.StrictRedis):
 
     def ping(self, raven):
         try:
-            self.execute_command('PING')
+            # Write a key to Redis, to see if we have a read/write
+            # capable connection.
+            token = uuid4().hex.encode('ascii')
+            self.set(b'ping_' + token, token, ex=1)
         except Exception:
             raven.captureException()
             return False
