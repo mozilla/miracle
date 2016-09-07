@@ -5,6 +5,8 @@ Changelog
 1.1.2 (unreleased)
 ==================
 
+- #2: Add analysis script to get recurring URL stats.
+
 - Extend Redis ping by testing a write operation.
 
 - Remove unused AWS S3 bucket code.
