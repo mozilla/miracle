@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.2 (unreleased)
+1.1.2 (2016-09-07)
 ==================
 
 - #2: Add analysis script to get recurring URL stats.
