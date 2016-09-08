@@ -5,6 +5,8 @@ Changelog
 1.1.3 (unreleased)
 ==================
 
+- Update end date based on launch data.
+
 
 1.1.2 (2016-09-07)
 ==================

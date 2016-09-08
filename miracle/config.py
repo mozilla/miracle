@@ -7,7 +7,7 @@ from alembic.config import Config as AlembicConfig
 TESTING = 'TESTING' in os.environ
 
 # Hard end date for data being submitted to the service.
-END_DATE = date(2016, 11, 22)  # Tentative... will change based on launch.
+END_DATE = date(2016, 12, 7)  # 2016-09-08 + 90 days
 
 HERE = os.path.dirname(__file__)
 STATIC_DIR = os.path.abspath(os.path.join(HERE, 'static'))
