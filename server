@@ -135,6 +135,7 @@ case "$1" in
         -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
         -e "DB_USER=miracle" -e "DB_PASSWORD=miracle" \
         -e "DB_ROOT_CERT=postgres_dev_ssl.pem" \
+        -p 8000:8000/tcp \
         mozilla/miracle $2 $3 $4 $5 $6 $7 $8 $9
     ;;
 

@@ -5,6 +5,8 @@ Changelog
 1.1.3 (unreleased)
 ==================
 
+- Fix user header parsing.
+
 - Update end date based on launch data.
 
 

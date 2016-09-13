@@ -38,8 +38,11 @@ def test_check_user():
     assert not check_user(('a' * 40).encode('ascii'))
     assert not check_user(b'abcd?')
     assert not check_user(b'abcd\xfe')
+    assert check_user('abc')
     assert check_user(b'abc')
+    assert check_user('fae006df902d4809aaddb176b6bdf8dd')
     assert check_user(b'fae006df902d4809aaddb176b6bdf8dd')
+    assert check_user('fae006df-902d-4809-aadd-b176b6bdf8dd')
     assert check_user(b'fae006df-902d-4809-aadd-b176b6bdf8dd')
 
 

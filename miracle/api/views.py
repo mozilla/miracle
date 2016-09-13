@@ -30,11 +30,14 @@ def check_end_date(end=END_DATE):
 
 
 def check_user(user):
-    if not user:
-        return None
-    try:
-        user = user.decode('ascii')
-    except UnicodeDecodeError:
+    if isinstance(user, bytes):
+        try:
+            user = user.decode('ascii')
+        except UnicodeDecodeError:
+            return None
+    elif isinstance(user, str):
+        pass
+    else:
         return None
     if len(user) < 3 or len(user) > 36:
         return None
