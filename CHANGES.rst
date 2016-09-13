@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.3 (unreleased)
+1.1.3 (2016-09-13)
 ==================
 
 - Fix user header parsing.
