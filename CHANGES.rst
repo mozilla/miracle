@@ -5,7 +5,9 @@ Changelog
 1.1.4 (unreleased)
 ==================
 
-- Add public_suffix list (2016-09-14).
+- Apply domain blocklist based on domain's public suffix.
+
+- Add public suffix list (2016-09-14).
 
 - Extend domain blocklist.
 

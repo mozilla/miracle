@@ -7,7 +7,7 @@ from sqlalchemy import (
     select,
 )
 
-from miracle.bloom import read_source
+from miracle.bloom import parse_domain_blocklist_source
 from miracle.config import BLOOM_DOMAIN_SOURCE
 from miracle.db import create_db
 from miracle.log import (
@@ -55,7 +55,7 @@ def remove_urls(db, lines):
 
 def main(db, filename=BLOOM_DOMAIN_SOURCE):
     LOGGER.info('Reading source file: %s', filename)
-    lines = read_source(filename)
+    lines = parse_domain_blocklist_source(filename)
     LOGGER.info('Found %s domains in source file.', len(lines))
     urls_removed = remove_urls(db, lines)
     LOGGER.info('Deleted %s domains.', urls_removed)

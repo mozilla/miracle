@@ -5,7 +5,7 @@ import sys
 
 import hydra
 
-from miracle.bloom import read_source
+from miracle.bloom import parse_domain_blocklist_source
 from miracle.config import BLOOM_DOMAIN_SOURCE
 from miracle.log import configure_logging
 
@@ -13,7 +13,7 @@ from miracle.log import configure_logging
 def create(in_filename, out_filename, archive_path, tmp_path):
     out_filepath = os.path.join(tmp_path, out_filename)
 
-    lines = read_source(in_filename)
+    lines = parse_domain_blocklist_source(in_filename)
 
     with hydra.WritingBloomFilter(len(lines), 0.001, out_filepath) as bf:
         for line in lines:
