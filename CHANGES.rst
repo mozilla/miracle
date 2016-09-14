@@ -5,6 +5,8 @@ Changelog
 1.1.4 (unreleased)
 ==================
 
+- Extend domain blocklist.
+
 
 1.1.3 (2016-09-13)
 ==================

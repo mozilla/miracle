@@ -12,7 +12,7 @@ TEST_START = datetime.utcfromtimestamp(1469400000)
 
 
 def test_read_source():
-    lines = block.read_source(_max=2)
+    lines = block.read_source()
     assert 'localhost' in lines
 
 
