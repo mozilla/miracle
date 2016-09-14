@@ -28,7 +28,9 @@ def _read_data_file(filename):
 
 
 def parse_domain_blocklist_source(filename=BLOOM_DOMAIN_SOURCE):
-    return _read_data_file(filename)
+    lines = _read_data_file(filename)
+    lines += ['broadcasthost', 'localhost', 'localhost.local']
+    return lines
 
 
 def parse_public_suffix_list(filename=PUBLIC_SUFFIX_LIST):
