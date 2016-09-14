@@ -5,6 +5,7 @@ import sys
 
 import hydra
 
+from miracle.bloom import read_source
 from miracle.config import BLOOM_DOMAIN_SOURCE
 from miracle.log import configure_logging
 
@@ -12,12 +13,7 @@ from miracle.log import configure_logging
 def create(in_filename, out_filename, archive_path, tmp_path):
     out_filepath = os.path.join(tmp_path, out_filename)
 
-    lines = []
-    with open(in_filename, 'rt', encoding='utf-8') as fd:
-        for line in fd.readlines():
-            line = line.strip()
-            if line:
-                lines.append(line)
+    lines = read_source(in_filename)
 
     with hydra.WritingBloomFilter(len(lines), 0.001, out_filepath) as bf:
         for line in lines:

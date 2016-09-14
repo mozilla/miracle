@@ -11,11 +11,6 @@ from miracle.scripts import block
 TEST_START = datetime.utcfromtimestamp(1469400000)
 
 
-def test_read_source():
-    lines = block.read_source()
-    assert 'localhost' in lines
-
-
 def test_remove_urls(db):
     # Test without any matching URLs
     assert block.remove_urls(db, ['localhost']) == 0

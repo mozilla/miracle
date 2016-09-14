@@ -7,6 +7,7 @@ from sqlalchemy import (
     select,
 )
 
+from miracle.bloom import read_source
 from miracle.config import BLOOM_DOMAIN_SOURCE
 from miracle.db import create_db
 from miracle.log import (
@@ -14,20 +15,6 @@ from miracle.log import (
     LOGGER,
 )
 from miracle.models import URL
-
-
-def read_source(filename=BLOOM_DOMAIN_SOURCE, _max=None):
-    lines = []
-    with open(filename, 'rt', encoding='utf-8') as fd:
-        i = 0
-        for line in fd.readlines():
-            line = line.strip()
-            if line:
-                lines.append(line)
-                i += 1
-            if _max is not None and i >= _max:
-                break
-    return lines
 
 
 def remove_urls(db, lines):
