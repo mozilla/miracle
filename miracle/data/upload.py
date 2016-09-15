@@ -1,6 +1,7 @@
 from datetime import datetime
 from ipaddress import _BaseAddress
 import json
+import sys
 import time
 
 from sqlalchemy import select, text
@@ -195,17 +196,23 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
 def upload_data(task, user_token, data,
                 _lock_timeout=10000, _retries=3, _retry_wait=1.0):
     # Upload data wrapper, to retry upload on database errors.
+    exc_info = None
     success = False
-    for i in range(_retries):
+    for i in range(max(_retries, 1)):
         try:
             success = _upload_data(task, user_token, data,
                                    _lock_timeout=_lock_timeout)
-        except OperationalError:
+        except (OperationalError, TypeError):
+            exc_info = sys.exc_info()
             time.sleep(_retry_wait * (i ** 2 + 1))
 
         if success:
             break
 
+    if not success:
+        task.raven.captureException(exc_info=exc_info)
+
+    del exc_info
     return success
 
 

@@ -62,10 +62,12 @@ _COMBINED_PAYLOAD['sessions'].extend(_INVALID_SESSIONS)
 
 class DummyTask(object):
 
-    def __init__(self, bloom_domain=None, crypto=None, db=None, stats=None):
+    def __init__(self, bloom_domain=None, crypto=None, db=None,
+                 raven=None, stats=None):
         self.bloom_domain = bloom_domain
         self.crypto = crypto
         self.db = db
+        self.raven = raven
         self.stats = stats
 
 
@@ -109,13 +111,14 @@ def test_validate(bloom_domain):
         assert upload.validate(input_, bloom_domain)[0] == expected
 
 
-def test_upload_data_new_user(bloom_domain, db, stats):
+def test_upload_data_new_user(bloom_domain, db, raven, stats):
     with db.session(commit=False) as session:
         url = URL(**URL.from_url('http://www.example.com/'))
         session.add(url)
         session.commit()
 
-        task = DummyTask(bloom_domain=bloom_domain, db=db, stats=stats)
+        task = DummyTask(bloom_domain=bloom_domain, db=db,
+                         raven=raven, stats=stats)
         assert upload.upload_data(task, 'foo', _PAYLOAD)
 
         assert session.query(URL).count() == 4
@@ -137,13 +140,14 @@ def test_upload_data_new_user(bloom_domain, db, stats):
     ])
 
 
-def test_upload_data_existing_user(bloom_domain, db, stats):
+def test_upload_data_existing_user(bloom_domain, db, raven, stats):
     with db.session(commit=False) as session:
         user = User(token='foo', created=TEST_TIME)
         session.add(user)
         session.commit()
 
-        task = DummyTask(bloom_domain=bloom_domain, db=db, stats=stats)
+        task = DummyTask(bloom_domain=bloom_domain, db=db,
+                         raven=raven, stats=stats)
         assert upload.upload_data(task, 'foo', _PAYLOAD)
 
         assert session.query(URL).count() == 4
@@ -166,9 +170,10 @@ def test_upload_data_existing_user(bloom_domain, db, stats):
     ])
 
 
-def test_upload_data_duplicated_sessions(bloom_domain, db, stats):
+def test_upload_data_duplicated_sessions(bloom_domain, db, raven, stats):
     with db.session(commit=False) as session:
-        task = DummyTask(bloom_domain=bloom_domain, db=db, stats=stats)
+        task = DummyTask(bloom_domain=bloom_domain, db=db,
+                         raven=raven, stats=stats)
         assert upload.upload_data(task, 'foo', _PAYLOAD)
         assert upload.upload_data(task, 'foo', _PAYLOAD)
         assert session.query(Session).count() == 10
@@ -180,7 +185,7 @@ def test_upload_data_duplicated_sessions(bloom_domain, db, stats):
     ])
 
 
-def test_upload_data_conflict(bloom_domain, cleanup_db, db, stats):
+def test_upload_data_conflict(bloom_domain, cleanup_db, db, raven, stats):
     # Use as secondary transaction to insert a conflicting user id,
     # and keep it open while _upload_data runs the first time.
     # Rollback the secondary transaction before _upload_data runs
@@ -202,14 +207,44 @@ def test_upload_data_conflict(bloom_domain, cleanup_db, db, stats):
 
             with mock.patch.object(upload, '_upload_data', mock_upload_data):
                 with db.session(commit=False) as session:
-                    task = DummyTask(bloom_domain=bloom_domain,
-                                     db=db, stats=stats)
+                    task = DummyTask(bloom_domain=bloom_domain, db=db,
+                                     raven=raven, stats=stats)
                     assert upload.upload_data(
                         task, 'foo', _PAYLOAD,
                         _lock_timeout=100, _retry_wait=0.01)
                     assert num == 2
                     assert session.query(User).count() == 1
                     assert session.query(Session).count() == 5
+
+
+def test_upload_data_conflict_error(bloom_domain, cleanup_db, db,
+                                    raven, stats):
+    # Same approach as above, but without retries.
+    with cleanup_db.engine.connect() as conn:
+        with conn.begin() as trans:
+            conn.execute(insert(User), [{'token': 'foo'}])
+
+            orig_upload_data = upload._upload_data
+            num = 0
+
+            def mock_upload_data(task, user_token, data, _lock_timeout=100):
+                nonlocal num
+                num += 1
+                return orig_upload_data(task, user_token, data,
+                                        _lock_timeout=_lock_timeout)
+
+            with mock.patch.object(upload, '_upload_data', mock_upload_data):
+                with db.session(commit=False) as session:
+                    task = DummyTask(bloom_domain=bloom_domain, db=db,
+                                     raven=raven, stats=stats)
+                    assert not upload.upload_data(
+                        task, 'foo', _PAYLOAD,
+                        _lock_timeout=100, _retry_wait=0.01, _retries=0)
+                    raven.check(['OperationalError'])
+                    assert num == 1
+                    assert session.query(User).count() == 0
+                    assert session.query(Session).count() == 0
+            trans.rollback()
 
 
 class TestUpload(object):

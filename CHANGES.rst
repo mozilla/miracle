@@ -5,6 +5,8 @@ Changelog
 1.1.4 (unreleased)
 ==================
 
+- Capture and retry SQLAlchemy internal TypeError during upload.
+
 - Adjust miracle_block script to take public suffixes into account.
 
 - Apply domain blocklist based on domain's public suffix.
