@@ -46,7 +46,8 @@ class BloomDomainFilter(object):
         self.public_suffixes = parse_public_suffix_list(public_suffix_filename)
 
     def __contains__(self, url):
-        return self.tld(url) in self.bloom
+        tld = self.tld(url)
+        return (tld if tld else url) in self.bloom
 
     def tld(self, url):
         labels = url.split('.')
@@ -63,7 +64,7 @@ class BloomDomainFilter(object):
                 return '.'.join(sub_labels)
             elif matches.intersection(self.public_suffixes):
                 return '.'.join(labels[max(i, 1) - 1:])
-        return url
+        return None
 
     def close(self):
         self.bloom.close()

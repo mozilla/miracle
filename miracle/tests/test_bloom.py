@@ -30,7 +30,7 @@ def test_tld(bloom_domain):
     # Test cases based on:
     # https://github.com/publicsuffix/list/blob/master/tests/test_psl.txt
     # Listed, but non-Internet, TLD.
-    assert bloom_domain.tld('localhost') == 'localhost'
+    assert bloom_domain.tld('localhost') is None
     assert bloom_domain.tld('localhost.local') == 'localhost.local'
     assert bloom_domain.tld('b.localhost.local') == 'localhost.local'
     assert bloom_domain.tld('a.b.localhost.local') == 'localhost.local'
