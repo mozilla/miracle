@@ -70,6 +70,7 @@ class Session(Model):
     start_time = Column(TIMESTAMP(), nullable=False)
 
     duration = Column(Integer())
+    tab_id = Column(String(32))
 
     url = relationship('URL', back_populates='sessions')
     user = relationship('User', back_populates='sessions')

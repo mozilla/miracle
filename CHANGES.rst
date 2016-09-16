@@ -5,6 +5,8 @@ Changelog
 1.1.4 (unreleased)
 ==================
 
+- Add tab_id to upload schema and extend sessions table.
+
 - Capture and retry SQLAlchemy internal TypeError during upload.
 
 - Adjust miracle_block script to take public suffixes into account.

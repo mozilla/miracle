@@ -15,11 +15,12 @@ from miracle.models import (
     Session,
 )
 
-HISTORY_SCHEMA = [
+SESSION_SCHEMA = [
     # (field name, field type, required, min_value, max_value)
-    ('url', str, True, 0, 2048),
+    ('url', str, True, 8, 2048),
     ('start_time', int, True, 2 ** 29, 2 ** 32),  # year 1987-2106
     ('duration', int, False, 0, 1000 * 3600 * 24),  # max 1 day in ms
+    ('tab_id', str, False, 2, 36),
 ]
 
 
@@ -29,11 +30,11 @@ def check_field(value, type_, min_value, max_value):
     if not isinstance(value, type_):
         return None
 
-    if (type_ in (int, float) and
-            not (min_value <= value < max_value)):
-        value = None
-    elif (type_ is str and
-          not (min_value <= len(value) < max_value)):
+    range_condition = value
+    if type_ is str:
+        range_condition = len(value)
+
+    if not (min_value <= range_condition < max_value):
         value = None
 
     return value
@@ -55,7 +56,7 @@ def validate(data, bloom_domain):
 
         missing_field = False
         validated_entry = {}
-        for field, type_, required, min_value, max_value in HISTORY_SCHEMA:
+        for field, type_, required, min_value, max_value in SESSION_SCHEMA:
             value = check_field(entry.get(field), type_, min_value, max_value)
 
             if required and not value:
@@ -180,6 +181,7 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
                 'url_id': urls[entry['url']],
                 'duration': entry['duration'],
                 'start_time': datetime.utcfromtimestamp(entry['start_time']),
+                'tab_id': entry['tab_id'],
             })
 
         if session_values:

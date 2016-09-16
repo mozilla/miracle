@@ -43,13 +43,15 @@ def test_session(db):
         url = URL(**URL.from_url(TEST_URL))
         user = User(token='foo')
         session.add(Session(
-            user=user, url=url, start_time=TEST_TIME, duration=2400))
+            user=user, url=url, start_time=TEST_TIME,
+            duration=2400, tab_id='-31-2'))
         session.commit()
 
         sess = session.query(Session).first()
         assert isinstance(sess.id, int)
         assert sess.start_time == TEST_TIME
         assert sess.duration == 2400
+        assert sess.tab_id == '-31-2'
 
         # Deleting a session, leaves the user and URL untouched
         session.execute(delete(Session))

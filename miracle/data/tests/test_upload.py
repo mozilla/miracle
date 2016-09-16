@@ -19,26 +19,31 @@ _PAYLOAD = {'sessions': [
         'duration': 2400,
         'start_time': 1468600000,
         'url': 'http://www.example.com/',
+        'tab_id': '-31-1',
     },
     {
         'duration': 1300,
         'start_time': 1468800000,
         'url': 'https://www.foo.com/',
+        'tab_id': '-31-1',
     },
     {
         'duration': 5700,
         'start_time': 1469200000,
         'url': 'https://www.example.com/login',
+        'tab_id': '-31-1',
     },
     {
         'duration': 4600,
         'start_time': 1469400000,
         'url': 'http://www.example.com/search/?query=question',
+        'tab_id': '-30-2',
     },
     {
         'duration': 6200,
         'start_time': 1469500000,
         'url': 'https://www.foo.com/',
+        'tab_id': '-30-2',
     },
 ]}
 _INVALID_SESSIONS = [
@@ -46,16 +51,19 @@ _INVALID_SESSIONS = [
         'duration': 800,
         'start_time': 1469700000,
         'url': 'https://foo:admin@www.foo.com/',
+        'tab_id': '-10-1',
     }, {
         'duration': 1000,
         'start_time': 1469800000,
         'url': 'https://foo:admin@www.foo.com/',
+        'tab_id': '-10-1',
     }
 ]
 _PAYLOAD_DURATIONS = {sess['duration'] for sess in _PAYLOAD['sessions']}
 _PAYLOAD_STARTS = {datetime.utcfromtimestamp(sess['start_time'])
                    for sess in _PAYLOAD['sessions']}
 _PAYLOAD_URLS = {sess['url'] for sess in _PAYLOAD['sessions']}
+_PAYLOAD_TAB_IDS = {sess['tab_id'] for sess in _PAYLOAD['sessions']}
 _COMBINED_PAYLOAD = deepcopy(_PAYLOAD)
 _COMBINED_PAYLOAD['sessions'].extend(_INVALID_SESSIONS)
 
@@ -95,17 +103,28 @@ def test_validate(bloom_domain):
         assert not upload.validate(invalid, bloom_domain)[0]['sessions']
 
     valid_inputs = [
-        {'sessions': [{'url': url, 'start_time': time, 'duration': None}]},
-        {'sessions': [{'url': url, 'start_time': time, 'duration': 2400}]},
-        {'sessions': [{'url': 'http://13.0.0.1/home',
-                       'start_time': time, 'duration': None}]},
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': None, 'tab_id': None}]},
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': 2400, 'tab_id': None}]},
+        {'sessions': [{'url': 'http://13.0.0.1/home', 'start_time': time,
+                       'duration': None, 'tab_id': None}]},
+        {'sessions': [{'url': 'http://13.0.0.1/home', 'start_time': time,
+                       'duration': None, 'tab_id': '-20-2'}]},
     ]
     for valid in valid_inputs:
         assert upload.validate(valid, bloom_domain)[0] == valid
 
     corrected_inputs = [(
-        {'sessions': [{'url': url, 'start_time': time, 'duration': -100}]},
-        {'sessions': [{'url': url, 'start_time': time, 'duration': None}]}
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': -100, 'tab_id': None}]},
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': None, 'tab_id': None}]}
+    ), (
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': None, 'tab_id': 10}]},
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': None, 'tab_id': None}]}
     )]
     for input_, expected in corrected_inputs:
         assert upload.validate(input_, bloom_domain)[0] == expected
@@ -131,6 +150,7 @@ def test_upload_data_new_user(bloom_domain, db, raven, stats):
         assert len(sessions) == 5
         assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
         assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
+        assert {sess.tab_id for sess in sessions} == _PAYLOAD_TAB_IDS
         assert {sess.url.url for sess in sessions} == _PAYLOAD_URLS
 
     stats.check(counter=[
@@ -161,6 +181,7 @@ def test_upload_data_existing_user(bloom_domain, db, raven, stats):
         assert len(sessions) == 5
         assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
         assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
+        assert {sess.tab_id for sess in sessions} == _PAYLOAD_TAB_IDS
         assert {sess.url.url for sess in sessions} == _PAYLOAD_URLS
 
     stats.check(counter=[

@@ -69,11 +69,13 @@ following structure:
         {
             "url": "http://www.apple.com/path/to/something",
             "start_time": 1468616293,
-            "duration": 2400
+            "duration": 2400,
+            "tab_id": '-31-2'
         }, {
             "url": "http://www.google.com/another/path/?argument=term",
             "start_time": 1468616317,
-            "duration": 4400
+            "duration": 4400,
+            "tab_id": '-31-1'
         }
     ]}
 
@@ -83,8 +85,10 @@ the user first opens the URL (starts the session) and the time the user
 navigates away from the URL (ends the session). Closing a browser window
 or closing the browser itself also ends the session.
 
-The start_time is specified in timezone neutral Unix time.
-The duration is measured in milliseconds.
+The start_time is specified in timezone neutral Unix time. The duration
+is measured in milliseconds. The tab_id specifies the browser tab the
+opened page was on. The tab_id is a short string composed of a tab group
+integer and a tab integer.
 
 
 Delete
