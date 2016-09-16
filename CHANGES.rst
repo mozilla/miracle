@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.4 (unreleased)
+1.1.4 (2016-09-16)
 ==================
 
 - Extend domain blocklist to block certain top-level domains.
