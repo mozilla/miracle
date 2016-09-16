@@ -5,11 +5,15 @@ def test_domain(bloom_domain):
     assert 'localhost' in bloom_domain
     assert 'localhost.local' in bloom_domain
     assert 'b.localhost.local' in bloom_domain
-    assert 'busters.porn' in bloom_domain
-    assert 'www.busters.porn' in bloom_domain
-    assert 'some.blog.busters.porn' in bloom_domain
-    assert 'somefancydomain.com' not in bloom_domain
-    assert 'www.somefancydomain.com' not in bloom_domain
+    assert 'sex.com' in bloom_domain
+    assert 'www.sex.com' in bloom_domain
+    assert 'a.b.sex.com' in bloom_domain
+    assert 'example.adult' in bloom_domain
+    assert 'a.b.example.adult' in bloom_domain
+    assert 'example.xxx' in bloom_domain
+    assert 'a.b.example.xxx' in bloom_domain
+    assert 'not-blocked.com' not in bloom_domain
+    assert 'www.not-blocked.com' not in bloom_domain
 
 
 def test_parse_domain_blocklist_source():

@@ -6,6 +6,14 @@ from miracle.config import (
     PUBLIC_SUFFIX_LIST,
 )
 
+BLOCKED_TLDS = frozenset((
+    'adult',
+    'porn',
+    'sex',
+    'sexy',
+    'xxx',
+))
+
 
 def create_bloom_domain(bloom_filename=BLOOM_DOMAIN,
                         public_suffix_filename=PUBLIC_SUFFIX_LIST,
@@ -45,12 +53,16 @@ class BloomDomainFilter(object):
         self.bloom = hydra.ReadingBloomFilter(bloom_filename)
         self.public_suffixes = parse_public_suffix_list(public_suffix_filename)
 
-    def __contains__(self, url):
-        tld = self.tld(url)
-        return (tld if tld else url) in self.bloom
+    def __contains__(self, host):
+        if host.split('.')[-1] in BLOCKED_TLDS:
+            # Filter out based on top-level domain.
+            return True
 
-    def tld(self, url):
-        labels = url.split('.')
+        tld = self.tld(host)
+        return (tld if tld else host) in self.bloom
+
+    def tld(self, host):
+        labels = host.split('.')
         for i in range(0, len(labels)):
             sub_labels = labels[i:]
             full_match = '.'.join(sub_labels)
