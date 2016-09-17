@@ -12,6 +12,7 @@ def test_domain(bloom_domain):
     assert 'a.b.example.adult' in bloom_domain
     assert 'example.xxx' in bloom_domain
     assert 'a.b.example.xxx' in bloom_domain
+    assert 'stevipark18.blogspot.co.id' in bloom_domain
     assert 'not-blocked.com' not in bloom_domain
     assert 'www.not-blocked.com' not in bloom_domain
 
