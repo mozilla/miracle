@@ -98,10 +98,10 @@ def log_tween_factory(handler, registry):
                 registry.raven.captureException()
                 raise
 
-        start = time.time()
+        start = time.monotonic()
 
         def _send(status):
-            duration = int(round((time.time() - start) * 1000))
+            duration = int(round((time.monotonic() - start) * 1000))
             tags = [
                 # Convert a URI to a statsd acceptable metric name
                 'path:%s' % request.path.replace(

@@ -5,6 +5,7 @@ Changelog
 1.1.5 (unreleased)
 ==================
 
+- Use `time.monotonic` to capture timing information.
 
 
 1.1.4 (2016-09-16)
