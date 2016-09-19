@@ -5,6 +5,8 @@ def test_domain(bloom_domain):
     assert 'localhost' in bloom_domain
     assert 'localhost.local' in bloom_domain
     assert 'b.localhost.local' in bloom_domain
+    assert 'example.local' in bloom_domain
+    assert 'a.b.example.local' in bloom_domain
     assert 'sex.com' in bloom_domain
     assert 'www.sex.com' in bloom_domain
     assert 'a.b.sex.com' in bloom_domain

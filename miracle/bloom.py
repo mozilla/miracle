@@ -8,6 +8,7 @@ from miracle.config import (
 
 BLOCKED_TLDS = frozenset((
     'adult',
+    'local',
     'porn',
     'sex',
     'sexy',
@@ -37,7 +38,7 @@ def _read_data_file(filename):
 
 def parse_domain_blocklist_source(filename=BLOOM_DOMAIN_SOURCE):
     lines = _read_data_file(filename)
-    lines += ['broadcasthost', 'localhost', 'localhost.local']
+    lines += ['broadcasthost', 'localhost']
     return lines
 
 
