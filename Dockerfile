@@ -32,6 +32,8 @@ RUN apk add --no-cache --virtual .deps \
     postgresql-dev && \
     pip install --no-deps --no-cache-dir --require-hashes \
         -r requirements/build.txt && \
+# To build a new binary wheel and update the wheelhouse, add here:
+# pip wheel --no-deps cffi==1.8.3 && \
     pip install --no-deps --no-cache-dir --require-hashes \
         -f /app/wheelhouse -r requirements/binary.txt && \
     apk del --purge .deps

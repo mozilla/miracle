@@ -1,3 +1,7 @@
+"""
+A script to measure recurring sessions to the same URL from the same
+user in a 7 day period.
+"""
 import argparse
 from collections import defaultdict
 import sys
