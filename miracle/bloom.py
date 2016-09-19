@@ -37,9 +37,7 @@ def _read_data_file(filename):
 
 
 def parse_domain_blocklist_source(filename=BLOOM_DOMAIN_SOURCE):
-    lines = _read_data_file(filename)
-    lines += ['broadcasthost', 'localhost']
-    return lines
+    return _read_data_file(filename)
 
 
 def parse_public_suffix_list(filename=PUBLIC_SUFFIX_LIST):
@@ -60,7 +58,10 @@ class BloomDomainFilter(object):
             return True
 
         tld = self.tld(host)
-        return (tld if tld else host) in self.bloom
+        if tld is None:
+            # Filter out invalid domains.
+            return True
+        return tld in self.bloom
 
     def tld(self, host):
         labels = host.split('.')

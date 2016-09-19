@@ -5,6 +5,8 @@ Changelog
 1.1.5 (unreleased)
 ==================
 
+- Filter out invalid domain names.
+
 - Filter out all `.local` domains.
 
 - Use `time.monotonic` to capture timing information.

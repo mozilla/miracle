@@ -2,11 +2,13 @@ from miracle import bloom
 
 
 def test_domain(bloom_domain):
+    assert 'broadcasthost' in bloom_domain
     assert 'localhost' in bloom_domain
     assert 'localhost.local' in bloom_domain
     assert 'b.localhost.local' in bloom_domain
     assert 'example.local' in bloom_domain
     assert 'a.b.example.local' in bloom_domain
+    assert 'reader' in bloom_domain
     assert 'sex.com' in bloom_domain
     assert 'www.sex.com' in bloom_domain
     assert 'a.b.sex.com' in bloom_domain
@@ -21,7 +23,7 @@ def test_domain(bloom_domain):
 
 def test_parse_domain_blocklist_source():
     lines = bloom.parse_domain_blocklist_source()
-    assert 'localhost' in lines
+    assert 'sex.com' in lines
     assert '' not in lines
     assert not [line for line in lines if '//' in line]
 
@@ -36,6 +38,9 @@ def test_parse_public_suffix_list():
 def test_tld(bloom_domain):
     # Test cases based on:
     # https://github.com/publicsuffix/list/blob/master/tests/test_psl.txt
+    # Invalid hostnames.
+    assert bloom_domain.tld('broadcasthost') is None
+    assert bloom_domain.tld('reader') is None
     # Listed, but non-Internet, TLD.
     assert bloom_domain.tld('localhost') is None
     assert bloom_domain.tld('localhost.local') == 'localhost.local'
