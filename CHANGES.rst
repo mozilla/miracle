@@ -5,6 +5,8 @@ Changelog
 1.1.5 (unreleased)
 ==================
 
+- Increase maximum valid session duration to 21 days.
+
 - Filter out invalid domain names.
 
 - Filter out all `.local` domains.

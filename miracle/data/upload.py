@@ -15,16 +15,17 @@ from miracle.models import (
     Session,
 )
 
+MAX_DURATION = 1000 * 3600 * 24 * 21  # max 21 day in ms
 SESSION_SCHEMA = [
-    # (field name, field type, required, min_value, max_value)
-    ('url', str, True, 8, 2048),
-    ('start_time', int, True, 2 ** 29, 2 ** 32),  # year 1987-2106
-    ('duration', int, False, 0, 1000 * 3600 * 24),  # max 1 day in ms
-    ('tab_id', str, False, 2, 36),
+    # (name, type, required, min_value, max_value, underflow, overflow)
+    ('url', str, True, 8, 2048, None, None),
+    ('start_time', int, True, 2 ** 29, 2 ** 32, None, None),  # year 1987-2106
+    ('duration', int, False, 0, MAX_DURATION, 0, MAX_DURATION),
+    ('tab_id', str, False, 2, 36, '', ''),
 ]
 
 
-def check_field(value, type_, min_value, max_value):
+def check_field(value, type_, min_value, max_value, underflow, overflow):
     # Ensure that each field is of the expected type and
     # inside the expected min/max range.
     if not isinstance(value, type_):
@@ -34,8 +35,11 @@ def check_field(value, type_, min_value, max_value):
     if type_ is str:
         range_condition = len(value)
 
-    if not (min_value <= range_condition < max_value):
-        value = None
+    if range_condition <= min_value:
+        return underflow
+
+    if range_condition > max_value:
+        return overflow
 
     return value
 
@@ -56,8 +60,8 @@ def validate(data, bloom_domain):
 
         missing_field = False
         validated_entry = {}
-        for field, type_, required, min_value, max_value in SESSION_SCHEMA:
-            value = check_field(entry.get(field), type_, min_value, max_value)
+        for field, type_, required, *spec in SESSION_SCHEMA:
+            value = check_field(entry.get(field), type_, *spec)
 
             if required and not value:
                 missing_field = True

@@ -119,12 +119,17 @@ def test_validate(bloom_domain):
         {'sessions': [{'url': url, 'start_time': time,
                        'duration': -100, 'tab_id': None}]},
         {'sessions': [{'url': url, 'start_time': time,
-                       'duration': None, 'tab_id': None}]}
+                       'duration': 0, 'tab_id': None}]}
     ), (
         {'sessions': [{'url': url, 'start_time': time,
-                       'duration': None, 'tab_id': 10}]},
+                       'duration': upload.MAX_DURATION + 1, 'tab_id': None}]},
         {'sessions': [{'url': url, 'start_time': time,
-                       'duration': None, 'tab_id': None}]}
+                       'duration': upload.MAX_DURATION, 'tab_id': None}]}
+    ), (
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': None, 'tab_id': 'a'}]},
+        {'sessions': [{'url': url, 'start_time': time,
+                       'duration': None, 'tab_id': ''}]}
     )]
     for input_, expected in corrected_inputs:
         assert upload.validate(input_, bloom_domain)[0] == expected
