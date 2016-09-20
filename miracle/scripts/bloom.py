@@ -15,7 +15,7 @@ def create(in_filename, out_filename, archive_path, tmp_path):
 
     lines = parse_domain_blocklist_source(in_filename)
 
-    with hydra.WritingBloomFilter(len(lines), 0.001, out_filepath) as bf:
+    with hydra.WritingBloomFilter(len(lines), 0.0001, out_filepath) as bf:
         for line in lines:
             bf[(line.encode('utf-8'))] = 0
 
