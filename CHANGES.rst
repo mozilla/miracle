@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.5 (unreleased)
+1.1.5 (2016-09-20)
 ==================
 
 - Filter out non-standard HTTP/S ports.
