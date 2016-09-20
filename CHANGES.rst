@@ -5,6 +5,8 @@ Changelog
 1.1.5 (unreleased)
 ==================
 
+- Filter out non-standard HTTP/S ports.
+
 - Increase maximum valid session duration to 21 days.
 
 - Filter out invalid domain names and IP addresses.

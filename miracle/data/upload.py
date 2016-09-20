@@ -104,6 +104,11 @@ def filter_entry(session_entry, bloom_domain):
     else:  # pragma: no cover
         return None
 
+    port = url_result.getport()
+    if port is not None and port not in (80, 443):
+        # Filter out non-standard ports.
+        return None
+
     return session_entry
 
 

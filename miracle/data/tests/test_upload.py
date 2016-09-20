@@ -99,12 +99,17 @@ def test_validate(bloom_domain):
         {'sessions': [{'url': 'https://admin:admin@example.com/',
                        'start_time': time}]},
         {'sessions': [{'url': 'http://localhost:80/', 'start_time': time}]},
+        {'sessions': [{'url': 'http://example.com:81/', 'start_time': time}]},
     ]
     for invalid in invalid_inputs:
         assert not upload.validate(invalid, bloom_domain)[0]['sessions']
 
     valid_inputs = [
         {'sessions': [{'url': url, 'start_time': time,
+                       'duration': None, 'tab_id': None}]},
+        {'sessions': [{'url': 'http://example.com:80/', 'start_time': time,
+                       'duration': None, 'tab_id': None}]},
+        {'sessions': [{'url': 'https://example.com:443/', 'start_time': time,
                        'duration': None, 'tab_id': None}]},
         {'sessions': [{'url': url, 'start_time': time,
                        'duration': 2400, 'tab_id': None}]},
