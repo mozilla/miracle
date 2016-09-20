@@ -99,9 +99,8 @@ def filter_entry(session_entry, bloom_domain):
             # Filter out domains based on a blocklist.
             return None
     elif isinstance(host, _BaseAddress):
-        # Filter out private IP addresses.
-        if not host.is_global:
-            return None
+        # Filter out IP addresses.
+        return None
     else:  # pragma: no cover
         return None
 

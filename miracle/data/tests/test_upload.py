@@ -93,6 +93,7 @@ def test_validate(bloom_domain):
         {'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
                        'start_time': time}]},
         {'sessions': [{'url': 'http://127.0.0.1/home', 'start_time': time}]},
+        {'sessions': [{'url': 'http://8.8.8.8/home', 'start_time': time}]},
         {'sessions': [{'url': 'about:config', 'start_time': time}]},
         {'sessions': [{'url': 'file:///etc/hosts', 'start_time': time}]},
         {'sessions': [{'url': 'https://admin:admin@example.com/',
@@ -107,9 +108,9 @@ def test_validate(bloom_domain):
                        'duration': None, 'tab_id': None}]},
         {'sessions': [{'url': url, 'start_time': time,
                        'duration': 2400, 'tab_id': None}]},
-        {'sessions': [{'url': 'http://13.0.0.1/home', 'start_time': time,
+        {'sessions': [{'url': 'http://example.com/home', 'start_time': time,
                        'duration': None, 'tab_id': None}]},
-        {'sessions': [{'url': 'http://13.0.0.1/home', 'start_time': time,
+        {'sessions': [{'url': 'http://example.com/home', 'start_time': time,
                        'duration': None, 'tab_id': '-20-2'}]},
     ]
     for valid in valid_inputs:

@@ -7,7 +7,7 @@ Changelog
 
 - Increase maximum valid session duration to 21 days.
 
-- Filter out invalid domain names.
+- Filter out invalid domain names and IP addresses.
 
 - Filter out all `.local` domains.
 
