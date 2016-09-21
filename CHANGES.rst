@@ -5,6 +5,8 @@ Changelog
 1.1.6 (unreleased)
 ==================
 
+- Filter out users who have not participated for at least a week from
+  the weekly recurrence analysis script.
 
 
 1.1.5 (2016-09-20)

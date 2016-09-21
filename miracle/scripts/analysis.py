@@ -1,9 +1,12 @@
 """
 A script to measure recurring sessions to the same URL from the same
-user in a 7 day period.
+user in a 7 day period, if those URLs have been visited at least 3 times.
+
+Only users who have participated for at least 7 days are counted.
 """
 import argparse
 from collections import defaultdict
+from datetime import datetime, timedelta
 import sys
 
 from sqlalchemy import (
@@ -19,7 +22,10 @@ from miracle.log import (
     configure_logging,
     LOGGER,
 )
-from miracle.models import Session
+from miracle.models import (
+    User,
+    Session,
+)
 
 ONE_WEEK_SEC = 7 * 24 * 3600
 
@@ -53,6 +59,10 @@ def user_weekly_recurrence(session, user_id, min_count=3):
 
     found = 0
     for url_id, times in url_times.items():
+        # Use a sliding window, comparing times at position 0 and
+        # position min_count - 1 and check if they are at most one
+        # week apart. Pop the first element from the list and continue
+        # until either the URL is confirmed or the list of times ends.
         times = sorted(times)
         for i in range(0, len(times) - min_count + 1):
             # We don't need to look at the last elements, as there
@@ -71,18 +81,27 @@ def user_weekly_recurrence(session, user_id, min_count=3):
 
 
 def weekly_recurrence(db):
-    user_results = {}
+    seven_days = datetime.utcnow() - timedelta(days=7)
+    results = {}
 
     with db.session(commit=False) as session:
         user_rows = session.execute(
-            select([Session.user_id], distinct=True)).fetchall()
-        user_ids = [u.user_id for u in user_rows]
+            select([User.id]).where(User.created <= seven_days)).fetchall()
 
+        user_ids = {u.id for u in user_rows}
         for user_id in user_ids:
-            user_results[user_id] = user_weekly_recurrence(session, user_id)
+            # Check if the user has participated for at least a week.
+            row = session.execute(
+                select([func.min(Session.start_time),
+                        func.max(Session.start_time)])
+                .where(Session.user_id == user_id)).fetchone()
+
+            if row and row.min_1 and row.max_1:
+                if (row.max_1 - row.min_1) >= timedelta(days=7):
+                    results[user_id] = user_weekly_recurrence(session, user_id)
 
     num_users = defaultdict(int)
-    for num in user_results.values():
+    for num in results.values():
         num_users[num] += 1
 
     return sorted([(k, v) for k, v in num_users.items()])
