@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.6 (unreleased)
+1.1.6 (2016-10-05)
 ==================
 
 - Filter out users who have not participated for at least a week from
