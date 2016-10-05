@@ -35,13 +35,13 @@ dependencies:
     - cp version.json $CIRCLE_ARTIFACTS
 
     # build the actual deployment container
-    - docker build --pull -t ${DOCKERHUB_REPO} .
+    - docker build --pull -t miracle .
 
     # write the sha256 sum to an artifact to make image verification easier
     - docker images --no-trunc | awk '/^app/ {print $3}' | tee $CIRCLE_ARTIFACTS/docker-image-shasum256.txt
 
     # Clean up any old images; save the new one.
-    - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save ${DOCKERHUB_REPO} | pigz --fast -c > ~/docker/$I; ls -l ~/docker
+    - I="image-$(date +%j).gz"; mkdir -p ~/docker; rm ~/docker/*; docker save miracle | pigz --fast -c > ~/docker/$I; ls -l ~/docker
 
     # Pull down images for service containers.
     - docker-compose pull
