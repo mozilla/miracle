@@ -212,7 +212,7 @@ def upload_data(task, user_token, data,
         try:
             success = _upload_data(task, user_token, data,
                                    _lock_timeout=_lock_timeout)
-        except (OperationalError, TypeError):
+        except OperationalError:
             exc_info = sys.exc_info()
             time.sleep(_retry_wait * (i ** 2 + 1))
 
