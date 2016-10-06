@@ -4,6 +4,7 @@ from miracle.config import (
     BLOOM_DOMAIN,
     BLOOM_DOMAIN_SOURCE,
     PUBLIC_SUFFIX_LIST,
+    TOP_100_US_LIST,
 )
 
 BLOCKED_TLDS = frozenset((
@@ -43,6 +44,13 @@ def parse_domain_blocklist_source(filename=BLOOM_DOMAIN_SOURCE):
 def parse_public_suffix_list(filename=PUBLIC_SUFFIX_LIST):
     lines = _read_data_file(filename)
     lines += ['local']
+    return frozenset(lines)
+
+
+def parse_top_100_list(filename=TOP_100_US_LIST):
+    # Take top 100 list and remove known adult domains.
+    lines = set(_read_data_file(filename))
+    lines -= {'pornhub.com', 'xhamster.com', 'xvideos.com'}
     return frozenset(lines)
 
 

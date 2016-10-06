@@ -5,6 +5,7 @@ Changelog
 1.1.7 (unreleased)
 ==================
 
+- Test our bloom filter against the top 100 domains.
 
 
 1.1.6 (2016-10-05)

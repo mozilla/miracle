@@ -21,6 +21,21 @@ def test_domain(bloom_domain):
     assert 'www.not-blocked.com' not in bloom_domain
 
 
+def test_domain_filter_not_100(bloom_domain):
+    top_100 = bloom.parse_top_100_list()
+    for domain in top_100:
+        assert domain not in bloom_domain
+        assert 'www.' + domain not in bloom_domain
+
+
+def test_parse_top_100_list():
+    lines = bloom.parse_top_100_list()
+    assert 'pornhub.com' not in lines
+    assert 'amazon.com' in lines
+    assert 'google.com' in lines
+    assert len(lines) == 97
+
+
 def test_parse_domain_blocklist_source():
     lines = bloom.parse_domain_blocklist_source()
     assert 'sex.com' in lines
