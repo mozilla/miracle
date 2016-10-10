@@ -125,7 +125,7 @@ def db(global_db):
         with conn.begin() as trans:
             global_db.session_factory.configure(bind=conn)
             yield global_db
-            global_db.session_factory.configure(bind=None)
+            global_db.session_factory.configure(bind=global_db.engine)
             trans.rollback()
 
 
