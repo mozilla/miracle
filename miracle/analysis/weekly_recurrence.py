@@ -6,6 +6,7 @@ Only users who have participated for at least 7 days are counted.
 """
 from collections import defaultdict
 from datetime import datetime, timedelta
+from statistics import mean, median
 
 from sqlalchemy import (
     cast,
@@ -95,15 +96,31 @@ def weekly_recurrence(db):
                     results[user_id] = user_weekly_recurrence(session, user_id)
 
     num_users = defaultdict(int)
-    for num in results.values():
+    for user_id, num in results.items():
         num_users[num] += 1
 
-    return sorted([(k, v) for k, v in num_users.items()])
+    users_num = sorted([(k, v) for k, v in num_users.items()])
+
+    sessions = []
+    for user_id, num in users_num:
+        for i in range(num):
+            sessions.append(user_id)
+    stats = ('max: 0', 'mean: 0', 'median: 0', 'min: 0')
+    if sessions:
+        stats = ('max: %s' % round(max(sessions)),
+                 'mean: %s' % round(mean(sessions)),
+                 'median: %s' % round(median(sessions)),
+                 'min: %s' % round(min(sessions)),
+                 )
+
+    return (users_num, stats)
 
 
 def main(db, argv=None):
     LOGGER.info('Starting analysis.')
+    users_num, stats = weekly_recurrence(db)
     LOGGER.info('Number of recurring URLs per 7 days to user count:')
-    LOGGER.info(weekly_recurrence(db))
+    LOGGER.info(users_num)
+    LOGGER.info(stats)
     LOGGER.info('Finished analysis.')
     return True

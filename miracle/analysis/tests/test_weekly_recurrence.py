@@ -68,4 +68,5 @@ def test_weekly_recurrence(db):
                     start_time=TEST_START + timedelta(days=10)),
         ])
         session.flush()
-        assert weekly_recurrence.weekly_recurrence(db) == [(0, 1), (2, 1)]
+        assert weekly_recurrence.weekly_recurrence(db) == (
+            [(0, 1), (2, 1)], ('max: 2', 'mean: 1', 'median: 1', 'min: 0'))
