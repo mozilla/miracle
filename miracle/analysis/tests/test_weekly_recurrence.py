@@ -13,7 +13,7 @@ TEST_START = NOW - timedelta(days=14)
 
 
 def test_main(db):
-    assert weekly_recurrence.main(db)
+    assert weekly_recurrence.main(db) is None
 
 
 def test_weekly_recurrence(db):

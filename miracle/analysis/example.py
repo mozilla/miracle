@@ -24,16 +24,10 @@ def main(db, argv=None):
     # It also needs to take the argv command line arguments, but can
     # ignore those.
 
-    # A Python logger is set up automatically, which prints messages
-    # to the console, prefixed by a timestamp.
-    LOGGER.info('Starting example analysis.')
-
     # Call a function to do the actual work.
     result = example(db)
+
+    # A Python logger is set up automatically, which prints messages
+    # to the console, prefixed by a timestamp. For long running scripts
+    # this allows one to follow the progress.
     LOGGER.info('Result: %s', result)
-
-    LOGGER.info('Finished example analysis.')
-
-    # Return True for a successful run, False otherwise.
-    # This results in either an exit code of 0 or 1 for the script.
-    return True

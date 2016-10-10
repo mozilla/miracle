@@ -117,10 +117,7 @@ def weekly_recurrence(db):
 
 
 def main(db, argv=None):
-    LOGGER.info('Starting analysis.')
     users_num, stats = weekly_recurrence(db)
     LOGGER.info('Number of recurring URLs per 7 days to user count:')
     LOGGER.info(users_num)
     LOGGER.info(stats)
-    LOGGER.info('Finished analysis.')
-    return True

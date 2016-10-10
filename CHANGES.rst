@@ -5,6 +5,8 @@ Changelog
 1.1.7 (unreleased)
 ==================
 
+- Add script to calculate daily sessions per user.
+
 - Re-factor `scripts.analysis` into a new sub-package.
 
 - Test our bloom filter against the top 100 domains.

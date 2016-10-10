@@ -22,20 +22,22 @@ def main(argv, _db=None):
     if args.script not in MODULES:
         LOGGER.info('Unknown analysis script. Choose one of:')
         LOGGER.info(', '.join(MODULES.keys()))
-        return False
+        return 1
 
     script_module = MODULES[args.script]
-    result = True
     try:
         db = create_db(_db=_db)
-        result = script_module.main(db, argv)
+        LOGGER.info('Starting analysis.')
+        script_module.main(db, argv)
+        LOGGER.info('Finished analysis.')
     finally:
         if _db is None:  # pragma: no cover
             db.close()
-    return result
 
 
 def console_entry():  # pragma: no cover
     configure_logging()
-    result = main(sys.argv)
-    sys.exit(int(not result))
+    exit_code = main(sys.argv)
+    if exit_code is not None:
+        sys.exit(exit_code)
+    sys.exit(0)
