@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export GEVENT_RESOLVER=ares
+
 cd $(dirname $0)
 case "$1" in
     web)
