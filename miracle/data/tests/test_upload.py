@@ -108,6 +108,8 @@ def test_validate(bloom_domain):
                        'start_time': time}]},
         {'sessions': [{'url': 'http://127.0.0.1/home', 'start_time': time}]},
         {'sessions': [{'url': 'http://8.8.8.8/home', 'start_time': time}]},
+        {'sessions': [{'url': 'http://domain-really-does-not-exist.com',
+                       'start_time': time}]},
         {'sessions': [{'url': 'about:config', 'start_time': time}]},
         {'sessions': [{'url': 'file:///etc/hosts', 'start_time': time}]},
         {'sessions': [{'url': 'https://admin:admin@example.com/',

@@ -5,6 +5,8 @@ Changelog
 1.1.7 (unreleased)
 ==================
 
+- Validate DNS resolution for hostnames.
+
 - Switch celery worker to use gevent for concurrency.
 
 - Drop sessions with a start_time in the future or more than 2 weeks old.

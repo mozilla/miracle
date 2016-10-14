@@ -4,6 +4,7 @@ import json
 import sys
 import time
 
+from gevent import socket
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError
@@ -15,7 +16,7 @@ from miracle.models import (
     Session,
 )
 
-MAX_DURATION = 1000 * 3600 * 24 * 21  # max 21 day in ms
+MAX_DURATION = 1000 * 3600 * 24 * 21  # max 21 days in ms
 SESSION_SCHEMA = [
     # (name, type, required, min_value, max_value, underflow, overflow)
     ('url', str, True, 8, 2048, None, None),
@@ -83,6 +84,23 @@ def validate(data, bloom_domain):
             len(data['sessions']) - len(sessions))
 
 
+def validate_hostname(hostname):
+    # Validate DNS resolution.
+    try:
+        socket.gethostbyname(hostname)
+    except (socket.gaierror, UnicodeError):
+        return False
+    return True
+
+
+def validate_start_time(start_time):
+    # Filter out entries in the future or those more than 2 weeks old.
+    now = int(time.time())
+    if (start_time > now + 86400) or (start_time < now - 86400 * 14):
+        return False
+    return True
+
+
 def filter_entry(session_entry, bloom_domain):
     # Check each session entry and filter some of them out.
     try:
@@ -109,10 +127,12 @@ def filter_entry(session_entry, bloom_domain):
         # Filter out non-standard ports.
         return None
 
-    start_time = session_entry['start_time']
-    now = int(time.time())
-    if (start_time > now + 86400) or (start_time < now - 86400 * 14):
-        # Filter out entries in the future or those more than 2 weeks old.
+    if not validate_start_time(session_entry['start_time']):
+        # Filter out too old or too new times.
+        return None
+
+    if not validate_hostname(host):
+        # Filter out invalid or publicly unreachable hosts.
         return None
 
     return session_entry
