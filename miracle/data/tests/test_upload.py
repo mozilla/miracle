@@ -1,6 +1,7 @@
 from copy import deepcopy
 from datetime import datetime
 import json
+import time
 from unittest import mock
 
 from sqlalchemy.dialects.postgresql import insert
@@ -13,35 +14,36 @@ from miracle.models import (
     Session,
 )
 
-TEST_TIME = datetime.utcfromtimestamp(1469400000)
+TEST_DATE = datetime.utcnow()
+TEST_TIME = int(time.time())
 _PAYLOAD = {'sessions': [
     {
         'duration': 2400,
-        'start_time': 1468600000,
+        'start_time': TEST_TIME,
         'url': 'http://www.example.com/',
         'tab_id': '-31-1',
     },
     {
         'duration': 1300,
-        'start_time': 1468800000,
+        'start_time': TEST_TIME,
         'url': 'https://www.foo.com/',
         'tab_id': '-31-1',
     },
     {
         'duration': 5700,
-        'start_time': 1469200000,
+        'start_time': TEST_TIME - 3600,
         'url': 'https://www.example.com/login',
         'tab_id': '-31-1',
     },
     {
         'duration': 4600,
-        'start_time': 1469400000,
+        'start_time': TEST_TIME - 7200,
         'url': 'http://www.example.com/search/?query=question',
         'tab_id': '-30-2',
     },
     {
         'duration': 6200,
-        'start_time': 1469500000,
+        'start_time': TEST_TIME - 10800,
         'url': 'https://www.foo.com/',
         'tab_id': '-30-2',
     },
@@ -49,15 +51,25 @@ _PAYLOAD = {'sessions': [
 _INVALID_SESSIONS = [
     {
         'duration': 800,
-        'start_time': 1469700000,
+        'start_time': TEST_TIME,
         'url': 'https://foo:admin@www.foo.com/',
         'tab_id': '-10-1',
     }, {
         'duration': 1000,
-        'start_time': 1469800000,
+        'start_time': TEST_TIME - 3600,
         'url': 'https://foo:admin@www.foo.com/',
         'tab_id': '-10-1',
-    }
+    }, {
+        'duration': 1200,
+        'start_time': TEST_TIME - 86400 * 15,
+        'url': 'http://www.example.com/',
+        'tab_id': '-10-1',
+    }, {
+        'duration': 1400,
+        'start_time': TEST_TIME + 86400 * 2,
+        'url': 'http://www.example.com/',
+        'tab_id': '-10-1',
+    },
 ]
 _PAYLOAD_DURATIONS = {sess['duration'] for sess in _PAYLOAD['sessions']}
 _PAYLOAD_STARTS = {datetime.utcfromtimestamp(sess['start_time'])
@@ -81,7 +93,7 @@ class DummyTask(object):
 
 def test_validate(bloom_domain):
     url = 'https://example.com/path'
-    time = 1469400000
+    time = TEST_TIME
 
     invalid_inputs = [
         {'other_key': []},
@@ -90,6 +102,8 @@ def test_validate(bloom_domain):
         {'sessions': [{'url': ''}]},
         {'sessions': [{'url': 1}]},
         {'sessions': [{'url': url, 'start_time': None}]},
+        {'sessions': [{'url': url, 'start_time': TEST_TIME + 86400 * 2}]},
+        {'sessions': [{'url': url, 'start_time': TEST_TIME - 86400 * 15}]},
         {'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
                        'start_time': time}]},
         {'sessions': [{'url': 'http://127.0.0.1/home', 'start_time': time}]},
@@ -173,7 +187,7 @@ def test_upload_data_new_user(bloom_domain, db, raven, stats):
 
 def test_upload_data_existing_user(bloom_domain, db, raven, stats):
     with db.session(commit=False) as session:
-        user = User(token='foo', created=TEST_TIME)
+        user = User(token='foo', created=TEST_DATE)
         session.add(user)
         session.commit()
 
@@ -186,7 +200,7 @@ def test_upload_data_existing_user(bloom_domain, db, raven, stats):
         assert len(users) == 1
         assert users[0].id == user.id
         assert users[0].token == 'foo'
-        assert users[0].created == TEST_TIME
+        assert users[0].created == TEST_DATE
 
         sessions = session.query(Session).all()
         assert len(sessions) == 5
@@ -286,8 +300,8 @@ class TestUpload(object):
             'foo', crypto.encrypt(json.dumps(_COMBINED_PAYLOAD))).get()
 
         stats.check(counter=[
-            ('data.url.drop', 1, 1),
-            ('data.session.drop', 1, 2),
+            ('data.url.drop', 1, 2),
+            ('data.session.drop', 1, 4),
         ])
 
     def test_task_fail(self, celery, crypto, stats):

@@ -5,6 +5,8 @@ Changelog
 1.1.7 (unreleased)
 ==================
 
+- Drop sessions with a start_time in the future or more than 2 weeks old.
+
 - Add script to calculate daily sessions per user.
 
 - Re-factor `scripts.analysis` into a new sub-package.

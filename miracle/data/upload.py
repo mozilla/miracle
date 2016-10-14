@@ -109,6 +109,12 @@ def filter_entry(session_entry, bloom_domain):
         # Filter out non-standard ports.
         return None
 
+    start_time = session_entry['start_time']
+    now = int(time.time())
+    if (start_time > now + 86400) or (start_time < now - 86400 * 14):
+        # Filter out entries in the future or those more than 2 weeks old.
+        return None
+
     return session_entry
 
 

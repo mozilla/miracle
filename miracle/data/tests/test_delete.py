@@ -8,7 +8,7 @@ from miracle.models import (
     Session,
 )
 
-TEST_TIME = datetime.utcfromtimestamp(1469400000)
+TEST_TIME = datetime.utcnow()
 
 
 class DummyTask(object):
