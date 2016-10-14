@@ -3,7 +3,7 @@ import multiprocessing
 errorlog = '-'
 keepalive = 0
 loglevel = 'warning'
-max_requests = 1000000
+max_requests = 100000
 max_requests_jitter = max_requests // 10
 timeout = 60
 worker_class = 'miracle.web.worker.GeventWorker'

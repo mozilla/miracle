@@ -5,6 +5,8 @@ Changelog
 1.1.7 (unreleased)
 ==================
 
+- Switch celery worker to use gevent for concurrency.
+
 - Drop sessions with a start_time in the future or more than 2 weeks old.
 
 - Add script to calculate daily sessions per user.
