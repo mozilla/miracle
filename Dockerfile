@@ -18,6 +18,7 @@ CMD ["web"]
 
 # Install runtime dependencies
 RUN apk add --no-cache \
+    curl \
     libffi \
     postgresql-client \
     postgresql-libs \
