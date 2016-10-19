@@ -70,6 +70,10 @@ def shutdown_worker(celery_app):
 
 @worker_process_init.connect
 def init_worker_process(signal, sender, **kw):  # pragma: no cover
+    # Apply psycopg2 gevent patch.
+    from psycogreen.gevent import patch_psycopg
+    patch_psycopg()
+
     # get the app in the current forked worker process
     celery_app = app_or_default()
     init_worker(celery_app)
