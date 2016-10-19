@@ -2,9 +2,9 @@ from datetime import datetime
 from ipaddress import _BaseAddress
 import json
 import sys
+import socket
 import time
 
-from gevent import socket
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import OperationalError

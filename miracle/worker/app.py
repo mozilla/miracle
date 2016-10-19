@@ -38,7 +38,7 @@ def init_worker(celery_app,
                 _bloom_domain=None, _cache=None,
                 _crypto=None, _db=None, _raven=None, _stats=None):
     configure_logging()
-    raven = create_raven(transport='gevent', _raven=_raven)
+    raven = create_raven(transport='threaded', _raven=_raven)
 
     try:
         celery_app.bloom_domain = create_bloom_domain(_bloom=_bloom_domain)
@@ -70,10 +70,6 @@ def shutdown_worker(celery_app):
 
 @worker_process_init.connect
 def init_worker_process(signal, sender, **kw):  # pragma: no cover
-    # Apply psycopg2 gevent patch.
-    from psycogreen.gevent import patch_psycopg
-    patch_psycopg()
-
     # get the app in the current forked worker process
     celery_app = app_or_default()
     init_worker(celery_app)

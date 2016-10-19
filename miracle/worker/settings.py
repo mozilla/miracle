@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 
 testing = bool('TESTING' in os.environ)
@@ -22,7 +23,7 @@ CELERY_IMPORTS = [
 ]
 
 # Optimization
-CELERYD_CONCURRENCY = 20
+CELERYD_CONCURRENCY = multiprocessing.cpu_count()
 CELERYD_MAX_TASKS_PER_CHILD = 100000
 CELERYD_PREFETCH_MULTIPLIER = 8
 CELERY_DISABLE_RATE_LIMITS = True
@@ -32,5 +33,6 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 
 # cleanup
+del multiprocessing
 del os
 del testing

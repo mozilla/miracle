@@ -53,11 +53,10 @@ def teardown_db(engine):
 
 @pytest.fixture(scope='session', autouse=True)
 def package():
-    # Apply gevent monkey patches during testing.
+    # Apply gevent monkey patches as early as possible during tests.
     from gevent.monkey import patch_all
-    from psycogreen.gevent import patch_psycopg
-
     patch_all()
+    from psycogreen.gevent import patch_psycopg
     patch_psycopg()
 
     # Enable all warnings in test mode.
