@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.1.7 (unreleased)
+1.1.7 (2016-10-19)
 ==================
 
 - Validate DNS resolution for hostnames.
