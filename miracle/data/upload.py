@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import lru_cache
 from ipaddress import _BaseAddress
 import json
 import sys
@@ -84,6 +85,7 @@ def validate(data, bloom_domain):
             len(data['sessions']) - len(sessions))
 
 
+@lru_cache(maxsize=1024)
 def validate_hostname(hostname):
     # Validate DNS resolution.
     try:

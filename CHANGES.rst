@@ -5,6 +5,7 @@ Changelog
 1.1.8 (unreleased)
 ==================
 
+- Add a LRU cache to DNS validation.
 
 
 1.1.7 (2016-10-19)
