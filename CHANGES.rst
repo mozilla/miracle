@@ -2,8 +2,10 @@
 Changelog
 =========
 
-1.1.8 (unreleased)
+1.2.0 (unreleased)
 ==================
+
+- Switch Docker image to be Debian based and install numpy.
 
 - Add a LRU cache to DNS validation.
 

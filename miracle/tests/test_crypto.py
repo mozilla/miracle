@@ -41,5 +41,5 @@ def test_validate(crypto):
         '{"foo": 1}', _protected='{"alg":"RSA-OAEP","enc":"A128CBC-HS256"}')
     assert not crypto.validate(data)
     data = crypto.encrypt(
-        '{"foo": 1}', _protected='{"alg":"RSA-OAEP-256","enc":"A256GCM"}')
+        '{"foo": 1}', _protected='{"alg":"RSA1_5","enc":"A256GCM"}')
     assert not crypto.validate(data)

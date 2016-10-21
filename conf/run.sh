@@ -15,7 +15,7 @@ case "$1" in
     shell)
         echo "Opening shell"
         cd ..
-        exec /bin/sh
+        exec /bin/bash
         ;;
     test)
         echo "Running Tests"
