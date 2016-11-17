@@ -22,5 +22,6 @@ def worker_exit(server, worker):  # pragma: no cover
     from miracle.web.app import worker_exit
     worker_exit(server, worker)
 
+
 # cleanup
 del multiprocessing

@@ -16,4 +16,5 @@ def locate_modules():
 
     return result
 
+
 MODULES = locate_modules()
