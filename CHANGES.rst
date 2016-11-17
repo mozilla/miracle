@@ -2,7 +2,7 @@
 Changelog
 =========
 
-1.2.0 (unreleased)
+1.2.0 (2016-11-17)
 ==================
 
 - Switch Docker image to be Debian based and install numpy.
