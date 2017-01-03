@@ -2,9 +2,10 @@
 Changelog
 =========
 
-1.2.1 (unreleased)
+2.0.0 (unreleased)
 ==================
 
+- Remove end date.
 
 
 1.2.0 (2016-11-17)

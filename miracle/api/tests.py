@@ -1,12 +1,8 @@
-from datetime import datetime, timedelta
 import json
 
 from jwcrypto.jwk import JWK
-from pyramid.httpexceptions import HTTPForbidden
-import pytest
 
 from miracle.api.views import (
-    check_end_date,
     check_user,
 )
 
@@ -16,18 +12,6 @@ CORS_HEADERS = {
     'Access-Control-Allow-Headers',
     'Access-Control-Allow-Methods',
 }
-
-
-def test_check_end_date():
-    today = datetime.utcnow().date()
-    check_end_date(today + timedelta(days=90))
-    check_end_date(today + timedelta(days=1))
-    with pytest.raises(HTTPForbidden):
-        check_end_date(today)
-    with pytest.raises(HTTPForbidden):
-        check_end_date(today - timedelta(days=1))
-    with pytest.raises(HTTPForbidden):
-        check_end_date(today - timedelta(days=90))
 
 
 def test_check_user():

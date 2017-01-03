@@ -1,13 +1,9 @@
 import base64
-from datetime import date
 import os
 
 from alembic.config import Config as AlembicConfig
 
 TESTING = 'TESTING' in os.environ
-
-# Hard end date for data being submitted to the service.
-END_DATE = date(2016, 12, 19)  # 2016-09-20 + 90 days
 
 HERE = os.path.dirname(__file__)
 STATIC_DIR = os.path.abspath(os.path.join(HERE, 'static'))
