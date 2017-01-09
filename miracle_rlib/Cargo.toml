@@ -1,0 +1,15 @@
+[package]
+name = "miracle_rlib"
+version = "0.1.0"
+authors = ["Mozilla Context Graph <context-graph@lists.mozilla.org>"]
+
+[lib]
+name = "miracle_rlib"
+crate-type = ["cdylib"]
+
+[dependencies]
+url = "1.2"
+
+[dependencies.cpython]
+version = "0.1"
+features = ["extension-module", "python-3-5"]

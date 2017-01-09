@@ -14,6 +14,7 @@ WORKDIR /app
 
 # Run the web service by default.
 ENTRYPOINT ["/app/conf/run.sh"]
+EXPOSE 8000
 CMD ["web"]
 
 # Disable installing doc/man/locale files
@@ -27,7 +28,12 @@ path-exclude=/usr/share/locale/*\n\
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
         curl \
+        file \
+        gcc \
+        libffi-dev \
+        make \
         redis-tools \
+        sudo \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
@@ -43,36 +49,39 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main 9.5" \
         postgresql-client-9.5 \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Rust into app users home directory
+RUN mkdir -p /app && \
+    mkdir -p /app/miracle_rlib && \
+    chown -R app:app /app
+USER app
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH=/app/.cargo/bin:$PATH
+USER root
+
 # Install build and binary Python libraries
 COPY ./requirements/build.txt ./requirements/binary.txt /app/requirements/
-RUN buildDeps=' \
-        gcc \
-        libffi-dev \
-        make \
-    ' && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends $buildDeps && \
-    pip install --no-deps --no-cache-dir --require-hashes \
+RUN pip install --no-deps --no-cache-dir --require-hashes \
         -r requirements/build.txt && \
     pip install --no-deps --no-cache-dir --require-hashes \
-        -r requirements/binary.txt && \
-    apt-get purge -y --auto-remove $buildDeps && \
-    rm -rf /var/lib/apt/lists/*
+        -r requirements/binary.txt
 
 # Install pure Python libraries
 COPY ./requirements/python.txt /app/requirements/
 RUN pip install --no-deps --no-cache-dir --require-hashes \
     -r requirements/python.txt
 
-ENV PYTHONPATH $PYTHONPATH:/app
-EXPOSE 8000
+# Install Rust dependencies and build Rust library
+USER app
+COPY ./miracle_rlib /app/miracle_rlib
+RUN cd /app/miracle_rlib; make release; cd /app
+USER root
 
+# Install application code
 COPY . /app
-
-# Call setup.py to create scripts
-RUN chown app:app /app
-RUN python setup.py develop
-RUN python -c "import compileall; compileall.compile_dir('miracle', quiet=1)"
+ENV PYTHONPATH $PYTHONPATH:/app
+RUN chown -R app:app /app && \
+    python setup.py develop && \
+    python -c "import compileall; compileall.compile_dir('miracle', quiet=1)"
 
 # Symlink version object to serve /__version__ endpoint
 RUN rm /app/miracle/static/version.json ; \

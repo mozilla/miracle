@@ -8,3 +8,4 @@
 *.sublime-workspace
 coverage.xml
 docker/**
+miracle_rlib/target/**
