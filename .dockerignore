@@ -1,11 +1,10 @@
-*.pyc
-*.pyo
-__pycache__
+**/*.pyc
+**/*.pyo
+**/__pycache__
 .coverage
 .DS_Store
 .git
 *.sublime-project
 *.sublime-workspace
 coverage.xml
-docker
-dist
+docker/**
