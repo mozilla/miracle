@@ -72,8 +72,8 @@ User-agent: *
 Disallow: /__heartbeat__
 Disallow: /__lbheartbeat__
 Disallow: /__version__
-Disallow: /v1/jwk
-Disallow: /v1/upload
+Disallow: /v2/jwk
+Disallow: /v2/upload
 '''
 
 

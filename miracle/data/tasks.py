@@ -16,5 +16,5 @@ if TESTING:
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_upload')
-def upload(self, user, payload):
-    return Upload(self)(user, payload)
+def upload(self, payload):
+    return Upload(self)(payload)

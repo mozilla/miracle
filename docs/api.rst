@@ -16,12 +16,12 @@ using JWE encryption using the RSA-OAEP algorithm and A256GCM stream
 encryption.
 
 The service provides an endpoint exposing the public RSA key you need
-to use in JWK format. You can issue a HTTPS GET request to ``/v1/jwk``
+to use in JWK format. You can issue a HTTPS GET request to ``/v2/jwk``
 to get the key:
 
 .. code-block:: bash
 
-    curl https://miracle.services.mozilla.com/v1/jwk
+    curl https://miracle.services.mozilla.com/v2/jwk
 
 The response contains a JSON body, of the form:
 
@@ -34,15 +34,12 @@ Upload
 ======
 
 To upload your data to the service, you can do a HTTPS POST request to
-the ``/v1/upload`` API endpoint.
-
-You need to send your unique user id (a UUID 4) in a ``X-User`` header.
+the ``/v2/upload`` API endpoint.
 
 .. code-block:: bash
 
-    curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
-        -H 'Content-Type: text/plain' \
-        https://miracle.services.mozilla.com/v1/upload -d '<data>'
+    curl -H 'Content-Type: text/plain' \
+        https://miracle.services.mozilla.com/v2/upload -d '<data>'
 
 If the data was accepted, you get a `200` response code.
 
@@ -65,7 +62,8 @@ following structure:
 
 .. code-block:: javascript
 
-    {"sessions" : [
+    {"user": "a6c6fc926dbd465fb200905cb1abe5c1",
+     "sessions" : [
         {
             "url": "http://www.apple.com/path/to/something",
             "start_time": 1468616293,
@@ -78,6 +76,8 @@ following structure:
             "tab_id": '-31-1'
         }
     ]}
+
+The user id is a client side generated UUID 4.
 
 A session in our context is specific to a single URL and describes the
 interaction that happens between the user and that URL from the time

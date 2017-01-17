@@ -16,7 +16,7 @@ from miracle.models import (
 
 TEST_DATE = datetime.utcnow()
 TEST_TIME = int(time.time())
-_PAYLOAD = {'sessions': [
+_PAYLOAD = {'user': 'foo', 'sessions': [
     {
         'duration': 2400,
         'start_time': TEST_TIME,
@@ -91,66 +91,108 @@ class DummyTask(object):
         self.stats = stats
 
 
+def test_validate_user():
+    assert not upload.validate_user(None)
+    assert not upload.validate_user(b'')
+    assert not upload.validate_user(b'abcdefgh')
+    assert not upload.validate_user('')
+    assert not upload.validate_user('ab')
+    assert not upload.validate_user('a' * 40)
+    assert not upload.validate_user('abcd?')
+    assert not upload.validate_user('abcd\xfe')
+    assert upload.validate_user('foo')
+    assert upload.validate_user('fae006df902d4809aaddb176b6bdf8dd')
+    assert upload.validate_user('fae006df-902d-4809-aadd-b176b6bdf8dd')
+
+
 def test_validate(bloom_domain):
     url = 'https://example.com/path'
     time = TEST_TIME
 
     invalid_inputs = [
         {'other_key': []},
+        {'user': 'foo'},
         {'sessions': {}},
+        {'sessions': []},
+        {'user': 123, 'sessions': []},
+        {'user': b'ab', 'sessions': []},
         {'sessions': [[]]},
-        {'sessions': [{'url': ''}]},
-        {'sessions': [{'url': 1}]},
-        {'sessions': [{'url': url, 'start_time': None}]},
-        {'sessions': [{'url': url, 'start_time': TEST_TIME + 86400 * 2}]},
-        {'sessions': [{'url': url, 'start_time': TEST_TIME - 86400 * 15}]},
-        {'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
+        {'user': 'foo', 'sessions': [[]]},
+        {'user': 'foo', 'sessions': [{'url': ''}]},
+        {'user': 'foo', 'sessions': [{'url': 1}]},
+        {'user': 'foo', 'sessions': [{'url': url, 'start_time': None}]},
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': TEST_TIME + 86400 * 2}]},
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': TEST_TIME - 86400 * 15}]},
+        {'user': 'foo',
+         'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
                        'start_time': time}]},
-        {'sessions': [{'url': 'http://127.0.0.1/home', 'start_time': time}]},
-        {'sessions': [{'url': 'http://8.8.8.8/home', 'start_time': time}]},
-        {'sessions': [{'url': 'http://domain-really-does-not-exist.com',
+        {'user': 'foo',
+         'sessions': [{'url': 'http://127.0.0.1/home', 'start_time': time}]},
+        {'user': 'foo',
+         'sessions': [{'url': 'http://8.8.8.8/home', 'start_time': time}]},
+        {'user': 'foo',
+         'sessions': [{'url': 'http://domain-really-does-not-exist.com',
                        'start_time': time}]},
-        {'sessions': [{'url': 'about:config', 'start_time': time}]},
-        {'sessions': [{'url': 'file:///etc/hosts', 'start_time': time}]},
-        {'sessions': [{'url': 'https://admin:admin@example.com/',
+        {'user': 'foo',
+         'sessions': [{'url': 'about:config', 'start_time': time}]},
+        {'user': 'foo',
+         'sessions': [{'url': 'file:///etc/hosts', 'start_time': time}]},
+        {'user': 'foo',
+         'sessions': [{'url': 'https://admin:admin@example.com/',
                        'start_time': time}]},
-        {'sessions': [{'url': 'http://localhost:80/', 'start_time': time}]},
-        {'sessions': [{'url': 'http://example.com:81/', 'start_time': time}]},
+        {'user': 'foo',
+         'sessions': [{'url': 'http://localhost:80/', 'start_time': time}]},
+        {'user': 'foo',
+         'sessions': [{'url': 'http://example.com:81/', 'start_time': time}]},
     ]
     for invalid in invalid_inputs:
-        assert not upload.validate(invalid, bloom_domain)[0]['sessions']
+        assert not upload.validate(invalid, bloom_domain)[0]
 
     valid_inputs = [
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': None, 'tab_id': None}]},
-        {'sessions': [{'url': 'http://example.com:80/', 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': 'http://example.com:80/', 'start_time': time,
                        'duration': None, 'tab_id': None}]},
-        {'sessions': [{'url': 'https://example.com:443/', 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': 'https://example.com:443/', 'start_time': time,
                        'duration': None, 'tab_id': None}]},
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': 2400, 'tab_id': None}]},
-        {'sessions': [{'url': 'http://example.com/home', 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': 'http://example.com/home', 'start_time': time,
                        'duration': None, 'tab_id': None}]},
-        {'sessions': [{'url': 'http://example.com/home', 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': 'http://example.com/home', 'start_time': time,
                        'duration': None, 'tab_id': '-20-2'}]},
     ]
     for valid in valid_inputs:
         assert upload.validate(valid, bloom_domain)[0] == valid
 
     corrected_inputs = [(
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': -100, 'tab_id': None}]},
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': 0, 'tab_id': None}]}
     ), (
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': upload.MAX_DURATION + 1, 'tab_id': None}]},
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': upload.MAX_DURATION, 'tab_id': None}]}
     ), (
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': None, 'tab_id': 'a'}]},
-        {'sessions': [{'url': url, 'start_time': time,
+        {'user': 'foo',
+         'sessions': [{'url': url, 'start_time': time,
                        'duration': None, 'tab_id': ''}]}
     )]
     for input_, expected in corrected_inputs:
@@ -165,7 +207,7 @@ def test_upload_data_new_user(bloom_domain, db, raven, stats):
 
         task = DummyTask(bloom_domain=bloom_domain, db=db,
                          raven=raven, stats=stats)
-        assert upload.upload_data(task, 'foo', _PAYLOAD)
+        assert upload.upload_data(task, _PAYLOAD)
 
         assert session.query(URL).count() == 4
         users = session.query(User).all()
@@ -195,7 +237,7 @@ def test_upload_data_existing_user(bloom_domain, db, raven, stats):
 
         task = DummyTask(bloom_domain=bloom_domain, db=db,
                          raven=raven, stats=stats)
-        assert upload.upload_data(task, 'foo', _PAYLOAD)
+        assert upload.upload_data(task, _PAYLOAD)
 
         assert session.query(URL).count() == 4
         users = session.query(User).all()
@@ -222,8 +264,8 @@ def test_upload_data_duplicated_sessions(bloom_domain, db, raven, stats):
     with db.session(commit=False) as session:
         task = DummyTask(bloom_domain=bloom_domain, db=db,
                          raven=raven, stats=stats)
-        assert upload.upload_data(task, 'foo', _PAYLOAD)
-        assert upload.upload_data(task, 'foo', _PAYLOAD)
+        assert upload.upload_data(task, _PAYLOAD)
+        assert upload.upload_data(task, _PAYLOAD)
         assert session.query(Session).count() == 10
 
     stats.check(counter=[
@@ -245,21 +287,20 @@ def test_upload_data_conflict(bloom_domain, cleanup_db, db, raven, stats):
             orig_upload_data = upload._upload_data
             num = 0
 
-            def mock_upload_data(task, user_token, data, _lock_timeout=100):
+            def mock_upload_data(task, data, _lock_timeout=100):
                 nonlocal num
                 if num == 1:
                     trans.rollback()
                 num += 1
-                return orig_upload_data(task, user_token, data,
-                                        _lock_timeout=_lock_timeout)
+                return orig_upload_data(
+                    task, data, _lock_timeout=_lock_timeout)
 
             with mock.patch.object(upload, '_upload_data', mock_upload_data):
                 with db.session(commit=False) as session:
                     task = DummyTask(bloom_domain=bloom_domain, db=db,
                                      raven=raven, stats=stats)
                     assert upload.upload_data(
-                        task, 'foo', _PAYLOAD,
-                        _lock_timeout=100, _retry_wait=0.01)
+                        task, _PAYLOAD, _lock_timeout=100, _retry_wait=0.01)
                     assert num == 2
                     assert session.query(User).count() == 1
                     assert session.query(Session).count() == 5
@@ -275,18 +316,18 @@ def test_upload_data_conflict_error(bloom_domain, cleanup_db, db,
             orig_upload_data = upload._upload_data
             num = 0
 
-            def mock_upload_data(task, user_token, data, _lock_timeout=100):
+            def mock_upload_data(task, data, _lock_timeout=100):
                 nonlocal num
                 num += 1
-                return orig_upload_data(task, user_token, data,
-                                        _lock_timeout=_lock_timeout)
+                return orig_upload_data(
+                    task, data, _lock_timeout=_lock_timeout)
 
             with mock.patch.object(upload, '_upload_data', mock_upload_data):
                 with db.session(commit=False) as session:
                     task = DummyTask(bloom_domain=bloom_domain, db=db,
                                      raven=raven, stats=stats)
                     assert not upload.upload_data(
-                        task, 'foo', _PAYLOAD,
+                        task, _PAYLOAD,
                         _lock_timeout=100, _retry_wait=0.01, _retries=0)
                     raven.check(['OperationalError'])
                     assert num == 1
@@ -299,7 +340,7 @@ class TestUpload(object):
 
     def test_task(self, celery, crypto, stats):
         assert tasks.upload.delay(
-            'foo', crypto.encrypt(json.dumps(_COMBINED_PAYLOAD))).get()
+            crypto.encrypt(json.dumps(_COMBINED_PAYLOAD))).get()
 
         stats.check(counter=[
             ('data.url.drop', 1, 2),
@@ -308,13 +349,19 @@ class TestUpload(object):
 
     def test_task_fail(self, celery, crypto, stats):
         assert not tasks.upload.delay(
-            'foo', crypto.encrypt(b'no json')).get()
+            crypto.encrypt(b'no json')).get()
 
         assert not tasks.upload.delay(
-            'foo', crypto.encrypt(b'{"sessions": [{}]}')).get()
+            crypto.encrypt(b'{"user": "foo"}')).get()
+
+        assert not tasks.upload.delay(
+            crypto.encrypt(b'{"sessions": [{}]}')).get()
+
+        assert not tasks.upload.delay(
+            crypto.encrypt(b'{"user": "foo", "sessions": [{}]}')).get()
 
         stats.check(counter=[
             ('data.session.drop', 1),
             ('data.upload.error', 1, ['reason:json']),
-            ('data.upload.error', 1, ['reason:validation']),
+            ('data.upload.error', 3, ['reason:validation']),
         ])

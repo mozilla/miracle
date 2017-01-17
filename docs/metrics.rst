@@ -13,7 +13,7 @@ The timer counts the time in milliseconds it took to process the request.
 
 Each request metric is tagged with:
 
-    - ``path``: The URL path, e.g. ``v1.upload``
+    - ``path``: The URL path, e.g. ``v2.upload``
     - ``method``: The request method, e.g. ``post``
     - ``status``: The response code, e.g. ``200``
 
@@ -45,7 +45,6 @@ tagged with a ``reason:<value>`` tag with one of the following values:
     - ``reason:encryption``: The data was not correctly encrypted.
     - ``reason:json``: The data was not valid JSON.
     - ``reason:validation``: The data didn't match the schema.
-    - ``reason:db``: The data couldn't be inserted into the db.
 
 For successful and valid data uploads, additional metrics capture facts
 about the data itself:

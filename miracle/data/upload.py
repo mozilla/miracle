@@ -2,6 +2,7 @@ from datetime import datetime
 from functools import lru_cache
 from ipaddress import _BaseAddress
 import json
+import re
 import sys
 import socket
 import time
@@ -25,6 +26,9 @@ SESSION_SCHEMA = [
     ('duration', int, False, 0, MAX_DURATION, 0, MAX_DURATION),
     ('tab_id', str, False, 2, 36, '', ''),
 ]
+VALID_USER_TOKEN = re.compile(
+    r'^[!()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    r'_abcdefghijklmnopqrstuvwxyz~]*$')
 
 
 def check_field(value, type_, min_value, max_value, underflow, overflow):
@@ -46,13 +50,28 @@ def check_field(value, type_, min_value, max_value, underflow, overflow):
     return value
 
 
+def validate_user(user):
+    if not isinstance(user, str):
+        return None
+    if len(user) < 3 or len(user) > 36:
+        return None
+    if VALID_USER_TOKEN.match(user) is None:
+        return None
+    return user
+
+
 def validate(data, bloom_domain):
     # Validate the incoming data against the schema and filter out
     # any unwanted sessions.
     if (not isinstance(data, dict) or
             'sessions' not in data or
-            not isinstance(data['sessions'], list)):
-        return ({'sessions': []}, 0, 0)
+            not isinstance(data['sessions'], list) or
+            'user' not in data):
+        return (None, 0, 0)
+
+    user = validate_user(data['user'])
+    if not user:
+        return (None, 0, 0)
 
     drop_urls = set()
     sessions = []
@@ -78,9 +97,13 @@ def validate(data, bloom_domain):
             else:
                 drop_urls.add(validated_entry['url'])
 
+    result = None
+    if sessions:
+        result = {'sessions': sessions, 'user': user}
+
     # Return filtered session data, the number of dropped URLs and
     # the number of dropped sessions.
-    return ({'sessions': sessions},
+    return (result,
             len(drop_urls),
             len(data['sessions']) - len(sessions))
 
@@ -182,9 +205,10 @@ def _create_user(session, user_token):
     return (added_user, user_id)
 
 
-def _upload_data(task, user_token, data, _lock_timeout=10000):
+def _upload_data(task, data, _lock_timeout=10000):
     # Insert data into the database.
     new_urls = {sess['url'] for sess in data['sessions']}
+    user_token = data['user']
 
     with task.db.session() as session:
         # First do UPSERTs for new URLs and the user in its own transaction.
@@ -231,15 +255,14 @@ def _upload_data(task, user_token, data, _lock_timeout=10000):
     return True
 
 
-def upload_data(task, user_token, data,
+def upload_data(task, data,
                 _lock_timeout=10000, _retries=3, _retry_wait=1.0):
     # Upload data wrapper, to retry upload on database errors.
     exc_info = None
     success = False
     for i in range(max(_retries, 1)):
         try:
-            success = _upload_data(task, user_token, data,
-                                   _lock_timeout=_lock_timeout)
+            success = _upload_data(task, data, _lock_timeout=_lock_timeout)
         except OperationalError:
             exc_info = sys.exc_info()
             time.sleep(_retry_wait * (i ** 2 + 1))
@@ -263,7 +286,7 @@ class Upload(object):
         self.task.stats.increment(
             'data.upload.error', tags=['reason:%s' % reason])
 
-    def __call__(self, user, payload):
+    def __call__(self, payload):
         try:
             data = self.task.crypto.decrypt(payload)
         except ValueError:
@@ -282,11 +305,9 @@ class Upload(object):
         self.task.stats.increment('data.url.drop', drop_urls)
         self.task.stats.increment('data.session.drop', drop_sessions)
 
-        if not parsed_data['sessions']:
+        if not parsed_data:
             self.error_stat('validation')
             return False
 
-        success = upload_data(self.task, user, parsed_data)
-        if not success:  # pragma: no cover
-            self.error_stat('db')
+        success = upload_data(self.task, parsed_data)
         return success

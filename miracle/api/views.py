@@ -1,5 +1,4 @@
 import json
-import re
 
 from pyramid.httpexceptions import (
     HTTPBadRequest,
@@ -9,31 +8,10 @@ from pyramid.response import Response
 
 from miracle.data import tasks
 
-VALID_USER_TOKEN = re.compile(
-    r'^[!()*-.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    r'_abcdefghijklmnopqrstuvwxyz~]*$')
-
 
 def configure(config):
     JWKView.configure(config)
     UploadView.configure(config)
-
-
-def check_user(user):
-    if isinstance(user, bytes):
-        try:
-            user = user.decode('ascii')
-        except UnicodeDecodeError:
-            return None
-    elif isinstance(user, str):
-        pass
-    else:
-        return None
-    if len(user) < 3 or len(user) > 36:
-        return None
-    if VALID_USER_TOKEN.match(user) is None:
-        return None
-    return user
 
 
 class View(object):
@@ -85,9 +63,6 @@ class View(object):
         cors_headers['Access-Control-Allow-Methods'] = ', '.join(supported)
         return cors_headers
 
-    def user(self):
-        return check_user(self.request.headers.get('X-User'))
-
     def head(self):
         return Response()
 
@@ -100,8 +75,8 @@ class View(object):
 
 class JWKView(View):
 
-    _route_name = 'v1_jwk'
-    _route_path = '/v1/jwk'
+    _route_name = 'v2_jwk'
+    _route_path = '/v2/jwk'
 
     _supported_methods = ('GET', )
     _unsupported_methods = ('POST', 'PUT', 'DELETE', 'PATCH')
@@ -114,16 +89,12 @@ class JWKView(View):
 
 class UploadView(View):
 
-    _route_name = 'v1_upload'
-    _route_path = '/v1/upload'
+    _route_name = 'v2_upload'
+    _route_path = '/v2/upload'
 
     _max_size = 10 * 1024 * 1024  # 10 mib
 
     def __call__(self):
-        user = self.user()
-        if not user:
-            return HTTPBadRequest('Missing or invalid X-User header.')
-
         body = self.request.body
         if not body:
             return HTTPBadRequest('Empty body.')
@@ -139,5 +110,5 @@ class UploadView(View):
         if not self.request.registry.crypto.validate(text):
             return HTTPBadRequest('Invalid JWE structure.')
 
-        tasks.upload.delay(user, text)
+        tasks.upload.delay(text)
         return {'status': 'success'}
