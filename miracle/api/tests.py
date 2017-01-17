@@ -30,27 +30,6 @@ def test_check_user():
     assert check_user(b'fae006df-902d-4809-aadd-b176b6bdf8dd')
 
 
-def test_delete(app, stats):
-    res = app.post('/v1/delete',
-                   b'',
-                   headers={'X-User': b'abc'},
-                   status=200)
-    assert CORS_HEADERS - set(res.headers.keys()) == set()
-    assert res.json == {'status': 'success'}
-    assert 'Strict-Transport-Security' in res.headers
-    stats.check(timer=[
-        ('task', 1, ['task:data.tasks.delete']),
-    ])
-
-
-def test_delete_fail(app, stats):
-    app.post('/v1/delete', b'foo', status=400)
-    app.post('/v1/delete', b'foo', headers={'X-User': b'abc'}, status=400)
-    stats.check(timer=[
-        ('request', 2, ['path:v1.delete', 'method:post', 'status:400']),
-    ])
-
-
 def test_jwk(app, stats):
     res = app.get('/v1/jwk', status=200)
     assert set(res.json.keys()) == {'n', 'e', 'kty'}
@@ -58,16 +37,6 @@ def test_jwk(app, stats):
     assert 'Strict-Transport-Security' in res.headers
     stats.check(timer=[
         ('request', 1, ['path:v1.jwk', 'method:get', 'status:200']),
-    ])
-
-
-def test_stats(app, stats):
-    res = app.get('/v1/stats', status=200)
-    assert CORS_HEADERS - set(res.headers.keys()) == set()
-    assert res.json == {}
-    assert 'Strict-Transport-Security' in res.headers
-    stats.check(timer=[
-        ('request', 1, ['path:v1.stats', 'method:get', 'status:200']),
     ])
 
 
@@ -136,9 +105,7 @@ def test_upload_jwe(app, stats):
 
 def test_head(app, stats):
     urls = [
-        '/v1/delete',
         '/v1/jwk',
-        '/v1/stats',
         '/v1/upload',
     ]
     for url in urls:
@@ -148,9 +115,7 @@ def test_head(app, stats):
 def test_options(app, stats):
     urls = {
         # url: primary supported method
-        '/v1/delete': 'POST',
         '/v1/jwk': 'GET',
-        '/v1/stats': 'GET',
         '/v1/upload': 'POST',
     }
     for url, method in urls.items():
@@ -162,9 +127,7 @@ def test_options(app, stats):
 def test_unsupported(app, stats):
     urls = {
         # url: unsupported method
-        '/v1/delete': 'get',
         '/v1/jwk': 'post',
-        '/v1/stats': 'post',
         '/v1/upload': 'get',
     }
     for url, method in urls.items():

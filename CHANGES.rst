@@ -5,6 +5,8 @@ Changelog
 2.0.0 (unreleased)
 ==================
 
+- Remove delete and stats API endpoints.
+
 - Remove end date.
 
 

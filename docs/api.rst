@@ -2,10 +2,10 @@
 API
 ===
 
-The miracle service provides a couple of API endpoints. The two primary
-endpoints allow you to share your data with and upload it to the service.
-The other allows you to ask the service to forget and delete all data
-about you.
+The miracle service provides a couple of API endpoint.
+
+The main API endpoint allows you to share your data with and
+upload it to the service.
 
 
 JWK
@@ -89,37 +89,3 @@ The start_time is specified in timezone neutral Unix time. The duration
 is measured in milliseconds. The tab_id specifies the browser tab the
 opened page was on. The tab_id is a short string composed of a tab group
 integer and a tab integer.
-
-
-Delete
-======
-
-To delete your data from the service, you can do a HTTPS POST request to
-the ``/v1/delete`` API endpoint with an empty body.
-
-You need to send your unique user id (a UUID 4) in a ``X-User`` header.
-
-.. code-block:: bash
-
-    curl -H 'X-User: a6c6fc926dbd465fb200905cb1abe5c1' \
-        https://miracle.services.mozilla.com/v1/delete -d ''
-
-If the delete request was accepted, you get a `200` response code.
-
-If the request was malformed, you can get `4xx` responses. If the
-service is unavailable or broken, you might get `5xx` responses and
-you should retry the request after a back-off interval.
-
-
-Stats
-=====
-
-To get general statistics from the service, you can do a HTTPS GET
-request to the ``/v1/stats`` API endpoint.
-
-.. code-block:: bash
-
-    curl https://miracle.services.mozilla.com/v1/stats
-
-The response contains a JSON body, with a mapping of metrics names
-to values.

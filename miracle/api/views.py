@@ -15,9 +15,7 @@ VALID_USER_TOKEN = re.compile(
 
 
 def configure(config):
-    DeleteView.configure(config)
     JWKView.configure(config)
-    StatsView.configure(config)
     UploadView.configure(config)
 
 
@@ -100,22 +98,6 @@ class View(object):
         raise HTTPMethodNotAllowed()
 
 
-class DeleteView(View):
-
-    _route_name = 'v1_delete'
-    _route_path = '/v1/delete'
-
-    def __call__(self):
-        user = self.user()
-        if not user:
-            return HTTPBadRequest('Missing X-User header.')
-        if self.request.body:
-            return HTTPBadRequest('Non-empty body.')
-
-        tasks.delete.delay(user)
-        return {'status': 'success'}
-
-
 class JWKView(View):
 
     _route_name = 'v1_jwk'
@@ -128,18 +110,6 @@ class JWKView(View):
         jwk = self.request.registry.crypto._public_jwk
         data = jwk.export(private_key=False)
         return json.loads(data)
-
-
-class StatsView(View):
-
-    _route_name = 'v1_stats'
-    _route_path = '/v1/stats'
-
-    _supported_methods = ('GET', )
-    _unsupported_methods = ('POST', 'PUT', 'DELETE', 'PATCH')
-
-    def __call__(self):
-        return {}
 
 
 class UploadView(View):
