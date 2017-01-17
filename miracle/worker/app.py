@@ -18,7 +18,7 @@ from miracle.log import (
 )
 
 
-CELERY_QUEUES = (
+TASK_QUEUES = (
     Queue('celery_default', routing_key='celery_default'),
     Queue('celery_delete', routing_key='celery_delete'),
     Queue('celery_upload', routing_key='celery_upload'),
@@ -28,9 +28,9 @@ CELERY_QUEUES = (
 def configure_celery(celery_app):
     celery_app.config_from_object('miracle.worker.settings')
     celery_app.conf.update(
-        BROKER_URL=REDIS_URI,
-        CELERY_RESULT_BACKEND=REDIS_URI,
-        CELERY_QUEUES=CELERY_QUEUES,
+        broker_url=REDIS_URI,
+        result_backend=REDIS_URI,
+        task_queues=TASK_QUEUES,
     )
 
 

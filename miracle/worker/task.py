@@ -7,25 +7,33 @@ from kombu.serialization import (
 
 class BaseTask(Task):
 
-    abstract = True
-    acks_late = False
-    ignore_result = True
-    max_retries = 3
+    _shortname = None
+
+    def __init__(self):
+        self._shortname = self.shortname()
+
+    @classmethod
+    def shortname(cls):
+        short = cls._shortname
+        if short is None:
+            name = cls.name
+            prefix = 'miracle.'
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+            short = name
+        return short
 
     def __call__(self, *args, **kw):
         """
         Execute the task, capture a statsd timer for the task duration and
         automatically report exceptions into Sentry.
         """
-        name = self.name
-        if name.startswith('miracle.'):
-            name = name[8:]
-        with self.stats.timed('task', tags=['task:' + name]):
+        with self.stats.timed('task', tags=['task:' + self.shortname()]):
             try:
                 result = super(BaseTask, self).__call__(*args, **kw)
             except Exception as exc:
                 self.raven.captureException()
-                if not self.app.conf.CELERY_ALWAYS_EAGER:  # pragma: no cover
+                if not self.app.conf.task_always_eager:  # pragma: no cover
                     raise self.retry(exc=exc)
                 raise
         return result
@@ -40,10 +48,10 @@ class BaseTask(Task):
         be serialized into JSON.
         """
 
-        if self.app.conf.CELERY_ALWAYS_EAGER:
+        if self.app.conf.task_always_eager:
             # We do the extra check to make sure this was really used from
             # inside tests
-            serializer = self.app.conf.CELERY_TASK_SERIALIZER
+            serializer = self.app.conf.task_serializer
             content_type, encoding, data = kombu_dumps(args, serializer)
             args = kombu_loads(data, content_type, encoding)
 
