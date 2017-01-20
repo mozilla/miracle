@@ -1,9 +1,4 @@
-# mozilla/miracle
-#
-# VERSION 1.0
-
 FROM python:3.5-slim
-MAINTAINER context-graph@lists.mozilla.org
 
 # add a non-privileged user for installing and running
 # the application
