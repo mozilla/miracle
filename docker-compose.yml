@@ -1,3 +1,15 @@
+s3:
+  container_name: miracle_s3
+  command: server /export
+  environment:
+    MINIO_ACCESS_KEY: "access"
+    MINIO_SECRET_KEY: "password"
+  expose:
+    - "9000"
+  image: minio/minio
+  ports:
+    - "9000:9000"
+
 redis:
   container_name: miracle_redis
   expose:

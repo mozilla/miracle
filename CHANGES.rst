@@ -5,6 +5,8 @@ Changelog
 2.0.0 (unreleased)
 ==================
 
+- Add AWS S3 bucket support.
+
 - Remove analysis script.
 
 - Remove domain blocklist.

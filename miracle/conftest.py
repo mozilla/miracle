@@ -78,7 +78,9 @@ def package():
 @pytest.fixture(scope='session')
 def global_bucket():
     bucket = create_bucket()
+    bucket.clear()
     yield bucket
+    bucket.close()
 
 
 @pytest.fixture(scope='function')

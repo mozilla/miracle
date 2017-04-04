@@ -1,12 +1,9 @@
-from io import BytesIO
-
 import boto3
 import botocore
-from botocore.response import StreamingBody
 
 from miracle.config import (
     S3_BUCKET,
-    TESTING,
+    S3_ENDPOINT,
 )
 
 
@@ -14,8 +11,7 @@ def create_bucket(s3_bucket=S3_BUCKET, _bucket=None):
     if _bucket is not None:
         return _bucket
 
-    klass = DebugBucket if TESTING else Bucket
-    return klass(s3_bucket)
+    return Bucket(s3_bucket)
 
 
 class Bucket(object):
@@ -25,64 +21,45 @@ class Bucket(object):
 
     def __init__(self, name):
         self.name = name
+        self._resource = s3 = boto3.resource('s3', endpoint_url=S3_ENDPOINT)
+        self._bucket = s3.Bucket(name)
 
-    def connect(self, raven):  # pragma: no cover
-        self._resource = s3 = boto3.resource('s3')
-        self._bucket = s3.Bucket(self.name)
+    def clear(self):
         try:
-            s3.meta.client.head_bucket(Bucket=self.name)
-        except botocore.exceptions.ClientError:
+            # This deletes up to 1000 objects, which should be plenty
+            # for test cleanup.
+            self._bucket.objects.delete()
+            self._bucket.delete()
+            self._bucket.wait_until_not_exists()
+        except botocore.exceptions.ClientError:  # pragma: no cover
+            # likely NoSuchBucket
+            pass
+        self._bucket = self._resource.Bucket(self.name)
+        self._bucket.create()
+        self._bucket.wait_until_exists()
+
+    def close(self):
+        pass
+
+    def ping(self, raven):
+        try:
+            self._resource.meta.client.head_bucket(Bucket=self.name)
+        except botocore.exceptions.ClientError:  # pragma: no cover
             raven.captureException()
             return False
         return True
 
-    def delete(self, key, **kw):  # pragma: no cover
-        obj = self._bucket.Object('key')
+    def delete(self, key, **kw):
+        obj = self._bucket.Object(key)
         obj.delete(**kw)
 
-    def get(self, key, **kw):  # pragma: no cover
-        obj = self._bucket.Object('key')
+    def get(self, key, **kw):
+        obj = self._bucket.Object(key)
         return obj.get(**kw)
 
     def put(self, key, body,
-            content_encoding=None,
-            content_type='application/json', **kw):  # pragma: no cover
+            content_type='application/json', **kw):
         obj = self._bucket.Object(key)
         obj.put(Body=body,
-                ContentEncoding=content_encoding,
                 ContentType=content_type,
                 **kw)
-
-
-class DebugBucket(Bucket):
-
-    def __init__(self, name):
-        super(DebugBucket, self).__init__(name)
-        self.clear()
-
-    def clear(self):
-        self.objects = {}
-
-    def connect(self, raven):
-        return True
-
-    def delete(self, key, **kw):
-        for path in list(self.objects.keys()):
-            if path.startswith(key):
-                del self.objects[path]
-
-    def get(self, key, **kw):
-        obj = self.objects[key]
-        res = dict(obj)
-        body = res['Body']
-        res['Body'] = StreamingBody(BytesIO(body), len(body))
-        return res
-
-    def put(self, key, body,
-            content_encoding=None,
-            content_type='application/json', **kw):
-        self.objects[key] = {
-            'Body': body,
-            'ContentEncoding': content_encoding,
-            'ContentType': content_type,
-        }

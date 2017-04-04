@@ -20,7 +20,8 @@ case "$1" in
     test)
         echo "Running Tests"
         cd ..
-        TESTING=true pytest --cov-config=.coveragerc --cov=miracle miracle && \
+        TESTING=true pytest --cov-config=.coveragerc --cov=miracle \
+            miracle $2 $3 $4 $5 $6 $7 $8 $9 && \
             flake8 miracle
         ;;
     alembic)

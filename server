@@ -72,6 +72,8 @@ case "$1" in
         fi
         docker build $PULL_ARG -t mozilla/miracle .
         docker run -d \
+          -e "AWS_ACCESS_KEY_ID=access" -e "AWS_SECRET_ACCESS_KEY=password" \
+          -e "S3_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_s3`:9000" \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
           -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
           -e "DB_ROOT_CERT=postgres_dev_ssl.pem" \
@@ -137,6 +139,8 @@ case "$1" in
     $0 start services
     docker build $PULL_ARG -t mozilla/miracle .
     docker run -it --rm \
+        -e "AWS_ACCESS_KEY_ID=access" -e "AWS_SECRET_ACCESS_KEY=password" \
+        -e "S3_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_s3`:9000" \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
         -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
         -e "DB_USER=miracle" -e "DB_PASSWORD=miracle" \
@@ -157,7 +161,7 @@ case "$1" in
 
   # Run the tests inside the container.
   test)
-    $0 run test
+    $0 run test $2 $3 $4 $5 $6 $7 $8 $9
     ;;
 
   # Shows usage information.
