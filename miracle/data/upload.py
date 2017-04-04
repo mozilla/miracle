@@ -1,22 +1,14 @@
-from datetime import datetime
 from functools import lru_cache
+import gzip
 from ipaddress import _BaseAddress
 import json
 import re
-import sys
 import socket
 import time
+import uuid
 
-from sqlalchemy import select, text
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.exc import OperationalError
+from botocore.exceptions import ClientError
 from uritools import urisplit
-
-from miracle.models import (
-    URL,
-    User,
-    Session,
-)
 
 MAX_DURATION = 1000 * 3600 * 24 * 21  # max 21 days in ms
 SESSION_SCHEMA = [
@@ -163,118 +155,22 @@ def filter_entry(session_entry):
     return session_entry
 
 
-def _create_urls(session, new_urls):
-    # Get or create URLs
-    added_urls = 0
-    url_values = []
+def upload_data(task, data):
+    try:
+        user_token = data['user']
+        blob = json.dumps(data).encode('utf-8')
+        blob = gzip.compress(blob, 6)
+        name = 'v2/sessions/%s/%s.json.gz' % (user_token, uuid.uuid1().hex)
+        task.bucket.put(
+            name, blob,
+            ContentEncoding='gzip',
+            ContentType='application/json')
+    except ClientError:  # pragma: no cover
+        task.raven.captureException()
+        return False
 
-    urls = dict(session.execute(
-        select([URL.url, URL.id]).where(URL.url.in_(new_urls))).fetchall())
-
-    for new_url in new_urls:
-        if new_url not in urls:
-            added_urls += 1
-            urls[new_url] = None
-            url_values.append(URL.from_url(new_url))
-
-    if url_values:
-        stmt = insert(URL).on_conflict_do_nothing()
-        session.execute(stmt, url_values)
-
-    return (added_urls, urls)
-
-
-def _create_user(session, user_token):
-    # Get or create user
-    added_user = 0
-    now = datetime.utcnow().replace(second=0, microsecond=0)
-    user_id = None
-
-    row = session.execute(
-        select([User.id]).where(User.token == user_token)).fetchone()
-    if row:
-        user_id = row[0]
-    else:
-        added_user = 1
-        stmt = (insert(User)
-                .on_conflict_do_nothing()
-                .values(token=user_token, created=now))
-        result = session.execute(stmt)
-        user_id = result.inserted_primary_key[0]
-
-    return (added_user, user_id)
-
-
-def _upload_data(task, data, _lock_timeout=10000):
-    # Insert data into the database.
-    new_urls = {sess['url'] for sess in data['sessions']}
-    user_token = data['user']
-
-    with task.db.session() as session:
-        # First do UPSERTs for new URLs and the user in its own transaction.
-        # This lets the DB do conflict resolution via
-        # "insert on conflict do nothing".
-        stmt = text('SET LOCAL lock_timeout = :lock_timeout')
-        session.execute(stmt.bindparams(lock_timeout=_lock_timeout))
-        added_urls, urls = _create_urls(session, new_urls)
-        added_user, user_id = _create_user(session, user_token)
-
-    # Determine newly created URLs without an id.
-    missing_url_ids = {url for url, url_id in urls.items() if url_id is None}
-
-    with task.db.session() as session:
-        # In the second transaction add sessions and find all
-        # newly created URL ids.
-
-        if missing_url_ids:
-            # Get missing URL ids.
-            found_urls = dict(session.execute(
-                select([URL.url, URL.id]).where(
-                    URL.url.in_(missing_url_ids))).fetchall())
-
-            urls.update(found_urls)
-
-        session_values = []
-        for entry in data['sessions']:
-            session_values.append({
-                'user_id': user_id,
-                'url_id': urls[entry['url']],
-                'duration': entry['duration'],
-                'start_time': datetime.utcfromtimestamp(entry['start_time']),
-                'tab_id': entry['tab_id'],
-            })
-
-        if session_values:
-            # Bulk insert new sessions.
-            session.execute(insert(Session), session_values)
-
-    # Emit metrics outside of the db transaction scope.
-    task.stats.increment('data.url.new', added_urls)
-    task.stats.increment('data.user.new', added_user)
     task.stats.increment('data.session.new', len(data['sessions']))
     return True
-
-
-def upload_data(task, data,
-                _lock_timeout=10000, _retries=3, _retry_wait=1.0):
-    # Upload data wrapper, to retry upload on database errors.
-    exc_info = None
-    success = False
-    for i in range(max(_retries, 1)):
-        try:
-            success = _upload_data(task, data, _lock_timeout=_lock_timeout)
-        except OperationalError:
-            exc_info = sys.exc_info()
-            time.sleep(_retry_wait * (i ** 2 + 1))
-
-        if success:
-            break
-
-    if not success:
-        task.raven.captureException(exc_info=exc_info)
-
-    del exc_info
-    return success
 
 
 class Upload(object):

@@ -158,8 +158,8 @@ Status Checks
 Both roles will try to connect to Redis during app startup, and send
 an error report to Sentry if they fail.
 
-The worker role will also try to connect to the Postgres database and
-the S3 bucket and send an error to Sentry if it fails.
+The worker role will also try to connect to the S3 bucket and send
+an error report to Sentry if it fails.
 
 The web role exposes three URL endpoints to check its status:
 

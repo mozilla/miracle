@@ -58,16 +58,16 @@ class BaseTask(Task):
         return super(BaseTask, self).apply(*args, **kw)
 
     @property
+    def bucket(self):
+        return self.app.bucket
+
+    @property
     def cache(self):
         return self.app.cache
 
     @property
     def crypto(self):
         return self.app.crypto
-
-    @property
-    def db(self):
-        return self.app.db
 
     @property
     def raven(self):

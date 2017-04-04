@@ -53,13 +53,13 @@ class Bucket(object):
         obj = self._bucket.Object(key)
         obj.delete(**kw)
 
+    def filter(self, **kw):
+        return self._bucket.objects.filter(**kw)
+
     def get(self, key, **kw):
         obj = self._bucket.Object(key)
         return obj.get(**kw)
 
-    def put(self, key, body,
-            content_type='application/json', **kw):
+    def put(self, key, body, **kw):
         obj = self._bucket.Object(key)
-        obj.put(Body=body,
-                ContentType=content_type,
-                **kw)
+        obj.put(Body=body, **kw)

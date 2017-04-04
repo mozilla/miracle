@@ -49,10 +49,5 @@ tagged with a ``reason:<value>`` tag with one of the following values:
 For successful and valid data uploads, additional metrics capture facts
 about the data itself:
 
-    - ``data.user.new``: A new user has contributed data.
-
-    - ``data.url.drop``: A number of URLs were filtered out / dropped.
-    - ``data.url.new``: A number of new URLs were first recorded.
-
     - ``data.session.drop``: A number of sessions were filtered out.
     - ``data.session.new``: A number of new sessions were recorded.

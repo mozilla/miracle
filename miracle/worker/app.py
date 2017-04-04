@@ -9,7 +9,6 @@ from kombu import Queue
 from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.crypto import create_crypto
-from miracle.db import create_db
 from miracle.config import REDIS_URI
 from miracle.log import (
     configure_logging,
@@ -43,13 +42,11 @@ def init_worker(celery_app,
         celery_app.bucket = create_bucket(_bucket=_bucket)
         celery_app.cache = create_cache(_cache=_cache)
         celery_app.crypto = create_crypto(_crypto=_crypto)
-        celery_app.db = create_db(_db=_db)
         celery_app.raven = raven
         celery_app.stats = create_stats(_stats=_stats)
 
         celery_app.bucket.ping(raven)
         celery_app.cache.ping(raven)
-        celery_app.db.ping(raven)
     except Exception:  # pragma: no cover
         raven.captureException()
         raise
@@ -61,8 +58,6 @@ def shutdown_worker(celery_app):
     celery_app.cache.close()
     del celery_app.cache
     del celery_app.crypto
-    celery_app.db.close()
-    del celery_app.db
     del celery_app.raven
     celery_app.stats.close()
     del celery_app.stats

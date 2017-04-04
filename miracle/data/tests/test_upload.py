@@ -1,18 +1,11 @@
 from copy import deepcopy
 from datetime import datetime
+import gzip
 import json
 import time
-from unittest import mock
-
-from sqlalchemy.dialects.postgresql import insert
 
 from miracle.data import tasks
 from miracle.data import upload
-from miracle.models import (
-    URL,
-    User,
-    Session,
-)
 
 TEST_DATE = datetime.utcnow()
 TEST_TIME = int(time.time())
@@ -82,9 +75,9 @@ _COMBINED_PAYLOAD['sessions'].extend(_INVALID_SESSIONS)
 
 class DummyTask(object):
 
-    def __init__(self, crypto=None, db=None, raven=None, stats=None):
+    def __init__(self, bucket=None, crypto=None, raven=None, stats=None):
+        self.bucket = bucket
         self.crypto = crypto
-        self.db = db
         self.raven = raven
         self.stats = stats
 
@@ -197,163 +190,59 @@ def test_validate():
         assert upload.validate(input_)[0] == expected
 
 
-def test_upload_data_new_user(db, raven, stats):
-    with db.session(commit=False) as session:
-        url = URL(**URL.from_url('http://www.example.com/'))
-        session.add(url)
-        session.commit()
+def test_upload_data(bucket, raven, stats):
+    user = _PAYLOAD['user']
+    task = DummyTask(bucket=bucket, raven=raven, stats=stats)
+    assert upload.upload_data(task, _PAYLOAD)
 
-        task = DummyTask(db=db, raven=raven, stats=stats)
-        assert upload.upload_data(task, _PAYLOAD)
+    objs = list(bucket.filter(Prefix='v2/sessions/%s/' % user))
+    assert len(objs) == 1
+    assert objs[0].key.endswith('.json.gz')
 
-        assert session.query(URL).count() == 4
-        users = session.query(User).all()
-        assert len(users) == 1
-        assert users[0].token == 'foo'
-        assert users[0].created.date() == datetime.utcnow().date()
+    obj = bucket.get(objs[0].key)
+    assert obj['ContentEncoding'] == 'gzip'
+    assert obj['ContentType'] == 'application/json'
+    body = obj['Body'].read()
+    obj['Body'].close()
 
-        sessions = session.query(Session).all()
-        assert len(sessions) == 5
-        assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
-        assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
-        assert {sess.tab_id for sess in sessions} == _PAYLOAD_TAB_IDS
-        assert {sess.url.url for sess in sessions} == _PAYLOAD_URLS
+    body = json.loads(gzip.decompress(body).decode('utf-8'))
+    assert body == _PAYLOAD
 
     stats.check(counter=[
         ('data.session.new', 1, 5),
-        ('data.url.new', 1, 3),
-        ('data.user.new', 1, 1)
     ])
 
+    # Upload a second time
+    assert upload.upload_data(task, _PAYLOAD)
 
-def test_upload_data_existing_user(db, raven, stats):
-    with db.session(commit=False) as session:
-        user = User(token='foo', created=TEST_DATE)
-        session.add(user)
-        session.commit()
+    objs = list(bucket.filter(Prefix='v2/sessions/%s/' % user))
+    assert len(objs) == 2
 
-        task = DummyTask(db=db, raven=raven, stats=stats)
-        assert upload.upload_data(task, _PAYLOAD)
 
-        assert session.query(URL).count() == 4
-        users = session.query(User).all()
-        assert len(users) == 1
-        assert users[0].id == user.id
-        assert users[0].token == 'foo'
-        assert users[0].created == TEST_DATE
-
-        sessions = session.query(Session).all()
-        assert len(sessions) == 5
-        assert {sess.duration for sess in sessions} == _PAYLOAD_DURATIONS
-        assert {sess.start_time for sess in sessions} == _PAYLOAD_STARTS
-        assert {sess.tab_id for sess in sessions} == _PAYLOAD_TAB_IDS
-        assert {sess.url.url for sess in sessions} == _PAYLOAD_URLS
+def test_task(celery, crypto, stats):
+    assert tasks.upload.delay(
+        crypto.encrypt(json.dumps(_COMBINED_PAYLOAD))).get()
 
     stats.check(counter=[
-        ('data.session.new', 1, 5),
-        ('data.url.new', 1, 4),
-        ('data.user.new', 0),
+        ('data.session.drop', 1, 4),
     ])
 
 
-def test_upload_data_duplicated_sessions(db, raven, stats):
-    with db.session(commit=False) as session:
-        task = DummyTask(db=db, raven=raven, stats=stats)
-        assert upload.upload_data(task, _PAYLOAD)
-        assert upload.upload_data(task, _PAYLOAD)
-        assert session.query(Session).count() == 10
+def test_task_fail(celery, crypto, stats):
+    assert not tasks.upload.delay(
+        crypto.encrypt(b'no json')).get()
+
+    assert not tasks.upload.delay(
+        crypto.encrypt(b'{"user": "foo"}')).get()
+
+    assert not tasks.upload.delay(
+        crypto.encrypt(b'{"sessions": [{}]}')).get()
+
+    assert not tasks.upload.delay(
+        crypto.encrypt(b'{"user": "foo", "sessions": [{}]}')).get()
 
     stats.check(counter=[
-        ('data.session.new', 2, 5),
-        ('data.url.new', 1, 4),
-        ('data.user.new', 1, 1),
+        ('data.session.drop', 1),
+        ('data.upload.error', 1, ['reason:json']),
+        ('data.upload.error', 3, ['reason:validation']),
     ])
-
-
-def test_upload_data_conflict(cleanup_db, db, raven, stats):
-    # Use as secondary transaction to insert a conflicting user id,
-    # and keep it open while _upload_data runs the first time.
-    # Rollback the secondary transaction before _upload_data runs
-    # for the second time, to let it succeed.
-    with cleanup_db.engine.connect() as conn:
-        with conn.begin() as trans:
-            conn.execute(insert(User), [{'token': 'foo'}])
-
-            orig_upload_data = upload._upload_data
-            num = 0
-
-            def mock_upload_data(task, data, _lock_timeout=100):
-                nonlocal num
-                if num == 1:
-                    trans.rollback()
-                num += 1
-                return orig_upload_data(
-                    task, data, _lock_timeout=_lock_timeout)
-
-            with mock.patch.object(upload, '_upload_data', mock_upload_data):
-                with db.session(commit=False) as session:
-                    task = DummyTask(db=db, raven=raven, stats=stats)
-                    assert upload.upload_data(
-                        task, _PAYLOAD, _lock_timeout=100, _retry_wait=0.01)
-                    assert num == 2
-                    assert session.query(User).count() == 1
-                    assert session.query(Session).count() == 5
-
-
-def test_upload_data_conflict_error(cleanup_db, db, raven, stats):
-    # Same approach as above, but without retries.
-    with cleanup_db.engine.connect() as conn:
-        with conn.begin() as trans:
-            conn.execute(insert(User), [{'token': 'foo'}])
-
-            orig_upload_data = upload._upload_data
-            num = 0
-
-            def mock_upload_data(task, data, _lock_timeout=100):
-                nonlocal num
-                num += 1
-                return orig_upload_data(
-                    task, data, _lock_timeout=_lock_timeout)
-
-            with mock.patch.object(upload, '_upload_data', mock_upload_data):
-                with db.session(commit=False) as session:
-                    task = DummyTask(db=db, raven=raven, stats=stats)
-                    assert not upload.upload_data(
-                        task, _PAYLOAD,
-                        _lock_timeout=100, _retry_wait=0.01, _retries=0)
-                    raven.check(['OperationalError'])
-                    assert num == 1
-                    assert session.query(User).count() == 0
-                    assert session.query(Session).count() == 0
-            trans.rollback()
-
-
-class TestUpload(object):
-
-    def test_task(self, celery, crypto, stats):
-        assert tasks.upload.delay(
-            crypto.encrypt(json.dumps(_COMBINED_PAYLOAD))).get()
-
-        stats.check(counter=[
-            ('data.url.drop', 1, 2),
-            ('data.session.drop', 1, 4),
-        ])
-
-    def test_task_fail(self, celery, crypto, stats):
-        assert not tasks.upload.delay(
-            crypto.encrypt(b'no json')).get()
-
-        assert not tasks.upload.delay(
-            crypto.encrypt(b'{"user": "foo"}')).get()
-
-        assert not tasks.upload.delay(
-            crypto.encrypt(b'{"sessions": [{}]}')).get()
-
-        assert not tasks.upload.delay(
-            crypto.encrypt(b'{"user": "foo", "sessions": [{}]}')).get()
-
-        stats.check(counter=[
-            ('data.session.drop', 1),
-            ('data.upload.error', 1, ['reason:json']),
-            ('data.upload.error', 3, ['reason:validation']),
-        ])
