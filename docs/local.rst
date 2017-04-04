@@ -42,7 +42,6 @@ Docker containers. It has a number of commands to help out:
 - `./server shell` - Opens a shell inside the application container.
 - `./server test` - Runs all tests inside the application container.
 - `./server alembic` - Runs alembic inside the application container.
-- `./server bloom` - Creates a bloom filter from a plain text file.
 
 In order to inspect the database, you can open a shell inside the
 running Postgres container::
@@ -61,42 +60,6 @@ To inspect and manipulate the Redis cache, open a shell::
 And open the Redis client::
 
     redis-cli
-
-
-Docker Tips
------------
-
-While working with docker, one tends to accumulate large numbers of
-orphaned containers, images and volumes.
-
-To clean up all containers (excluding those which are running), do::
-
-    docker rm $(docker ps -a -q)
-
-Afterwards you can remove all images, which are no longer in use::
-
-    docker rmi $(docker images -f "dangling=true" -q)
-
-And finally all unused volumes::
-
-    docker volume rm $(docker volume ls -q)
-
-
-Bloom Filter
-------------
-
-To create or update a bloom filter file, create a newline separated,
-utf-8 encoded plain text file containing one entry per line, for
-example in `data/domain_blocklist.txt`. Then run::
-
-    ./server bloom data/domain_blocklist.txt
-
-This creates matching `data/domain_blocklist.dat` and
-`domain_blocklist.dat.desc` files containing the binary version of
-the Hydra bloom filter.
-
-If there is an error during creation, try increasing the `sleep` values
-inside `./server` and `./conf/run.sh` in their bloom sections.
 
 
 Production

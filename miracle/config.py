@@ -10,10 +10,7 @@ STATIC_DIR = os.path.abspath(os.path.join(HERE, 'static'))
 VERSION_FILE = os.path.join(STATIC_DIR, 'version.json')
 
 DATA_DIR = os.path.abspath(os.path.join(HERE, os.pardir, 'data'))
-BLOOM_DOMAIN = os.path.join(DATA_DIR, 'domain_blocklist.dat')
-BLOOM_DOMAIN_SOURCE = os.path.join(DATA_DIR, 'domain_blocklist.txt')
 PUBLIC_SUFFIX_LIST = os.path.join(DATA_DIR, 'public_suffix_list.dat')
-TOP_100_US_LIST = os.path.join(DATA_DIR, 'top_100_us.txt')
 
 DB_ROOT_CERT = os.environ.get('DB_ROOT_CERT', 'rds_root_ca.pem')
 if TESTING:

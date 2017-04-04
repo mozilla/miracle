@@ -58,10 +58,6 @@ class BaseTask(Task):
         return super(BaseTask, self).apply(*args, **kw)
 
     @property
-    def bloom_domain(self):
-        return self.app.bloom_domain
-
-    @property
     def cache(self):
         return self.app.cache
 

@@ -60,7 +60,7 @@ def validate_user(user):
     return user
 
 
-def validate(data, bloom_domain):
+def validate(data):
     # Validate the incoming data against the schema and filter out
     # any unwanted sessions.
     if (not isinstance(data, dict) or
@@ -91,7 +91,7 @@ def validate(data, bloom_domain):
             validated_entry[field] = value
 
         if not missing_field:
-            filtered_entry = filter_entry(validated_entry, bloom_domain)
+            filtered_entry = filter_entry(validated_entry)
             if filtered_entry:
                 sessions.append(filtered_entry)
             else:
@@ -126,7 +126,7 @@ def validate_start_time(start_time):
     return True
 
 
-def filter_entry(session_entry, bloom_domain):
+def filter_entry(session_entry):
     # Check each session entry and filter some of them out.
     try:
         url_result = urisplit(session_entry['url'])
@@ -138,8 +138,8 @@ def filter_entry(session_entry, bloom_domain):
         return None
 
     if isinstance(host, str):
-        if host in bloom_domain:
-            # Filter out domains based on a blocklist.
+        # Filter out localhost, .local
+        if host == 'localhost' or host.endswith('.local'):
             return None
     elif isinstance(host, _BaseAddress):
         # Filter out IP addresses.
@@ -299,8 +299,7 @@ class Upload(object):
             self.error_stat('json')
             return False
 
-        parsed_data, drop_urls, drop_sessions = validate(
-            data, self.task.bloom_domain)
+        parsed_data, drop_urls, drop_sessions = validate(data)
 
         self.task.stats.increment('data.url.drop', drop_urls)
         self.task.stats.increment('data.session.drop', drop_sessions)

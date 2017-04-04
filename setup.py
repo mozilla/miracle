@@ -37,8 +37,6 @@ setup(
     entry_points={
         'console_scripts': [
             'miracle_analysis=miracle.scripts.analysis:console_entry',
-            'miracle_block=miracle.scripts.block:console_entry',
-            'miracle_bloom=miracle.scripts.bloom:console_entry',
         ],
     },
 )
