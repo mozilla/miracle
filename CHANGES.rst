@@ -5,6 +5,8 @@ Changelog
 2.0.0 (unreleased)
 ==================
 
+- Add local DynamoDB, change default web port to 80880.
+
 - Remove Postgres and alembic db migration support.
 
 - Upload data to S3 instead of Posstgres.
