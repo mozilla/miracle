@@ -59,17 +59,9 @@ LOGGING_CONFIG = dict(
         'level': logging.WARN,
     },
     loggers=dict(
-        alembic={
-            'level': logging.INFO,
-            'qualname': 'alembic',
-        },
         miracle={
             'level': logging.INFO,
             'qualname': 'miracle',
-        },
-        sqlalchemny={
-            'level': logging.WARN,
-            'qualname': 'sqlalchemy.engine',
         },
     ),
 )

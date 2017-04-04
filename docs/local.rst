@@ -14,13 +14,15 @@ with a web and worker role, using the same application image.
 In addition several services are required:
 
 - a `Redis <http://redis.io/>`_ cache
-- a `Postgres <https://www.postgresql.org/>`_ database
+- a `AWS S3 <https://aws.amazon.com/s3/>`_ file storage
 
 A `Docker Compose <https://docs.docker.com/compose/>`_ configuration is
 included to streamline setup and management of those services for local
 development. They are run alongside the application containers on a
 single `Docker <https://docs.docker.com/>`_ host.
 
+For local development AWS S3 is substituted with the API-compatible
+minio/minio project.
 
 First-Time Setup
 ================
@@ -41,17 +43,10 @@ Docker containers. It has a number of commands to help out:
 - `./server restart` - runs `./server stop`, then `./server start`.
 - `./server shell` - Opens a shell inside the application container.
 - `./server test` - Runs all tests inside the application container.
-- `./server alembic` - Runs alembic inside the application container.
 
-In order to inspect the database, you can open a shell inside the
-running Postgres container::
+In order to inspect the AWS storage, you can open a web browser::
 
-    docker-compose exec postgres sh
-
-And run commands like::
-
-    pg_dump -U miracle miracle
-    psql -U miracle miracle
+    http://127.0.0.1:9000/minio/
 
 To inspect and manipulate the Redis cache, open a shell::
 
@@ -65,29 +60,22 @@ And open the Redis client::
 Production
 ==========
 
-In production you can inspect the database from inside a running
+In production you can connect to the services from inside a running
 docker container.
 
 First find out what the installed application version is::
 
     docker images | grep miracle
 
-If the installed version is 1.0.5, the output should show::
+If the installed version is 2.0, the output should show::
 
-    mozilla/miracle    1.0.5    eb9495318562    5 days ago    151.9 MB
+    mozilla/miracle    2.0    eb9495318561    5 days ago    151.9 MB
 
 To start a container based on that image, do::
 
     docker run -it --rm \
-        -e "DB_HOST=..." -e "DB_USER=..." -e "DB_PASSWORD=..." \
-        mozilla/miracle:1.0.5 shell
+        -e "S3_BUCKET=..." -e "..." \
+        mozilla/miracle:2.0 shell
 
-The docker container includes a helper script to connect to the
-Postgres database with all connection information taken from the
-`DB_*` environment variables::
-
-    ./db.sh -c "\d+"
-
-Or open the prompt::
-
-    ./db.sh
+Make sure to pass along all required environment variables via
+either individual `-e` arguments or based on a `--env-file`.

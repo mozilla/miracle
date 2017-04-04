@@ -33,7 +33,7 @@ def configure_celery(celery_app):
 
 
 def init_worker(celery_app,
-                _bucket=None, _cache=None, _crypto=None, _db=None,
+                _bucket=None, _cache=None, _crypto=None,
                 _raven=None, _stats=None):
     configure_logging()
     raven = create_raven(transport='threaded', _raven=_raven)

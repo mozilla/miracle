@@ -26,23 +26,12 @@ RUN apt-get update -y && \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Add Postgres repository and install Postgres 9.5
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main 9.5" \
-    >> /etc/apt/sources.list && \
-    curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-        libpq5=9.5\* \
-        libpq-dev=9.5\* \
-        libssl-dev \
-        postgresql-client-9.5 \
-    && rm -rf /var/lib/apt/lists/*
-
 # Install build and binary Python libraries
 COPY ./requirements/build.txt ./requirements/binary.txt /app/requirements/
 RUN buildDeps=' \
         gcc \
         libffi-dev \
+        libssl-dev \
         make \
     ' && \
     apt-get update -y && \

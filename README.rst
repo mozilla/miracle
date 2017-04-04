@@ -4,7 +4,7 @@ miracle
 
 Miracle is a part of the
 `Mozilla Context Graph <https://wiki.mozilla.org/Context_Graph>`_
-initiative, more specifically its experimental
+initiative, more specifically its
 `Recommendation Engine <https://wiki.mozilla.org/Context_Graph#Recommendation_Engine>`_
 project.
 

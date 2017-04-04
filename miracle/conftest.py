@@ -1,24 +1,16 @@
 import gc
 import warnings
 
-from alembic import command
 import pytest
-from sqlalchemy import (
-    inspect,
-)
-from sqlalchemy import text
 import webtest
 
 from miracle.bucket import create_bucket
 from miracle.cache import create_cache
-from miracle.config import ALEMBIC_CFG
 from miracle.crypto import create_crypto
-from miracle.db import create_db
 from miracle.log import (
     create_raven,
     create_stats,
 )
-from miracle.models import Model
 from miracle.web.app import (
     create_app,
     shutdown_app,
@@ -30,34 +22,11 @@ from miracle.worker.app import (
 )
 
 
-def setup_db(engine):
-    with engine.connect() as conn:
-        # Create all tables from model definition.
-        trans = conn.begin()
-        Model.metadata.create_all(engine)
-        trans.commit()
-    # Finally stamp the database with the latest alembic version.
-    command.stamp(ALEMBIC_CFG, 'head')
-
-
-def teardown_db(engine):
-    inspector = inspect(engine)
-    with engine.connect() as conn:
-        # Drop all tables currently in the database.
-        trans = conn.begin()
-        table_names = inspector.get_table_names()
-        for table_name in table_names:
-            conn.execute(text('DROP TABLE "%s" CASCADE' % table_name))
-        trans.commit()
-
-
 @pytest.fixture(scope='session', autouse=True)
 def package():
     # Apply gevent monkey patches as early as possible during tests.
     from gevent.monkey import patch_all
     patch_all()
-    from psycogreen.gevent import patch_psycopg
-    patch_psycopg()
 
     # Enable all warnings in test mode.
     warnings.resetwarnings()
@@ -109,25 +78,6 @@ def crypto():
 
 
 @pytest.fixture(scope='session')
-def global_db():
-    db = create_db()
-    teardown_db(db.engine)
-    setup_db(db.engine)
-    yield db
-    db.close()
-
-
-@pytest.fixture(scope='function')
-def db(global_db):
-    with global_db.engine.connect() as conn:
-        with conn.begin() as trans:
-            global_db.session_factory.configure(bind=conn)
-            yield global_db
-            global_db.session_factory.configure(bind=global_db.engine)
-            trans.rollback()
-
-
-@pytest.fixture(scope='session')
 def global_raven():
     raven = create_raven()
     yield raven
@@ -155,14 +105,13 @@ def stats(global_stats):
 
 
 @pytest.fixture(scope='session')
-def global_celery(crypto, global_bucket, global_cache, global_db,
+def global_celery(crypto, global_bucket, global_cache,
                   global_raven, global_stats):
     init_worker(
         celery_app,
         _bucket=global_bucket,
         _cache=global_cache,
         _crypto=crypto,
-        _db=global_db,
         _raven=global_raven,
         _stats=global_stats)
     yield celery_app
@@ -170,7 +119,7 @@ def global_celery(crypto, global_bucket, global_cache, global_db,
 
 
 @pytest.fixture(scope='function')
-def celery(global_celery, bucket, cache, db, raven, stats):
+def celery(global_celery, bucket, cache, raven, stats):
     yield global_celery
 
 

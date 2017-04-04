@@ -75,8 +75,6 @@ case "$1" in
           -e "AWS_ACCESS_KEY_ID=access" -e "AWS_SECRET_ACCESS_KEY=password" \
           -e "S3_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_s3`:9000" \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
-          -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
-          -e "DB_ROOT_CERT=postgres_dev_ssl.pem" \
           --name="miracle_worker" mozilla/miracle worker
         ;;
 
@@ -142,16 +140,8 @@ case "$1" in
         -e "AWS_ACCESS_KEY_ID=access" -e "AWS_SECRET_ACCESS_KEY=password" \
         -e "S3_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_s3`:9000" \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
-        -e "DB_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_postgres`" \
-        -e "DB_USER=miracle" -e "DB_PASSWORD=miracle" \
-        -e "DB_ROOT_CERT=postgres_dev_ssl.pem" \
         -p 8000:8000/tcp \
         mozilla/miracle $2 $3 $4 $5 $6 $7 $8 $9
-    ;;
-
-  # Runs alembic inside the container.
-  alembic)
-    $0 run alembic $2 $3 $4 $5 $6 $7 $8 $9
     ;;
 
   # Open a shell inside the container.
@@ -166,7 +156,7 @@ case "$1" in
 
   # Shows usage information.
   help)
-    echo "Usage: $0 {start|stop|restart|run|shell|test|alembic|help}"
+    echo "Usage: $0 {start|stop|restart|run|shell|test|help}"
     ;;
 
   # Shows help message.

@@ -5,6 +5,8 @@ Changelog
 2.0.0 (unreleased)
 ==================
 
+- Remove Postgres and alembic db migration support.
+
 - Upload data to S3 instead of Posstgres.
 
 - Add AWS S3 bucket support.

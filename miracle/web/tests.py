@@ -27,7 +27,6 @@ def test_config(app):
     assert hasattr(app.app, 'registry')
     assert hasattr(app.app.registry, 'cache')
     assert hasattr(app.app.registry, 'crypto')
-    assert not hasattr(app.app.registry, 'db')
     assert hasattr(app.app.registry, 'raven')
     assert hasattr(app.app.registry, 'stats')
 

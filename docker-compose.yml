@@ -17,15 +17,3 @@ redis:
   image: redis:2.8
   ports:
     - "6379"
-
-postgres:
-  container_name: miracle_postgres
-  environment:
-    - POSTGRES_USER=miracle
-    - POSTGRES_PASSWORD=miracle
-    - POSTGRES_DB=miracle
-  expose:
-    - "5432"
-  build: ./docker/postgres
-  ports:
-    - "5432"
