@@ -3,6 +3,7 @@
 def test_config(celery):
     assert celery.conf['task_always_eager']
     assert 'redis' in celery.conf['broker_url']
+    assert hasattr(celery, 'bucket')
     assert hasattr(celery, 'cache')
     assert hasattr(celery, 'crypto')
     assert hasattr(celery, 'db')

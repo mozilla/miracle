@@ -32,6 +32,7 @@ REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_DB = '1' if TESTING else '0'
 REDIS_URI = 'redis://{host}:6379/{name}'.format(host=REDIS_HOST, name=REDIS_DB)
 
+S3_BUCKET = os.environ.get('S3_BUCKET', None)
 SENTRY_DSN = os.environ.get('SENTRY_DSN', None)
 STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
 

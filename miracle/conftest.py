@@ -9,6 +9,7 @@ from sqlalchemy import (
 from sqlalchemy import text
 import webtest
 
+from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.config import ALEMBIC_CFG
 from miracle.crypto import create_crypto
@@ -72,6 +73,18 @@ def package():
         print('Uncollectable objects found:')
         for obj in gc.garbage:
             print(obj)
+
+
+@pytest.fixture(scope='session')
+def global_bucket():
+    bucket = create_bucket()
+    yield bucket
+
+
+@pytest.fixture(scope='function')
+def bucket(global_bucket):
+    yield global_bucket
+    global_bucket.clear()
 
 
 @pytest.fixture(scope='session')
@@ -149,10 +162,11 @@ def stats(global_stats):
 
 
 @pytest.fixture(scope='session')
-def global_celery(crypto, global_cache, global_db,
+def global_celery(crypto, global_bucket, global_cache, global_db,
                   global_raven, global_stats):
     init_worker(
         celery_app,
+        _bucket=global_bucket,
         _cache=global_cache,
         _crypto=crypto,
         _db=global_db,
@@ -163,7 +177,7 @@ def global_celery(crypto, global_cache, global_db,
 
 
 @pytest.fixture(scope='function')
-def celery(global_celery, cache, db, raven, stats):
+def celery(global_celery, bucket, cache, db, raven, stats):
     yield global_celery
 
 

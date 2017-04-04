@@ -6,6 +6,7 @@ from celery.signals import (
 )
 from kombu import Queue
 
+from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.crypto import create_crypto
 from miracle.db import create_db
@@ -33,12 +34,13 @@ def configure_celery(celery_app):
 
 
 def init_worker(celery_app,
-                _cache=None, _crypto=None, _db=None,
+                _bucket=None, _cache=None, _crypto=None, _db=None,
                 _raven=None, _stats=None):
     configure_logging()
     raven = create_raven(transport='threaded', _raven=_raven)
 
     try:
+        celery_app.bucket = create_bucket(_bucket=_bucket)
         celery_app.cache = create_cache(_cache=_cache)
         celery_app.crypto = create_crypto(_crypto=_crypto)
         celery_app.db = create_db(_db=_db)
@@ -53,6 +55,7 @@ def init_worker(celery_app,
 
 
 def shutdown_worker(celery_app):
+    del celery_app.bucket
     celery_app.cache.close()
     del celery_app.cache
     del celery_app.crypto
