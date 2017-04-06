@@ -45,9 +45,3 @@ tagged with a ``reason:<value>`` tag with one of the following values:
     - ``reason:encryption``: The data was not correctly encrypted.
     - ``reason:json``: The data was not valid JSON.
     - ``reason:validation``: The data didn't match the schema.
-
-For successful and valid data uploads, additional metrics capture facts
-about the data itself:
-
-    - ``data.session.drop``: A number of sessions were filtered out.
-    - ``data.session.new``: A number of new sessions were recorded.

@@ -1,76 +1,8 @@
-from copy import deepcopy
-from datetime import datetime
 import gzip
 import json
-import time
 
 from miracle.data import tasks
 from miracle.data import upload
-
-TEST_DATE = datetime.utcnow()
-TEST_TIME = int(time.time())
-_PAYLOAD = {'user': 'foo', 'sessions': [
-    {
-        'duration': 2400,
-        'start_time': TEST_TIME,
-        'url': 'http://www.example.com/',
-        'tab_id': '-31-1',
-    },
-    {
-        'duration': 1300,
-        'start_time': TEST_TIME,
-        'url': 'https://www.foo.com/',
-        'tab_id': '-31-1',
-    },
-    {
-        'duration': 5700,
-        'start_time': TEST_TIME - 3600,
-        'url': 'https://www.example.com/login',
-        'tab_id': '-31-1',
-    },
-    {
-        'duration': 4600,
-        'start_time': TEST_TIME - 7200,
-        'url': 'http://www.example.com/search/?query=question',
-        'tab_id': '-30-2',
-    },
-    {
-        'duration': 6200,
-        'start_time': TEST_TIME - 10800,
-        'url': 'https://www.foo.com/',
-        'tab_id': '-30-2',
-    },
-]}
-_INVALID_SESSIONS = [
-    {
-        'duration': 800,
-        'start_time': TEST_TIME,
-        'url': 'https://foo:admin@www.foo.com/',
-        'tab_id': '-10-1',
-    }, {
-        'duration': 1000,
-        'start_time': TEST_TIME - 3600,
-        'url': 'https://foo:admin@www.foo.com/',
-        'tab_id': '-10-1',
-    }, {
-        'duration': 1200,
-        'start_time': TEST_TIME - 86400 * 15,
-        'url': 'http://www.example.com/',
-        'tab_id': '-10-1',
-    }, {
-        'duration': 1400,
-        'start_time': TEST_TIME + 86400 * 2,
-        'url': 'http://www.example.com/',
-        'tab_id': '-10-1',
-    },
-]
-_PAYLOAD_DURATIONS = {sess['duration'] for sess in _PAYLOAD['sessions']}
-_PAYLOAD_STARTS = {datetime.utcfromtimestamp(sess['start_time'])
-                   for sess in _PAYLOAD['sessions']}
-_PAYLOAD_URLS = {sess['url'] for sess in _PAYLOAD['sessions']}
-_PAYLOAD_TAB_IDS = {sess['tab_id'] for sess in _PAYLOAD['sessions']}
-_COMBINED_PAYLOAD = deepcopy(_PAYLOAD)
-_COMBINED_PAYLOAD['sessions'].extend(_INVALID_SESSIONS)
 
 
 class DummyTask(object):
@@ -97,103 +29,30 @@ def test_validate_user():
 
 
 def test_validate():
-    url = 'https://example.com/path'
-    time = TEST_TIME
-
     invalid_inputs = [
         {'other_key': []},
-        {'user': 'foo'},
-        {'sessions': {}},
-        {'sessions': []},
-        {'user': 123, 'sessions': []},
-        {'user': b'ab', 'sessions': []},
-        {'sessions': [[]]},
-        {'user': 'foo', 'sessions': [[]]},
-        {'user': 'foo', 'sessions': [{'url': ''}]},
-        {'user': 'foo', 'sessions': [{'url': 1}]},
-        {'user': 'foo', 'sessions': [{'url': url, 'start_time': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': TEST_TIME + 86400 * 2}]},
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': TEST_TIME - 86400 * 15}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'https://example.com/' + 'abc/' * 512,
-                       'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://127.0.0.1/home', 'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://8.8.8.8/home', 'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://domain-really-does-not-exist.com',
-                       'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'about:config', 'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'file:///etc/hosts', 'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'https://admin:admin@example.com/',
-                       'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://localhost:80/', 'start_time': time}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://example.com:81/', 'start_time': time}]},
+        {'user': 123},
+        {'user': 123, 'other': []},
+        {'user': b'ab', 'other': []},
     ]
     for invalid in invalid_inputs:
-        assert not upload.validate(invalid)[0]
+        assert not upload.validate(invalid)
 
     valid_inputs = [
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': None, 'tab_id': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://example.com:80/', 'start_time': time,
-                       'duration': None, 'tab_id': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'https://example.com:443/', 'start_time': time,
-                       'duration': None, 'tab_id': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': 2400, 'tab_id': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://example.com/home', 'start_time': time,
-                       'duration': None, 'tab_id': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': 'http://example.com/home', 'start_time': time,
-                       'duration': None, 'tab_id': '-20-2'}]},
+        {'user': 'foo'},
+        {'user': 'foo', 'other': [{}]},
+        {'user': 'foo', 'other': [], 'another': 'abc'},
     ]
     for valid in valid_inputs:
-        assert upload.validate(valid)[0] == valid
-
-    corrected_inputs = [(
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': -100, 'tab_id': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': 0, 'tab_id': None}]}
-    ), (
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': upload.MAX_DURATION + 1, 'tab_id': None}]},
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': upload.MAX_DURATION, 'tab_id': None}]}
-    ), (
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': None, 'tab_id': 'a'}]},
-        {'user': 'foo',
-         'sessions': [{'url': url, 'start_time': time,
-                       'duration': None, 'tab_id': ''}]}
-    )]
-    for input_, expected in corrected_inputs:
-        assert upload.validate(input_)[0] == expected
+        assert upload.validate(valid) == valid
 
 
-def test_upload_data(bucket, raven, stats):
-    user = _PAYLOAD['user']
+def test_upload(bucket, raven, stats):
+    payload = {'user': 'foo', 'other': ['spam', 'eggs']}
+
+    user = payload['user']
     task = DummyTask(bucket=bucket, raven=raven, stats=stats)
-    assert upload.upload_data(task, _PAYLOAD)
+    assert upload.upload(task, payload)
 
     objs = list(bucket.filter(Prefix='v2/sessions/%s/' % user))
     assert len(objs) == 1
@@ -206,26 +65,20 @@ def test_upload_data(bucket, raven, stats):
     obj['Body'].close()
 
     body = json.loads(gzip.decompress(body).decode('utf-8'))
-    assert body == _PAYLOAD
-
-    stats.check(counter=[
-        ('data.session.new', 1, 5),
-    ])
+    assert body == payload
 
     # Upload a second time
-    assert upload.upload_data(task, _PAYLOAD)
+    assert upload.upload(task, payload)
 
     objs = list(bucket.filter(Prefix='v2/sessions/%s/' % user))
     assert len(objs) == 2
 
 
 def test_task(celery, crypto, stats):
-    assert tasks.upload.delay(
-        crypto.encrypt(json.dumps(_COMBINED_PAYLOAD))).get()
+    payload = {'user': 'foo', 'other': ['spam', 'eggs']}
 
-    stats.check(counter=[
-        ('data.session.drop', 1, 4),
-    ])
+    assert tasks.upload.delay(
+        crypto.encrypt(json.dumps(payload))).get()
 
 
 def test_task_fail(celery, crypto, stats):
@@ -233,16 +86,12 @@ def test_task_fail(celery, crypto, stats):
         crypto.encrypt(b'no json')).get()
 
     assert not tasks.upload.delay(
-        crypto.encrypt(b'{"user": "foo"}')).get()
+        crypto.encrypt(b'{"user": 123}')).get()
 
     assert not tasks.upload.delay(
-        crypto.encrypt(b'{"sessions": [{}]}')).get()
-
-    assert not tasks.upload.delay(
-        crypto.encrypt(b'{"user": "foo", "sessions": [{}]}')).get()
+        crypto.encrypt(b'{"other": [{}]}')).get()
 
     stats.check(counter=[
-        ('data.session.drop', 1),
         ('data.upload.error', 1, ['reason:json']),
-        ('data.upload.error', 3, ['reason:validation']),
+        ('data.upload.error', 2, ['reason:validation']),
     ])
