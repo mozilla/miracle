@@ -39,7 +39,12 @@ class Bucket(object):
         self._bucket.wait_until_exists()
 
     def close(self):
-        pass
+        self._bucket = None
+        try:
+            self._resource.meta.client._endpoint.http_session.close()
+        except AttributeError:  # pragma: no cover
+            pass
+        self._resource = None
 
     def ping(self, raven):
         try:
@@ -51,7 +56,7 @@ class Bucket(object):
 
     def delete(self, key, **kw):
         obj = self._bucket.Object(key)
-        obj.delete(**kw)
+        return obj.delete(**kw)
 
     def filter(self, **kw):
         return self._bucket.objects.filter(**kw)
@@ -62,4 +67,4 @@ class Bucket(object):
 
     def put(self, key, body, **kw):
         obj = self._bucket.Object(key)
-        obj.put(Body=body, **kw)
+        return obj.put(Body=body, **kw)
