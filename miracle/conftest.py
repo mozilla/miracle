@@ -7,6 +7,7 @@ import webtest
 from miracle.bucket import create_bucket
 from miracle.cache import create_cache
 from miracle.crypto import create_crypto
+from miracle.kinesis import create_kinesis
 from miracle.log import (
     create_raven,
     create_stats,
@@ -75,6 +76,20 @@ def cache(global_cache):
 def crypto():
     crypto = create_crypto()
     yield crypto
+
+
+@pytest.fixture(scope='session')
+def global_kinesis():
+    kinesis = create_kinesis()
+    kinesis.clear()
+    yield kinesis
+    kinesis.close()
+
+
+@pytest.fixture(scope='function')
+def kinesis(global_kinesis):
+    yield global_kinesis
+    global_kinesis.clear()
 
 
 @pytest.fixture(scope='session')

@@ -8,6 +8,8 @@ STATIC_DIR = os.path.abspath(os.path.join(HERE, 'static'))
 VERSION_FILE = os.path.join(STATIC_DIR, 'version.json')
 
 KINESIS_ENDPOINT = os.environ.get('KINESIS_ENDPOINT')
+KINESIS_STREAM = os.environ.get(
+    'KINESIS_STREAM', 'net-mozaws-dev-miracle-test')
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_DB = '1' if TESTING else '0'
