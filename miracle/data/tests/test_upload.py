@@ -1,3 +1,4 @@
+from datetime import date
 import gzip
 import json
 
@@ -52,12 +53,14 @@ def test_validate():
 
 def test_upload(bucket, raven, stats):
     payload = {'user': 'foo', 'other': ['spam', 'eggs']}
-
     user = payload['user']
+    today = date.today()
+    prefix = 'v2/sessions/%s/%s/%s/' % (today.year, today.month, user)
+
     task = DummyTask(bucket=bucket, raven=raven, stats=stats)
     assert upload.upload(task, payload)
 
-    objs = list(bucket.filter(Prefix='v2/sessions/%s/' % user))
+    objs = list(bucket.filter(Prefix=prefix))
     assert len(objs) == 1
     assert objs[0].key.endswith('.json.gz')
 
@@ -73,5 +76,5 @@ def test_upload(bucket, raven, stats):
     # Upload a second time
     assert upload.upload(task, payload)
 
-    objs = list(bucket.filter(Prefix='v2/sessions/%s/' % user))
+    objs = list(bucket.filter(Prefix=prefix))
     assert len(objs) == 2

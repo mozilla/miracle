@@ -95,7 +95,7 @@ class UploadView(View):
     _route_name = 'v2_upload'
     _route_path = '/v2/upload'
 
-    _max_size = 10 * 1024 * 1024  # 10 mib
+    _max_size = 1024 * 1024  # 1 mib
 
     def __call__(self):
         body = self.request.body

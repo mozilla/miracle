@@ -1,3 +1,4 @@
+from datetime import date
 import gzip
 import json
 import re
@@ -31,11 +32,13 @@ def validate(data):
 
 
 def upload(task, data):
+    user_token = data['user']
+    today = date.today()
+    blob = json.dumps(data, separators=(',', ':')).encode('utf-8')
+    blob = gzip.compress(blob, 7)
+    name = 'v2/sessions/%s/%s/%s/%s.json.gz' % (
+        today.year, today.month, user_token, uuid.uuid1().hex)
     try:
-        user_token = data['user']
-        blob = json.dumps(data).encode('utf-8')
-        blob = gzip.compress(blob, 6)
-        name = 'v2/sessions/%s/%s.json.gz' % (user_token, uuid.uuid1().hex)
         task.app.bucket.put(
             name, blob,
             ContentEncoding='gzip',
