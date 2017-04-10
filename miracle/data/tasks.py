@@ -6,15 +6,13 @@ from miracle.worker.task import BaseTask
 
 if TESTING:
     @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
-    def dummy(self):
-        self.cache.incr('foo', 2)
-        return int(self.cache.get('foo'))
-
-    @celery_app.task(base=BaseTask, bind=True, queue='celery_default')
     def error(self, value):
         raise ValueError(value)
 
 
 @celery_app.task(base=BaseTask, bind=True, queue='celery_upload')
-def upload(self, payload):
-    return Upload(self)(payload)
+def upload(self, sequence_number=None, shard_id=None):
+    return Upload(self)(
+        sequence_number=sequence_number,
+        shard_id=shard_id,
+    )

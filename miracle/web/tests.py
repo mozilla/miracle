@@ -27,13 +27,14 @@ def test_config(app):
     assert hasattr(app.app, 'registry')
     assert hasattr(app.app.registry, 'cache')
     assert hasattr(app.app.registry, 'crypto')
+    assert hasattr(app.app.registry, 'kinesis')
     assert hasattr(app.app.registry, 'raven')
     assert hasattr(app.app.registry, 'stats')
 
 
 def test_heartbeat(app, stats):
     res = app.get('/__heartbeat__', status=200)
-    assert res.json == {'cache': {'up': True}}
+    assert res.json == {'cache': {'up': True}, 'queue': {'up': True}}
     stats.check(counter=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:200']),
     ], timer=[
@@ -41,16 +42,25 @@ def test_heartbeat(app, stats):
     ])
 
 
-def test_heartbeat_error(broken_app, raven, stats):
+def test_heartbeat_cache_error(broken_app, raven, stats):
     res = broken_app.get('/__heartbeat__', status=503)
     assert res.status_code == 503
-    assert res.json == {'cache': {'up': False}}
+    assert res.json == {'cache': {'up': False}, 'queue': {'up': True}}
     stats.check(counter=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:503']),
     ], timer=[
         ('request', 1, ['path:__heartbeat__', 'method:get', 'status:503']),
     ])
     raven.check(['ConnectionError'])
+
+
+def test_heartbeat_queue_error(app, kinesis, raven, stats):
+    kinesis._delete_frontend_stream()
+
+    res = app.get('/__heartbeat__', status=503)
+    assert res.status_code == 503
+    assert res.json == {'cache': {'up': True}, 'queue': {'up': False}}
+    raven.check(['ResourceNotFoundException'])
 
 
 def test_index(app, stats):

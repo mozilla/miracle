@@ -1,8 +1,11 @@
 import json
+import random
 
+import botocore
 from pyramid.httpexceptions import (
     HTTPBadRequest,
     HTTPMethodNotAllowed,
+    HTTPServiceUnavailable,
 )
 from pyramid.response import Response
 
@@ -110,5 +113,23 @@ class UploadView(View):
         if not self.request.registry.crypto.validate(text):
             return HTTPBadRequest('Invalid JWE structure.')
 
-        tasks.upload.delay(text)
+        # Random partition key, as all client data is encrypted.
+        partition_key = '%05d' % random.randint(0, 2**16)
+
+        kinesis = self.request.registry.kinesis
+        try:
+            record = kinesis.client.put_record(
+                Data=body,
+                PartitionKey=partition_key,
+                StreamName=kinesis.frontend_stream,
+            )
+        except botocore.exceptions.ClientError:
+            self.request.registry.raven.captureException()
+            return HTTPServiceUnavailable('Data queue backend unavailable.')
+
+        tasks.upload.delay(
+            sequence_number=record['SequenceNumber'],
+            shard_id=record['ShardId'],
+        )
+
         return {'status': 'success'}

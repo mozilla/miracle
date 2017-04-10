@@ -1,17 +1,20 @@
 import gzip
 import json
 
-from miracle.data import tasks
 from miracle.data import upload
+
+
+class DummyApp(object):
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 class DummyTask(object):
 
-    def __init__(self, bucket=None, crypto=None, raven=None, stats=None):
-        self.bucket = bucket
-        self.crypto = crypto
-        self.raven = raven
-        self.stats = stats
+    def __init__(self, **kwargs):
+        self.app = DummyApp(**kwargs)
 
 
 def test_validate_user():
@@ -72,26 +75,3 @@ def test_upload(bucket, raven, stats):
 
     objs = list(bucket.filter(Prefix='v2/sessions/%s/' % user))
     assert len(objs) == 2
-
-
-def test_task(celery, crypto, stats):
-    payload = {'user': 'foo', 'other': ['spam', 'eggs']}
-
-    assert tasks.upload.delay(
-        crypto.encrypt(json.dumps(payload))).get()
-
-
-def test_task_fail(celery, crypto, stats):
-    assert not tasks.upload.delay(
-        crypto.encrypt(b'no json')).get()
-
-    assert not tasks.upload.delay(
-        crypto.encrypt(b'{"user": 123}')).get()
-
-    assert not tasks.upload.delay(
-        crypto.encrypt(b'{"other": [{}]}')).get()
-
-    stats.check(counter=[
-        ('data.upload.error', 1, ['reason:json']),
-        ('data.upload.error', 2, ['reason:validation']),
-    ])

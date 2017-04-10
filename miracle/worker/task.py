@@ -28,11 +28,11 @@ class BaseTask(Task):
         Execute the task, capture a statsd timer for the task duration and
         automatically report exceptions into Sentry.
         """
-        with self.stats.timed('task', tags=['task:' + self.shortname()]):
+        with self.app.stats.timed('task', tags=['task:' + self.shortname()]):
             try:
                 result = super(BaseTask, self).__call__(*args, **kw)
             except Exception as exc:
-                self.raven.captureException()
+                self.app.raven.captureException()
                 if not self.app.conf.task_always_eager:  # pragma: no cover
                     raise self.retry(exc=exc)
                 raise
@@ -56,23 +56,3 @@ class BaseTask(Task):
             args = kombu_loads(data, content_type, encoding)
 
         return super(BaseTask, self).apply(*args, **kw)
-
-    @property
-    def bucket(self):
-        return self.app.bucket
-
-    @property
-    def cache(self):
-        return self.app.cache
-
-    @property
-    def crypto(self):
-        return self.app.crypto
-
-    @property
-    def raven(self):
-        return self.app.raven
-
-    @property
-    def stats(self):
-        return self.app.stats

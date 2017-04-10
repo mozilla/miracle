@@ -36,12 +36,12 @@ def upload(task, data):
         blob = json.dumps(data).encode('utf-8')
         blob = gzip.compress(blob, 6)
         name = 'v2/sessions/%s/%s.json.gz' % (user_token, uuid.uuid1().hex)
-        task.bucket.put(
+        task.app.bucket.put(
             name, blob,
             ContentEncoding='gzip',
             ContentType='application/json')
     except ClientError:  # pragma: no cover
-        task.raven.captureException()
+        task.app.raven.captureException()
         return False
 
     return True
@@ -53,12 +53,17 @@ class Upload(object):
         self.task = task
 
     def error_stat(self, reason):
-        self.task.stats.increment(
+        self.task.app.stats.increment(
             'data.upload.error', tags=['reason:%s' % reason])
 
-    def __call__(self, payload):
+    def __call__(self, sequence_number=None, shard_id=None):
+        records = self.task.app.kinesis.get_frontend_stream_records(
+            sequence_number=sequence_number,
+            shard_id=shard_id,
+        )
+
         try:
-            data = self.task.crypto.decrypt(payload)
+            data = self.task.app.crypto.decrypt(records[0].decode('ascii'))
         except ValueError:
             self.error_stat('encryption')
             return False

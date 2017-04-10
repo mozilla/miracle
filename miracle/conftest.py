@@ -139,11 +139,12 @@ def celery(global_celery, bucket, cache, raven, stats):
 
 
 @pytest.fixture(scope='session')
-def global_app(crypto, global_cache, global_celery,
+def global_app(crypto, global_cache, global_celery, global_kinesis,
                global_raven, global_stats):
     wsgiapp = create_app(
         _cache=global_cache,
         _crypto=crypto,
+        _kinesis=global_kinesis,
         _raven=global_raven,
         _stats=global_stats)
     app = webtest.TestApp(wsgiapp)
@@ -152,5 +153,5 @@ def global_app(crypto, global_cache, global_celery,
 
 
 @pytest.fixture(scope='function')
-def app(global_app, cache, celery, raven, stats):
+def app(global_app, cache, celery, kinesis, raven, stats):
     yield global_app

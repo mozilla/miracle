@@ -20,23 +20,35 @@ def test_jwk(app, stats):
     ])
 
 
-def test_upload(app, crypto, stats):
-    data = crypto.encrypt(json.dumps({'foo': 1}))
-    res = app.post('/v2/upload', data,
+def test_upload(app, crypto, kinesis, stats):
+    data = {'user': 'foo'}
+    body = crypto.encrypt(json.dumps(data))
+    res = app.post('/v2/upload', body,
                    headers={'Content-Type': 'text/plain'},
                    status=200)
     assert CORS_HEADERS - set(res.headers.keys()) == set()
     assert res.json == {'status': 'success'}
     assert 'Strict-Transport-Security' in res.headers
 
-    data = crypto.encrypt(b'encrypted no json')
-    app.post('/v2/upload', data,
-             headers={'Content-Type': 'text/plain'},
-             status=200)
+    records = kinesis.get_frontend_stream_records()
+    assert len(records) == 1
+    queued_data = crypto.decrypt(records[0].decode('ascii'))
+    assert json.loads(queued_data) == data
 
     stats.check(timer=[
-        ('task', 2, ['task:data.tasks.upload']),
+        ('task', 1, ['task:data.tasks.upload']),
     ])
+
+
+def test_upload_error(app, crypto, kinesis, raven):
+    kinesis._delete_frontend_stream()
+
+    data = crypto.encrypt(json.dumps({'user': 'foo'}))
+    res = app.post('/v2/upload', data,
+                   headers={'Content-Type': 'text/plain'},
+                   status=503)
+    assert 'Data queue backend unavailable.' in res.text
+    raven.check(['ResourceNotFoundException'])
 
 
 def test_upload_fail(app, stats):
@@ -52,6 +64,19 @@ def test_upload_fail(app, stats):
     app.post('/v2/upload', 'no\xfejson'.encode('latin-1'),
              headers={'Content-Type': 'text/plain'},
              status=400)
+
+
+def test_upload_backend_fail(app, crypto, stats):
+    app.post('/v2/upload', crypto.encrypt(b'no json'),
+             headers={'Content-Type': 'text/plain'})
+
+    app.post('/v2/upload', crypto.encrypt(json.dumps({'no': 'user'})),
+             headers={'Content-Type': 'text/plain'})
+
+    stats.check(counter=[
+        ('data.upload.error', 1, ['reason:json']),
+        ('data.upload.error', 1, ['reason:validation']),
+    ])
 
 
 def test_upload_jwe(app, stats):
