@@ -11,6 +11,7 @@ In a production environment the following services are typically used:
 - Amazon ELB handling SSL termination
 - Amazon EC2 running Docker containers for both web and worker roles
 - Amazon ElastiCache Redis
+- Amazon Kinesis
 - Amazon S3
 - Nginx running on the web role EC2 instances, proxying HTTP traffic
 - A Datadog/StatsD daemon running on each EC2 instance
@@ -73,6 +74,36 @@ It needs both read and write access to the bucket, so permissions:
 * ``s3:ListMultipartUploadParts``
 * ``s3:PutObject``
 
+The web role needs to have write access to the AWS Kinesis service
+with permissions:
+
+* ``kinesis:DescribeStream``
+* ``kinesis:PutRecord``
+* ``kinesis:PutRecords``
+
+The worker role needs to have read/write access to the AWS Kinesis
+service with permissions:
+
+* ``kinesis:DescribeStream``
+* ``kinesis:GetRecords``
+* ``kinesis:GetShardIterator``
+* ``kinesis:ListStreams``
+* ``kinesis:PutRecord``
+* ``kinesis:PutRecords``
+
+The worker role also needs Cloudwatch and DynamoDB permissions:
+
+* ``cloudwatch:PutMetricData``
+* ``dynamodb:CreateTable``
+* ``dynamodb:DeleteItem``
+* ``dynamodb:DescribeTable``
+* ``dynamodb:GetItem``
+* ``dynamodb:ListTables``
+* ``dynamodb:PutItem``
+* ``dynamodb:Query``
+* ``dynamodb:Scan``
+* ``dynamodb:UpdateItem``
+
 
 Web Role Configuration
 ======================
@@ -98,11 +129,8 @@ endpoint supported by the application to do so.
 Status Checks
 =============
 
-Both roles will try to connect to Redis during app startup, and send
-an error report to Sentry if they fail.
-
-The worker role will also try to connect to the S3 bucket and send
-an error report to Sentry if it fails.
+Both roles will try to connect to all essential services during app
+startup, and send an error report to Sentry if they fail.
 
 The web role exposes three URL endpoints to check its status:
 
