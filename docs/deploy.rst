@@ -26,7 +26,7 @@ the web and worker roles.
 The image contains an entrypoint which can take either "web" or "worker"
 as the run command, defaulting to "web".
 
-It exposes port 8080, which is only used by the web role.
+It exposes port 8000, which is only used by the web role.
 
 
 Environment Variables
@@ -81,11 +81,11 @@ The HTTP/S flow generally is:
 
 Internet --> ELB --> Nginx --> Web Server inside Docker Container
 
-The docker container exposes the web server on port 8080 and it can
-be bound at runtime to port 8080 on the EC2 host machine.
+The docker container exposes the web server on port 8000 and it can
+be bound at runtime to port 8000 on the EC2 host machine.
 
 Typically an Nginx instance on the EC2 host will listen on port
-80 and 443 for HTTP traffic and proxy pass both to port 8080.
+80 and 443 for HTTP traffic and proxy pass both to port 8000.
 
 The ELB listens on port 80 for HTTP and port 443 for HTTPS traffic
 and handles SSL termination. It forwards both as HTTP-only traffic

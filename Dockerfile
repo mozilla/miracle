@@ -49,7 +49,7 @@ RUN pip install --no-deps --no-cache-dir --require-hashes \
     -r requirements/python.txt
 
 ENV PYTHONPATH $PYTHONPATH:/app
-EXPOSE 8080
+EXPOSE 8000
 
 COPY . /app
 

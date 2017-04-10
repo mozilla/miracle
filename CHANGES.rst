@@ -7,11 +7,9 @@ Changelog
 
 - Allow almost arbitary data schema in uploads.
 
-- Add local DynamoDB, change default web port to 80880.
-
 - Remove Postgres and alembic db migration support.
 
-- Upload data to S3 instead of Posstgres.
+- Upload data to S3 instead of Postgres.
 
 - Add AWS S3 bucket support.
 

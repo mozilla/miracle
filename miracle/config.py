@@ -7,7 +7,7 @@ HERE = os.path.dirname(__file__)
 STATIC_DIR = os.path.abspath(os.path.join(HERE, 'static'))
 VERSION_FILE = os.path.join(STATIC_DIR, 'version.json')
 
-DB_ENDPOINT = os.environ.get('DB_ENDPOINT')
+KINESIS_ENDPOINT = os.environ.get('KINESIS_ENDPOINT')
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_DB = '1' if TESTING else '0'
