@@ -36,13 +36,7 @@ class Kinesis(object):
     def clear(self):
         try:
             names = self.client.list_streams()['StreamNames']
-            for name in names:
-                self.client.delete_stream(StreamName=name)
-            if names:
-                time.sleep(self._delay)
-                waiter = self.client.get_waiter('stream_not_exists')
-                for name in names:
-                    waiter.wait(StreamName=name)
+            self._delete_streams(names)
         except botocore.exceptions.ClientError:  # pragma: no cover
             pass
         self.client.create_stream(
@@ -69,9 +63,17 @@ class Kinesis(object):
             return False
         return True
 
+    def _delete_streams(self, names):
+        for name in names:
+            self.client.delete_stream(StreamName=name)
+        if names:
+            time.sleep(self._delay)
+            waiter = self.client.get_waiter('stream_not_exists')
+            for name in names:
+                waiter.wait(StreamName=name)
+
     def _delete_frontend_stream(self):
-        self.client.delete_stream(StreamName=self.frontend_stream)
-        time.sleep(self._delay)
+        self._delete_streams([self.frontend_stream])
 
     def get_frontend_stream_records(self, sequence_number=None, shard_id=None):
         if shard_id:
