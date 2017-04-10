@@ -7,6 +7,8 @@ HERE = os.path.dirname(__file__)
 STATIC_DIR = os.path.abspath(os.path.join(HERE, 'static'))
 VERSION_FILE = os.path.join(STATIC_DIR, 'version.json')
 
+DYNAMODB_ENDPOINT = os.environ.get('DYNAMODB_ENDPOINT')
+
 KINESIS_ENDPOINT = os.environ.get('KINESIS_ENDPOINT')
 KINESIS_FRONTEND_STREAM = os.environ.get(
     'KINESIS_FRONTEND_STREAM', 'miracle-frontend')

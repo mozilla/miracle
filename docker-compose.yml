@@ -1,10 +1,10 @@
-redis:
-  container_name: miracle_redis
+dynamodb:
+  container_name: miracle_dynamodb
   expose:
-    - "6379"
-  image: redis:2.8
+    - "8000"
+  build: ./docker/dynamodb
   ports:
-    - "6379"
+    - "8000"
 
 
 kinesis:
@@ -14,6 +14,16 @@ kinesis:
   build: ./docker/kinesis
   ports:
     - "4567"
+
+
+redis:
+  container_name: miracle_redis
+  expose:
+    - "6379"
+  image: redis:2.8
+  ports:
+    - "6379"
+
 
 s3:
   container_name: miracle_s3

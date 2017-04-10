@@ -60,8 +60,10 @@ case "$1" in
         fi
         docker build $PULL_ARG -t mozilla/miracle .
         docker run -d \
+          -e "AWS_ACCESS_KEY_ID=access" -e "AWS_SECRET_ACCESS_KEY=password" -e "AWS_CBOR_DISABLE=1" \
+          -e "KINESIS_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_kinesis`:4567" \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
-          -p 8000:8000/tcp --name="miracle_web" mozilla/miracle web
+          -p 8080:8080/tcp --name="miracle_web" mozilla/miracle web
         ;;
 
       # Builds and starts the worker container.
@@ -73,6 +75,7 @@ case "$1" in
         docker build $PULL_ARG -t mozilla/miracle .
         docker run -d \
           -e "AWS_ACCESS_KEY_ID=access" -e "AWS_SECRET_ACCESS_KEY=password" -e "AWS_CBOR_DISABLE=1" \
+          -e "DYNAMODB_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_dynamodb`:8000" \
           -e "KINESIS_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_kinesis`:4567" \
           -e "S3_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_s3`:9000" \
           -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
@@ -139,10 +142,11 @@ case "$1" in
     docker build $PULL_ARG -t mozilla/miracle .
     docker run -it --rm \
         -e "AWS_ACCESS_KEY_ID=access" -e "AWS_SECRET_ACCESS_KEY=password" -e "AWS_CBOR_DISABLE=1" \
+        -e "DYNAMODB_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_dynamodb`:8000" \
         -e "KINESIS_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_kinesis`:4567" \
         -e "S3_ENDPOINT=http://`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_s3`:9000" \
         -e "REDIS_HOST=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' miracle_redis`" \
-        -p 8000:8000/tcp \
+        -p 8080:8080/tcp \
         mozilla/miracle $2 $3 $4 $5 $6 $7 $8 $9
     ;;
 
