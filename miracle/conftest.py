@@ -50,6 +50,7 @@ def global_bucket():
     bucket = create_bucket()
     bucket.clear()
     yield bucket
+    bucket.clear()
     bucket.close()
 
 
@@ -83,6 +84,7 @@ def global_kinesis():
     kinesis = create_kinesis()
     kinesis.clear()
     yield kinesis
+    kinesis.clear()
     kinesis.close()
 
 
@@ -120,13 +122,14 @@ def stats(global_stats):
 
 
 @pytest.fixture(scope='session')
-def global_celery(crypto, global_bucket, global_cache,
+def global_celery(crypto, global_bucket, global_cache, global_kinesis,
                   global_raven, global_stats):
     init_worker(
         celery_app,
         _bucket=global_bucket,
         _cache=global_cache,
         _crypto=crypto,
+        _kinesis=global_kinesis,
         _raven=global_raven,
         _stats=global_stats)
     yield celery_app
@@ -134,7 +137,7 @@ def global_celery(crypto, global_bucket, global_cache,
 
 
 @pytest.fixture(scope='function')
-def celery(global_celery, bucket, cache, raven, stats):
+def celery(global_celery, bucket, cache, kinesis, raven, stats):
     yield global_celery
 
 

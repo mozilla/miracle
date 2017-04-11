@@ -25,18 +25,20 @@ class Bucket(object):
         self._bucket = s3.Bucket(name)
 
     def clear(self):
-        try:
-            # This deletes up to 1000 objects, which should be plenty
-            # for test cleanup.
-            self._bucket.objects.delete()
-            self._bucket.delete()
-            self._bucket.wait_until_not_exists()
-        except botocore.exceptions.ClientError:  # pragma: no cover
-            # likely NoSuchBucket
-            pass
-        self._bucket = self._resource.Bucket(self.name)
-        self._bucket.create()
-        self._bucket.wait_until_exists()
+        if self._bucket:
+            try:
+                # This deletes up to 1000 objects, which should be plenty
+                # for test cleanup.
+                self._bucket.objects.delete()
+                self._bucket.delete()
+                self._bucket.wait_until_not_exists()
+            except botocore.exceptions.ClientError:  # pragma: no cover
+                # likely NoSuchBucket
+                pass
+        if self._resource:
+            self._bucket = self._resource.Bucket(self.name)
+            self._bucket.create()
+            self._bucket.wait_until_exists()
 
     def close(self):
         self._bucket = None

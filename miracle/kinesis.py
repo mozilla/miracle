@@ -34,6 +34,8 @@ class Kinesis(object):
         self.client = boto3.client('kinesis', **extra_config)
 
     def clear(self):
+        if not self.client:
+            return
         try:
             names = self.client.list_streams()['StreamNames']
             self._delete_streams(names)
