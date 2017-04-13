@@ -5,6 +5,7 @@ dynamodb:
   build: ./docker/dynamodb
   ports:
     - "8000"
+  dns: "127.0.0.1"
 
 
 kinesis:
@@ -14,6 +15,7 @@ kinesis:
   build: ./docker/kinesis
   ports:
     - "4567"
+  dns: "127.0.0.1"
 
 
 redis:
@@ -23,6 +25,7 @@ redis:
   image: redis:2.8
   ports:
     - "6379"
+  dns: "127.0.0.1"
 
 
 s3:
@@ -36,3 +39,4 @@ s3:
   image: minio/minio
   ports:
     - "9000:9000"
+  dns: "127.0.0.1"

@@ -6,7 +6,6 @@ import botocore
 from miracle.config import (
     KINESIS_ENDPOINT,
     KINESIS_FRONTEND_STREAM,
-    TESTING,
 )
 
 
@@ -26,7 +25,7 @@ class Kinesis(object):
     def __init__(self, frontend_stream):
         self.frontend_stream = frontend_stream
         extra_config = {}
-        if TESTING:
+        if KINESIS_ENDPOINT:
             extra_config = {
                 'endpoint_url': KINESIS_ENDPOINT,
                 'region_name': 'kinesalite',
