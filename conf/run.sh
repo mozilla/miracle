@@ -3,6 +3,8 @@
 export GEVENT_RESOLVER=ares
 
 cd $(dirname $0)
+python kcl.py
+
 case "$1" in
     web)
         echo "Starting Web Server"
