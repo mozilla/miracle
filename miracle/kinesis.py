@@ -20,7 +20,7 @@ def create_kinesis(frontend_stream=KINESIS_FRONTEND_STREAM, _kinesis=None):
 class Kinesis(object):
 
     # Sligntly more than kinesalite's createStreamMs/deleteStreamMs
-    _delay = 0.15
+    _delay = 0.03
     client = None
 
     def __init__(self, frontend_stream):

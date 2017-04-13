@@ -1,7 +1,7 @@
 FROM node:7-slim
 
 EXPOSE 4567
-ENTRYPOINT ["kinesalite", "--createStreamMs=100", "--deleteStreamMs=100", "--updateStreamMs=100"]
+ENTRYPOINT ["kinesalite", "--createStreamMs=20", "--deleteStreamMs=20", "--updateStreamMs=20"]
 
 # add a non-privileged user for installing and running
 # the application

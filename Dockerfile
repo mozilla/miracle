@@ -63,7 +63,7 @@ EXPOSE 8080
 COPY . /app
 
 # Call setup.py to create scripts
-RUN chown app:app /app
+RUN chown app:app /app && chown app:app /app/conf
 RUN python setup.py develop
 RUN python -c "import compileall; compileall.compile_dir('miracle', quiet=1)"
 
