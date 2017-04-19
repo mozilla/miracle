@@ -13,14 +13,19 @@ CHECKPOINT_RETRY_WAIT = 1.5
 CHECKPOINT_SECONDS = 60.0
 
 
-def run_kcl_process(processor):
+def run_kcl_process(func, batch_size=None):
+    processor = RecordProcessor(func, batch_size=batch_size)
     kcl_process = kcl.KCLProcess(processor)
     kcl_process.run()
 
 
-class BaseRecordProcessor(processor.RecordProcessorBase):
+class RecordProcessor(processor.RecordProcessorBase):
 
-    def __init__(self):
+    def __init__(self, func, batch_size=None):
+        self.func = func
+        self.batch_size = batch_size
+        if not batch_size:
+            self.batch_size = 100
         self.last_checkpoint = None
         self.max_seq = (None, None)
 
@@ -30,9 +35,26 @@ class BaseRecordProcessor(processor.RecordProcessorBase):
     def _log(self, message):
         sys.stderr.write(message + '\n')
 
+    def _log_retry_error(self, exc, num):
+        if exc.value == 'ShutdownException':
+            self._log(
+                'Encountered shutdown exception, skipping checkpoint')
+        elif exc.value == 'ThrottlingException':
+            if num > CHECKPOINT_RETRIES:
+                self._log('Failed to checkpoint '
+                          'after %s attempts.' % num)
+        elif exc.value == 'InvalidStateException':
+            self._log('MultiLangDaemon reported an invalid state '
+                      'while checkpointing.')
+        else:
+            self._log('Encountered an error while checkpointing, '
+                      'error was %r.' % exc)
+
     def _wait(self, num):
         # Exponential backoff, at most 45 seconds in total.
-        time.sleep((num ** 2) * CHECKPOINT_SECONDS)
+        delay = (num ** 2) * CHECKPOINT_SECONDS
+        self._log('Checkpointing was throttled, sleeping %s seconds.' % delay)
+        time.sleep(delay)
 
     def _checkpoint(self, checkpointer, force=False):
         now = time.time()
@@ -42,28 +64,14 @@ class BaseRecordProcessor(processor.RecordProcessorBase):
         for num in range(1, CHECKPOINT_RETRIES + 1):
             try:
                 checkpointer.checkpoint(self.max_seq[0], self.max_seq[1])
+                self.last_checkpoint = now
                 return True
             except kcl.CheckpointError as exc:
-                if exc.value == 'ShutdownException':
-                    self._log(
-                        'Encountered shutdown exception, skipping checkpoint')
+                if not (exc.value == 'ThrottlingException' and
+                        num <= CHECKPOINT_RETRIES):
+                    self._log_retyr_error(exc)
                     return False
-                elif exc.value == 'ThrottlingException':
-                    if num > CHECKPOINT_RETRIES:
-                        self._log('Failed to checkpoint '
-                                  'after %s attempts.' % num)
-                        return False
-                    else:
-                        # TODO This is the only non-return case.
-                        self._log('Was throttled while checkpointing')
-                elif exc.value == 'InvalidStateException':
-                    self._log('MultiLangDaemon reported an invalid state '
-                              'while checkpointing.')
-                    return False
-                else:
-                    self._log('Encountered an error while checkpointing, '
-                              'error was %r.' % exc)
-                    return False
+
             self._wait(num)
 
         return None
@@ -77,19 +85,11 @@ class BaseRecordProcessor(processor.RecordProcessorBase):
             return True
         return False
 
-    def _process_record(self, data, key, seq, sub_seq):
-        raise NotImplementedError()
-
     def process_records(self, process_records_input):
-        seq = None
-        sub_seq = None
         try:
-            for record in process_records_input.records:
-                data = record.binary_data
-                key = record.partition_key
-                seq = record.sequence_number
-                sub_seq = record.sub_sequence_number
-                self._process_record(data, key, seq, sub_seq)
+            records = process_records_input.records
+            for i in range(0, len(records), self.batch_size):
+                seq, sub_seq = self.func(records[i:i + self.batch_size])
                 self._update_max_seq(seq, sub_seq)
             self._checkpoint(process_records_input.checkpointer)
         except Exception as exc:
