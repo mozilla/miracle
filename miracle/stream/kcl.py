@@ -13,7 +13,7 @@ CHECKPOINT_RETRY_WAIT = 1.5
 CHECKPOINT_SECONDS = 60.0
 
 
-def run_kcl_process(func, batch_size=None):
+def run_kcl_process(func, batch_size=None):  # pragma: no cover
     processor = RecordProcessor(func, batch_size=batch_size)
     kcl_process = kcl.KCLProcess(processor)
     kcl_process.run()
@@ -22,7 +22,7 @@ def run_kcl_process(func, batch_size=None):
 class RecordProcessor(processor.RecordProcessorBase):
 
     def __init__(self, func, batch_size=None):
-        self.func = func
+        self.func = func.__get__(self)
         self.batch_size = batch_size
         if not batch_size:
             self.batch_size = 100
@@ -64,7 +64,7 @@ class RecordProcessor(processor.RecordProcessorBase):
         for num in range(1, CHECKPOINT_RETRIES + 1):
             try:
                 checkpointer.checkpoint(self.max_seq[0], self.max_seq[1])
-                self.last_checkpoint = now
+                self.last_checkpoint = time.time()
                 return True
             except kcl.CheckpointError as exc:
                 if not (exc.value == 'ThrottlingException' and
@@ -100,7 +100,7 @@ class RecordProcessor(processor.RecordProcessorBase):
         try:
             if shutdown_input.reason == 'TERMINATE':
                 self._log('Was told to terminate, attempting to checkpoint.')
-                self.checkpoint(shutdown_input.checkpointer, force=True)
+                self._checkpoint(shutdown_input.checkpointer, force=True)
             else:  # reason == 'ZOMBIE'
                 self._log('Shutting down. Will not checkpoint.')
         except Exception as exc:
