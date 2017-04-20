@@ -1,7 +1,6 @@
 # This is based in large parts on the amazon_kclpy sample application:
 # https://github.com/awslabs/amazon-kinesis-client-python/blob/master/samples/sample_kclpy_app.py
 
-import sys
 import time
 
 from amazon_kclpy import kcl
@@ -63,33 +62,9 @@ class RecordProcessor(processor.RecordProcessorBase):
             self.raven.captureException()
             raise
 
-    def _log(self, message):
-        sys.stderr.write(message + '\n')
-
-    def _log_retry_error(self, exc, num):
-        if exc.value == 'ShutdownException':
-            self._log(
-                'Encountered shutdown exception, skipping checkpoint')
-        elif exc.value == 'ThrottlingException':
-            if num > CHECKPOINT_RETRIES:
-                self._log('Failed to checkpoint '
-                          'after %s attempts.' % num)
-        elif exc.value == 'InvalidStateException':
-            self._log('MultiLangDaemon reported an invalid state '
-                      'while checkpointing.')
-        else:
-            self._log('Encountered an error while checkpointing, '
-                      'error was %r.' % exc)
-
-    def _wait(self, num):
-        # Exponential backoff, at most 45 seconds in total.
-        delay = (num ** 2) * CHECKPOINT_SECONDS
-        self._log('Checkpointing was throttled, sleeping %s seconds.' % delay)
-        time.sleep(delay)
-
-    def _checkpoint(self, checkpointer, force=False):
+    def _checkpoint(self, checkpointer, delay=CHECKPOINT_SECONDS, force=False):
         now = time.time()
-        if ((now - self.last_checkpoint) < CHECKPOINT_SECONDS) and not force:
+        if ((now - self.last_checkpoint) < delay) and not force:
             return False
 
         for num in range(1, CHECKPOINT_RETRIES + 1):
@@ -99,18 +74,20 @@ class RecordProcessor(processor.RecordProcessorBase):
                 return True
             except kcl.CheckpointError as exc:
                 if not (exc.value == 'ThrottlingException' and
-                        num <= CHECKPOINT_RETRIES):
-                    self._log_retyr_error(exc)
+                        num < CHECKPOINT_RETRIES):
+                    self.raven.captureException()
                     return False
 
-            self._wait(num)
-
-        return None
+            # Exponential backoff, at most 45 seconds in total.
+            time.sleep((num ** 2) * delay)
 
     def _update_max_seq(self, seq, sub_seq):
+        # seq can be None for a fresh shard
         seq = int(seq) if seq is not None else None
+        # Coerce sub_seq to int, to avoid int/None comparisions
+        sub_seq = sub_seq if sub_seq else 0
         if (self.max_seq == (None, None) or
-                seq > self.max_seq[0] or
+                (seq is not None and seq > self.max_seq[0]) or
                 (seq == self.max_seq[0] and sub_seq > self.max_seq[1])):
             self.max_seq = (seq, sub_seq)
             return True
@@ -123,9 +100,8 @@ class RecordProcessor(processor.RecordProcessorBase):
                 seq, sub_seq = self.func(records[i:i + self.batch_size])
                 self._update_max_seq(seq, sub_seq)
             self._checkpoint(process_records_input.checkpointer)
-        except Exception as exc:
-            self._log('Encountered an exception while processing records. '
-                      'Exception was %r' % exc)
+        except Exception:
+            self.raven.captureException()
 
     def shutdown(self, shutdown_input):
         try:
