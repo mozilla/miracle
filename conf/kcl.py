@@ -13,10 +13,10 @@ CONFIGFILE = 'kcl-frontend-s3.properties'
 PYTHON_VERSION = '.'.join([str(i) for i in sys.version_info[:3]])
 STREAM_BASE_PATH = stream.__path__[0]
 
-# Must be at least 200 ms if a single consumer reads from a stream,
-# otherwise at least 200 ms multiplied by the number of consumer.
+# Must not be lower than 5 requests / sec for a single stream.
+# Setting this to to 1000 allows for up to 5 consumers per stream.
 # See http://docs.aws.amazon.com/streams/latest/dev/kinesis-low-latency.html
-IDLE_TIME = 250
+IDLE_TIME = 1000
 
 # Use TRIM_HORIZON to process messages which had been added to the stream
 # before any consumers were started and thus no DynamoDB tracking data

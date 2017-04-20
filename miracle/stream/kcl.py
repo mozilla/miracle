@@ -7,6 +7,14 @@ import time
 from amazon_kclpy import kcl
 from amazon_kclpy.v2 import processor
 
+from miracle.bucket import create_bucket
+from miracle.crypto import create_crypto
+from miracle.log import (
+    configure_logging,
+    create_raven,
+    create_stats,
+)
+
 
 CHECKPOINT_RETRIES = 4
 CHECKPOINT_RETRY_WAIT = 1.5
@@ -14,23 +22,46 @@ CHECKPOINT_SECONDS = 60.0
 
 
 def run_kcl_process(func, batch_size=None):  # pragma: no cover
+    configure_logging()
     processor = RecordProcessor(func, batch_size=batch_size)
-    kcl_process = kcl.KCLProcess(processor)
+    kcl_process = Process(processor)
     kcl_process.run()
+
+
+class Process(kcl.KCLProcess):
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.raven = self.processor.raven
+
+    def _perform_action(self, action):
+        try:
+            action.dispatch(self.checkpointer, self.processor)
+        except Exception:
+            self.raven.captureException()
 
 
 class RecordProcessor(processor.RecordProcessorBase):
 
-    def __init__(self, func, batch_size=None):
+    def __init__(self, func, batch_size=None,
+                 _bucket=None, _crypto=None, _raven=None, _stats=None):
         self.func = func.__get__(self)
-        self.batch_size = batch_size
-        if not batch_size:
-            self.batch_size = 100
+        self.batch_size = batch_size if batch_size else 100
         self.last_checkpoint = None
         self.max_seq = (None, None)
 
+        self.bucket = create_bucket(_bucket=_bucket)
+        self.crypto = create_crypto(_crypto=_crypto)
+        self.raven = create_raven(transport='threaded', _raven=_raven)
+        self.stats = create_stats(_stats=_stats)
+
     def initialize(self, initialize_input):
         self.last_checkpoint = time.time()
+        try:
+            self.bucket.ping(self.raven)
+        except Exception:  # pragma: no cover
+            self.raven.captureException()
+            raise
 
     def _log(self, message):
         sys.stderr.write(message + '\n')
@@ -99,10 +130,6 @@ class RecordProcessor(processor.RecordProcessorBase):
     def shutdown(self, shutdown_input):
         try:
             if shutdown_input.reason == 'TERMINATE':
-                self._log('Was told to terminate, attempting to checkpoint.')
                 self._checkpoint(shutdown_input.checkpointer, force=True)
-            else:  # reason == 'ZOMBIE'
-                self._log('Shutting down. Will not checkpoint.')
-        except Exception as exc:
-            self._log('Encountered an exception while shutting down. '
-                      'Exception was %r' % exc)
+        except Exception:
+            self.raven.captureException()

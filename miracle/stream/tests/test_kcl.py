@@ -1,108 +1,49 @@
-import io
 import json
-import time
-
-from amazon_kclpy.kcl import (
-    _IOHandler,
-    Checkpointer,
-)
-from amazon_kclpy.messages import (
-    InitializeInput,
-    ShutdownInput,
-)
-import pytest
-
-from miracle.stream.kcl import RecordProcessor
 
 
-@pytest.fixture(scope='function')
-def io_handler():
-    yield _IOHandler(input_file=io.StringIO(), output_file=io.StringIO(),
-                     error_file=io.StringIO())
+def test_init(process):
+    assert hasattr(process, 'io_handler')
+    assert hasattr(process, 'checkpointer')
+    assert hasattr(process, 'processor')
+    assert hasattr(process, 'raven')
+    processor = process.processor
+    assert hasattr(processor, 'bucket')
+    assert hasattr(processor, 'crypto')
+    assert hasattr(processor, 'raven')
+    assert hasattr(processor, 'stats')
+    assert processor.batch_size == 100
+    assert processor.last_checkpoint is not None
+    assert processor.max_seq == (None, None)
+    assert processor.func.__self__ is processor
 
 
-@pytest.fixture(scope='function')
-def checkpointer(io_handler):
-    yield Checkpointer(io_handler)
+def test_perform_action(process, raven):
+    process._perform_action(None)
+    raven.check(['AttributeError'])
 
 
-@pytest.fixture(scope='function')
-def init_msg():
-    yield InitializeInput({
-        'shardId': '0',
-        'sequenceNumber': '0',
-        'subSequenceNumber': 0,
-        'action': 'initialize',
-    })
-
-
-@pytest.fixture(scope='function')
-def shutdown_msg_term():
-    yield ShutdownInput({
-        'reason': 'TERMINATE',
-        'action': 'shutdown',
-    })
-
-
-@pytest.fixture(scope='function')
-def shutdown_msg_zombie():
-    yield ShutdownInput({
-        'reason': 'ZOMBIE',
-        'action': 'shutdown',
-    })
-
-
-def dummy_func(*args, **kw):  # pragma: no cover
-    return (None, None)
-
-
-def test_batch_size():
-    proc = RecordProcessor(dummy_func, batch_size=20)
-    assert proc.batch_size == 20
-
-
-def test_init(checkpointer, init_msg):
-    now = time.time()
-    proc = RecordProcessor(dummy_func)
-    init_msg.dispatch(checkpointer, proc)
-
-    assert proc.batch_size == 100
-    assert proc.last_checkpoint > now
-    assert proc.max_seq == (None, None)
-    assert proc.func.__self__ is proc
-
-
-def test_shutdown_term(checkpointer, init_msg, shutdown_msg_term):
-    now = time.time()
-    proc = RecordProcessor(dummy_func)
-    init_msg.dispatch(checkpointer, proc)
-    first_checkpoint = proc.last_checkpoint
-    assert first_checkpoint > now
-
+def test_shutdown_term(process, shutdown_msg_term):
     # Prepare dummy checkpoint response
-    checkpointer.io_handler.input_file.write(json.dumps({
+    input_file = process.checkpointer.io_handler.input_file
+    position = input_file.tell()
+    input_file.write(json.dumps({
         'action': 'checkpoint',
         'sequenceNumber': '0',
         'subSequenceNumber': 0,
     }) + '\n')
-    checkpointer.io_handler.input_file.seek(0)
+    input_file.seek(position)
 
-    shutdown_msg_term.dispatch(checkpointer, proc)
-    assert proc.last_checkpoint > first_checkpoint
-
-
-def test_shutdown_zombie(checkpointer, init_msg, shutdown_msg_zombie):
-    now = time.time()
-    proc = RecordProcessor(dummy_func)
-    init_msg.dispatch(checkpointer, proc)
-    first_checkpoint = proc.last_checkpoint
-    assert first_checkpoint > now
-
-    shutdown_msg_zombie.dispatch(checkpointer, proc)
-    assert proc.last_checkpoint == first_checkpoint
+    first_checkpoint = process.processor.last_checkpoint
+    process._perform_action(shutdown_msg_term)
+    assert process.processor.last_checkpoint > first_checkpoint
 
 
-def test_shutdown_fail(checkpointer, init_msg, shutdown_msg_zombie):
-    proc = RecordProcessor(dummy_func)
-    init_msg.dispatch(checkpointer, proc)
-    shutdown_msg_zombie.dispatch(None, proc)
+def test_shutdown_term_fail(process, raven, shutdown_msg_term):
+    shutdown_msg_term.dispatch(None, process.processor)
+    raven.check(['AttributeError'])
+
+
+def test_shutdown_zombie(process, shutdown_msg_zombie):
+    first_checkpoint = process.processor.last_checkpoint
+    process._perform_action(shutdown_msg_zombie)
+    assert process.processor.last_checkpoint == first_checkpoint
