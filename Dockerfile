@@ -28,7 +28,6 @@ ENV CA_CERTIFICATES_JAVA_VERSION 20161107~bpo8+1
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
         curl \
-        redis-tools \
         wget \
         openjdk-8-jre-headless \
         ca-certificates-java="$CA_CERTIFICATES_JAVA_VERSION" \
