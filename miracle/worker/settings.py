@@ -20,7 +20,6 @@ task_default_queue = 'celery_default'
 task_ignore_result = True
 
 imports = [
-    'miracle.data.tasks',
 ]
 
 # Optimization

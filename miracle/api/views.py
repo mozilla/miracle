@@ -9,8 +9,6 @@ from pyramid.httpexceptions import (
 )
 from pyramid.response import Response
 
-from miracle.data import tasks
-
 
 def configure(config):
     JWKView.configure(config)
@@ -118,7 +116,7 @@ class UploadView(View):
 
         kinesis = self.request.registry.kinesis
         try:
-            record = kinesis.client.put_record(
+            kinesis.client.put_record(
                 Data=body,
                 PartitionKey=partition_key,
                 StreamName=kinesis.frontend_stream,
@@ -126,10 +124,5 @@ class UploadView(View):
         except botocore.exceptions.ClientError:
             self.request.registry.raven.captureException()
             return HTTPServiceUnavailable('Data queue backend unavailable.')
-
-        tasks.upload.delay(
-            sequence_number=record['SequenceNumber'],
-            shard_id=record['ShardId'],
-        )
 
         return {'status': 'success'}

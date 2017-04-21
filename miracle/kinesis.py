@@ -76,34 +76,19 @@ class Kinesis(object):
     def _delete_frontend_stream(self):
         self._delete_streams([self.frontend_stream])
 
-    def get_frontend_stream_records(self, sequence_number=None, shard_id=None):
-        if shard_id:
-            shard_ids = [shard_id]
-        else:
-            info = self.client.describe_stream(StreamName=self.frontend_stream)
-            shard_ids = [shard['ShardId'] for shard in
-                         info['StreamDescription']['Shards']]
+    def get_frontend_stream_records(self):
+        info = self.client.describe_stream(StreamName=self.frontend_stream)
+        shard_ids = [shard['ShardId'] for shard in
+                     info['StreamDescription']['Shards']]
 
         records = []
         for id_ in shard_ids:
-            if sequence_number:
-                iter_args = {
-                    'ShardIteratorType': 'AT_SEQUENCE_NUMBER',
-                    'StartingSequenceNumber': sequence_number,
-                }
-                limit_args = {'Limit': 1}
-            else:
-                iter_args = {
-                    'ShardIteratorType': 'TRIM_HORIZON',
-                }
-                limit_args = {}
-
             shard_iter = self.client.get_shard_iterator(
                 StreamName=self.frontend_stream,
-                ShardId=id_, **iter_args)['ShardIterator']
+                ShardId=id_,
+                ShardIteratorType='TRIM_HORIZON')['ShardIterator']
 
-            record_info = self.client.get_records(
-                ShardIterator=shard_iter, **limit_args)
+            record_info = self.client.get_records(ShardIterator=shard_iter)
             records.extend([r['Data'] for r in record_info['Records']])
 
         return records

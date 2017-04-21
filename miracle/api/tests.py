@@ -35,10 +35,6 @@ def test_upload(app, crypto, kinesis, stats):
     queued_data = crypto.decrypt(records[0].decode('ascii'))
     assert json.loads(queued_data) == data
 
-    stats.check(timer=[
-        ('task', 1, ['task:data.tasks.upload']),
-    ])
-
 
 def test_upload_error(app, crypto, kinesis, raven):
     kinesis._delete_frontend_stream()
@@ -64,19 +60,6 @@ def test_upload_fail(app, stats):
     app.post('/v2/upload', 'no\xfejson'.encode('latin-1'),
              headers={'Content-Type': 'text/plain'},
              status=400)
-
-
-def test_upload_backend_fail(app, crypto, stats):
-    app.post('/v2/upload', crypto.encrypt(b'no json'),
-             headers={'Content-Type': 'text/plain'})
-
-    app.post('/v2/upload', crypto.encrypt(json.dumps({'no': 'user'})),
-             headers={'Content-Type': 'text/plain'})
-
-    stats.check(counter=[
-        ('data.upload.error', 1, ['reason:json']),
-        ('data.upload.error', 1, ['reason:validation']),
-    ])
 
 
 def test_upload_jwe(app, stats):

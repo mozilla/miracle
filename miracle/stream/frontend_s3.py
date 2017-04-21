@@ -15,7 +15,7 @@ VALID_USER_TOKEN = re.compile(
 
 
 def error_stat(stats, reason):
-    stats.increment('data.upload.error', tags=['reason:%s' % reason])
+    stats.increment('stream.process.error', tags=['reason:%s' % reason])
 
 
 def validate_user(user):

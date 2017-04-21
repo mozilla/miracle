@@ -97,7 +97,7 @@ def test_main_fail(crypto, processor, stats):
     assert main(processor, records) != ('3', 0)
 
     stats.check(counter=[
-        ('data.upload.error', 1, ['reason:encryption']),
-        ('data.upload.error', 1, ['reason:json']),
-        ('data.upload.error', 1, ['reason:validation']),
+        ('stream.process.error', 1, ['reason:encryption']),
+        ('stream.process.error', 1, ['reason:json']),
+        ('stream.process.error', 1, ['reason:validation']),
     ])
