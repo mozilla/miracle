@@ -17,18 +17,6 @@ Each request metric is tagged with:
     - ``method``: The request method, e.g. ``post``
     - ``status``: The response code, e.g. ``200``
 
-
-Task
-====
-
-Each asynchronous Celery task emits a timer called ``task``, which
-measures the task execution time in milliseconds.
-
-Each task metric is tagged with:
-
-    - ``task``: The task function, e.g. ``data.tasks.upload``
-
-
 Data
 ====
 
@@ -45,3 +33,18 @@ tagged with a ``reason:<value>`` tag with one of the following values:
     - ``reason:encryption``: The data was not correctly encrypted.
     - ``reason:json``: The data was not valid JSON.
     - ``reason:validation``: The data didn't match the schema.
+
+Stream
+------
+
+Each processed stream record emits some additional metrics.
+
+These metrics are all taged with the the shard id (``shard:shard-0001``)
+and the consumer name (``name:miracle.stream.module:function``).
+
+The ``stream.checkpoint`` metric has an additional tag to capture
+retried attempts, with ``try:1`` being the first.
+
+    - ``stream.checkpoint``: A timer for `checkpointing`.
+    - ``stream.process``: A timer for `process_records`.
+    - ``stream.records``: A counter for the number of processed records.

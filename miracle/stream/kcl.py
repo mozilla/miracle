@@ -14,7 +14,6 @@ from miracle.log import (
     create_stats,
 )
 
-
 CHECKPOINT_RETRIES = 4
 CHECKPOINT_RETRY_WAIT = 1.5
 CHECKPOINT_SECONDS = 60.0
@@ -44,10 +43,13 @@ class RecordProcessor(processor.RecordProcessorBase):
 
     def __init__(self, func, batch_size=None,
                  _bucket=None, _crypto=None, _raven=None, _stats=None):
+        self.name = func.__module__ + ':' + func.__qualname__
         self.func = func.__get__(self)
         self.batch_size = batch_size if batch_size else 100
         self.last_checkpoint = None
         self.max_seq = (None, None)
+        self.shard_id = None
+        self.metric_tags = ['name:%s' % self.name, 'shard:%s' % self.shard_id]
 
         self.bucket = create_bucket(_bucket=_bucket)
         self.crypto = create_crypto(_crypto=_crypto)
@@ -56,6 +58,11 @@ class RecordProcessor(processor.RecordProcessorBase):
 
     def initialize(self, initialize_input):
         self.last_checkpoint = time.time()
+        seq = initialize_input.sequence_number
+        seq = int(seq) if seq is not None else None
+        self.max_seq = (seq, initialize_input.sub_sequence_number)
+        self.shard_id = initialize_input.shard_id
+        self.metric_tags = ['name:%s' % self.name, 'shard:%s' % self.shard_id]
         try:
             self.bucket.ping(self.raven)
         except Exception:  # pragma: no cover
@@ -68,9 +75,11 @@ class RecordProcessor(processor.RecordProcessorBase):
             return False
 
         for num in range(1, CHECKPOINT_RETRIES + 1):
+            tags = self.metric_tags + ['try:%s' % num]
             try:
-                checkpointer.checkpoint(self.max_seq[0], self.max_seq[1])
-                self.last_checkpoint = time.time()
+                with self.stats.timed('stream.checkpoint', tags=tags):
+                    checkpointer.checkpoint(self.max_seq[0], self.max_seq[1])
+                    self.last_checkpoint = time.time()
                 return True
             except kcl.CheckpointError as exc:
                 if not (exc.value == 'ThrottlingException' and
@@ -96,10 +105,14 @@ class RecordProcessor(processor.RecordProcessorBase):
     def process_records(self, process_records_input):
         try:
             records = process_records_input.records
-            for i in range(0, len(records), self.batch_size):
-                seq, sub_seq = self.func(records[i:i + self.batch_size])
-                self._update_max_seq(seq, sub_seq)
+            with self.stats.timed('stream.process', tags=self.metric_tags):
+                for i in range(0, len(records), self.batch_size):
+                    seq, sub_seq = self.func(records[i:i + self.batch_size])
+                    self._update_max_seq(seq, sub_seq)
+
             self._checkpoint(process_records_input.checkpointer)
+            self.stats.increment('stream.records',
+                                 len(records), tags=self.metric_tags)
         except Exception:
             self.raven.captureException()
 

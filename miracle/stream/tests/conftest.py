@@ -1,7 +1,11 @@
+import base64
 import io
+import time
 
 from amazon_kclpy.messages import (
     InitializeInput,
+    ProcessRecordsInput,
+    Record,
     ShutdownInput,
 )
 import pytest
@@ -36,33 +40,56 @@ def error_file():
 @pytest.fixture(scope='function')
 def init_msg():
     yield InitializeInput({
-        'shardId': '0',
+        'action': 'initialize',
+        'shardId': 'shard-0000',
         'sequenceNumber': '0',
         'subSequenceNumber': 0,
-        'action': 'initialize',
+    })
+
+
+@pytest.fixture(scope='function')
+def process_msg():
+    yield ProcessRecordsInput({
+        'action': 'processRecords',
+        'millisBehindLatest': 1,
+        'records': [Record({
+            'action': 'record',
+            'partitionKey': 'partition-0',
+            'sequenceNumber': '1',
+            'subSequenceNumber': 0,
+            'approximateArrivalTimestamp': time.time() * 1000.0,
+            'data': base64.b64encode(b'{"user": "foo", "extra": 1}'),
+        }), Record({
+            'action': 'record',
+            'partitionKey': 'partition-1',
+            'sequenceNumber': '2',
+            'subSequenceNumber': 0,
+            'approximateArrivalTimestamp': time.time() * 1000.0,
+            'data': base64.b64encode(b'{"user": "bar", "extra": 2}'),
+        })],
     })
 
 
 @pytest.fixture(scope='function')
 def shutdown_msg_term():
     yield ShutdownInput({
-        'reason': 'TERMINATE',
         'action': 'shutdown',
+        'reason': 'TERMINATE',
     })
 
 
 @pytest.fixture(scope='function')
 def shutdown_msg_zombie():
     yield ShutdownInput({
-        'reason': 'ZOMBIE',
         'action': 'shutdown',
+        'reason': 'ZOMBIE',
     })
 
 
 @pytest.fixture(scope='function')
 def processor(raven, bucket, crypto, stats):
     processor = RecordProcessor(
-        dummy_func,
+        func,
         _raven=raven,
         _bucket=bucket,
         _crypto=crypto,
@@ -78,5 +105,5 @@ def process(processor, input_file, output_file, error_file, init_msg):
     yield proc
 
 
-def dummy_func(*args, **kw):  # pragma: no cover
-    return (None, None)
+def func(processor, records):
+    return max([(r.sequence_number, r.sub_sequence_number) for r in records])
