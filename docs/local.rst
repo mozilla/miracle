@@ -11,10 +11,8 @@ Architecture
 
 `miracle` is built as a containerized Docker application,
 with a web and worker role, using the same application image.
-In addition several services are required:
 
-- a `Redis <http://redis.io/>`_ cache
-- a `AWS S3 <https://aws.amazon.com/s3/>`_ file storage
+See the deploy documentation for a list of services.
 
 A `Docker Compose <https://docs.docker.com/compose/>`_ configuration is
 included to streamline setup and management of those services for local
@@ -22,7 +20,7 @@ development. They are run alongside the application containers on a
 single `Docker <https://docs.docker.com/>`_ host.
 
 For local development AWS S3 is substituted with the API-compatible
-minio/minio project.
+minio/minio project and AWS Kinesis with Kinesalite.
 
 First-Time Setup
 ================
@@ -47,14 +45,6 @@ Docker containers. It has a number of commands to help out:
 In order to inspect the AWS storage, you can open a web browser::
 
     http://127.0.0.1:9000/minio/
-
-To inspect and manipulate the Redis cache, open a shell::
-
-    docker-compose exec redis sh
-
-And open the Redis client::
-
-    redis-cli
 
 
 Production

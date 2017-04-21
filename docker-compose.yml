@@ -20,17 +20,6 @@ kinesis:
     - "127.0.0.1"
 
 
-redis:
-  container_name: miracle_redis
-  expose:
-    - "6379"
-  image: redis:2.8
-  ports:
-    - "6379"
-  dns:
-    - "127.0.0.1"
-
-
 s3:
   container_name: miracle_s3
   command: server /export

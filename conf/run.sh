@@ -11,7 +11,7 @@ case "$1" in
         exec ./web.sh
         ;;
     worker)
-        echo "Starting Celery Worker"
+        echo "Starting Worker"
         exec ./worker.sh
         ;;
     shell)

@@ -2,7 +2,7 @@
 Deployment
 ==========
 
-The service consists of a main web and celery worker docker container
+The service consists of a main web and kinesis worker docker container
 and supporting services.
 
 In a production environment the following services are typically used:
@@ -10,7 +10,6 @@ In a production environment the following services are typically used:
 - Amazon DynamoDB
 - Amazon ELB handling SSL termination
 - Amazon EC2 running Docker containers for both web and worker roles
-- Amazon ElastiCache Redis
 - Amazon Kinesis
 - Amazon S3
 - Nginx running on the web role EC2 instances, proxying HTTP traffic
@@ -39,7 +38,6 @@ variables.
 Both roles expect:
 
 * ``PUBLIC_KEY``, example ``LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0K\n...``
-* ``REDIS_HOST``, example ``example.cache.amazonaws.com``
 * ``SENTRY_DSN``, example ``https://public:secret@sentry.example.com/id``
 * ``STATSD_HOST``, example ``172.17.42.1``
 
@@ -59,7 +57,7 @@ AWS Permissions
 ===============
 
 Both roles expect to have access from inside the Docker containers
-to the ElastiCache Redis instance, the Sentry and the StatsD daemon.
+to Sentry and the StatsD daemon.
 
 Only the worker role should have access to the Amazon S3 bucket
 from inside the docker container.

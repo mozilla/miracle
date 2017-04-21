@@ -33,19 +33,17 @@ def security_headers(event):
 
 def heartbeat_view(request):
     raven = request.registry.raven
-    cache_success = request.registry.cache.ping(raven)
     kinesis_success = request.registry.kinesis.ping(raven)
 
-    if not (cache_success and kinesis_success):
+    if not kinesis_success:
         response = HTTPServiceUnavailable()
         response.content_type = 'application/json'
         response.json = {
-            'cache': {'up': cache_success},
             'queue': {'up': kinesis_success},
         }
         return response
 
-    return {'cache': {'up': True}, 'queue': {'up': True}}
+    return {'queue': {'up': True}}
 
 
 _INDEX_RESPONSE = '''\

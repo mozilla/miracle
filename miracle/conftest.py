@@ -5,7 +5,6 @@ import pytest
 import webtest
 
 from miracle.bucket import create_bucket
-from miracle.cache import create_cache
 from miracle.crypto import create_crypto
 from miracle.kinesis import create_kinesis
 from miracle.log import (
@@ -15,11 +14,6 @@ from miracle.log import (
 from miracle.web.app import (
     create_app,
     shutdown_app,
-)
-from miracle.worker.app import (
-    celery_app,
-    init_worker,
-    shutdown_worker,
 )
 
 
@@ -58,19 +52,6 @@ def global_bucket():
 def bucket(global_bucket):
     yield global_bucket
     global_bucket.clear()
-
-
-@pytest.fixture(scope='session')
-def global_cache():
-    cache = create_cache()
-    yield cache
-    cache.close()
-
-
-@pytest.fixture(scope='function')
-def cache(global_cache):
-    yield global_cache
-    global_cache.flushdb()
 
 
 @pytest.fixture(scope='session')
@@ -122,30 +103,8 @@ def stats(global_stats):
 
 
 @pytest.fixture(scope='session')
-def global_celery(crypto, global_bucket, global_cache, global_kinesis,
-                  global_raven, global_stats):
-    init_worker(
-        celery_app,
-        _bucket=global_bucket,
-        _cache=global_cache,
-        _crypto=crypto,
-        _kinesis=global_kinesis,
-        _raven=global_raven,
-        _stats=global_stats)
-    yield celery_app
-    shutdown_worker(celery_app)
-
-
-@pytest.fixture(scope='function')
-def celery(global_celery, bucket, cache, kinesis, raven, stats):
-    yield global_celery
-
-
-@pytest.fixture(scope='session')
-def global_app(crypto, global_cache, global_celery, global_kinesis,
-               global_raven, global_stats):
+def global_app(crypto, global_kinesis, global_raven, global_stats):
     wsgiapp = create_app(
-        _cache=global_cache,
         _crypto=crypto,
         _kinesis=global_kinesis,
         _raven=global_raven,
@@ -156,5 +115,5 @@ def global_app(crypto, global_cache, global_celery, global_kinesis,
 
 
 @pytest.fixture(scope='function')
-def app(global_app, cache, celery, kinesis, raven, stats):
+def app(global_app, kinesis, raven, stats):
     yield global_app
